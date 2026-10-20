@@ -41,9 +41,19 @@ python -m http.server 5500
 
 Abrir <http://localhost:5500> y permitir el acceso a la cámara.
 
+## Ramas
+
+| Rama | Uso |
+|---|---|
+| `main` | Versión estable y presentable. Es la que se usa en la defensa. |
+| `test` | Integración y pruebas antes de pasar a `main`. |
+| `desarrollo` | Rama de trabajo diario donde se unen las funciones terminadas. |
+
+Flujo: `feature/*` → `desarrollo` → `test` → `main`.
+
 ## Convenciones de trabajo
 
-- Rama `main` protegida; una rama por función (`feature/gestos-mlp`, `feature/llm-intent`).
+- Rama `main` protegida; una rama por función creada desde `desarrollo` (`feature/gestos-mlp`, `feature/llm-intent`).
 - *Pull request* con al menos una revisión de otro integrante antes de unir.
 - Nunca subir claves de API: van en `.env`, que está en `.gitignore`.
 - Las decisiones técnicas se registran en [docs/decisiones.md](docs/decisiones.md).
