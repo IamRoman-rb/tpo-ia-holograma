@@ -1,0 +1,6 @@
+Convierte la siguiente descripción en un prompt para un generador 3D.
+Requisitos: un solo objeto centrado, fondo blanco liso, vista tres cuartos,
+sin texto ni personas, estilo realista, materiales claros.
+Devuelve una sola línea en inglés, sin comillas.
+
+Descripción: {objeto}

@@ -1,0 +1,4 @@
+frase,json_esperado
+"mostrame un motor de cuatro cilindros desde atrás","{""accion"":""mostrar"",""objeto"":""motor de cuatro cilindros"",""parametros"":{""vista"":""trasera"",""factor_escala"":null}}"
+"hacelo el doble de grande","{""accion"":""escalar"",""objeto"":null,""parametros"":{""vista"":null,""factor_escala"":2.0}}"
+"qué hora es","{""accion"":""desconocido"",""objeto"":null,""parametros"":{""vista"":null,""factor_escala"":null}}"

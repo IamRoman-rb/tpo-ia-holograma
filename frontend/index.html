@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Visor 3D por gestos</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+        "@mediapipe/tasks-vision": "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="viewer"></div>
+
+  <video id="webcam" autoplay playsinline muted></video>
+
+  <aside id="hud">
+    <div>Gesto: <strong id="gesto">—</strong></div>
+    <div>Confianza: <strong id="confianza">—</strong></div>
+    <div>Estado: <strong id="estado">listo</strong></div>
+  </aside>
+
+  <form id="pedido">
+    <input id="frase" type="text" placeholder="Ej.: mostrame una válvula de acero" autocomplete="off">
+    <button type="submit">Pedir</button>
+    <button type="button" id="reiniciar">Reiniciar vista</button>
+  </form>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

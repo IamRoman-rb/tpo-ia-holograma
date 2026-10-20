@@ -1,0 +1,3 @@
+Para el objeto "{objeto}" devuelve un JSON con: nombre canónico en español,
+5 sinónimos o formas de pedirlo, y una descripción de una línea.
+Solo JSON válido.
