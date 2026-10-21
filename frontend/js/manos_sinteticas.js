@@ -1,0 +1,53 @@
+// Manos sintéticas con la misma estructura de 21 puntos que MediaPipe.
+// Se usan en los tests (frontend/tests) y en el modo simulación del recuadro de cámara,
+// para probar el sistema sin cámara. No reemplazan las pruebas con manos reales.
+
+export const ASPECTO = 640 / 480;
+
+const sumar = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+
+// Nudillos de índice, medio, anular y meñique (unidad = muñeca → nudillo medio)
+const BASES = [[-0.35, 1, 0], [-0.1, 1, 0], [0.12, 1, 0], [0.32, 0.95, 0]];
+
+function dedo(base, modo) {
+  if (modo === 'ext') {
+    const p = sumar(base, [0, 0.45, 0]), d = sumar(p, [0, 0.28, 0]);
+    return [base, p, d, sumar(d, [0, 0.22, 0])];
+  }
+  if (modo === 'dob') {
+    const p = sumar(base, [0, 0, -0.45]), d = sumar(p, [0, -0.28, 0]);
+    return [base, p, d, sumar(d, [0, -0.1, 0.2])];
+  }
+  // 'semi': índice curvado hacia el pulgar (pellizco)
+  const p = sumar(base, [0, 0.4, -0.15]), d = sumar(p, [-0.05, 0.15, -0.2]);
+  return [base, p, d, sumar(d, [-0.05, 0, -0.15])];
+}
+
+function mano(modos, puntaPulgar) {
+  const pts = [[0, 0, 0], [-0.35, 0.25, 0], [-0.6, 0.5, 0], [-0.75, 0.75, 0], puntaPulgar ?? [-0.85, 0.95, 0]];
+  modos.forEach((m, i) => pts.push(...dedo(BASES[i], m)));
+  return pts;
+}
+
+const puntaIndiceSemi = dedo(BASES[0], 'semi')[3];
+
+export const POSES = {
+  palma_abierta: mano(['ext', 'ext', 'ext', 'ext']),
+  'puño': mano(['dob', 'dob', 'dob', 'dob'], [-0.2, 0.7, -0.35]),
+  pellizco: mano(['semi', 'ext', 'ext', 'ext'], sumar(puntaIndiceSemi, [0.03, 0, 0])),
+  'señalar': mano(['ext', 'dob', 'dob', 'dob'], [-0.1, 0.6, -0.3]),
+};
+
+/**
+ * Lleva una pose a coordenadas de imagen como las de MediaPipe (x, y en 0..1, y hacia abajo).
+ * s: tamaño de la mano en fracción del alto del cuadro · (ox, oy): posición de la muñeca.
+ * espejo: invierte la mano (para simular la otra mano) · ruido: temblor aleatorio.
+ */
+export function aImagen(pts, s, ox, oy, { aspecto = ASPECTO, espejo = false, ruido = 0 } = {}) {
+  const r = () => (Math.random() - 0.5) * 2 * ruido;
+  return pts.map(([x, y, z]) => ({
+    x: ox + (s * (espejo ? -x : x)) / aspecto + r(),
+    y: oy - s * y + r(),
+    z: (s * z) / aspecto,
+  }));
+}

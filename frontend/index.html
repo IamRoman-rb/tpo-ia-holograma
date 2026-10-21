@@ -16,21 +16,96 @@
   </script>
 </head>
 <body>
-  <div id="viewer"></div>
+  <div id="escena" aria-label="Visor 3D"></div>
 
-  <video id="webcam" autoplay playsinline muted></video>
+  <header id="titulo">
+    <h1>Visor 3D por gestos</h1>
+    <p>Pedí una pieza y movela con la mano</p>
+  </header>
 
-  <aside id="hud">
-    <div>Gesto: <strong id="gesto">—</strong></div>
-    <div>Confianza: <strong id="confianza">—</strong></div>
-    <div>Estado: <strong id="estado">listo</strong></div>
+  <section id="hud" aria-live="polite">
+    <div class="fila"><span>Gesto</span><strong id="gesto">—</strong></div>
+    <div class="fila"><span>Confianza</span><strong id="confianza">—</strong></div>
+    <div class="barra"><div id="barra-confianza"></div></div>
+    <div class="fila"><span>Estado</span><strong id="estado">iniciando…</strong></div>
+  </section>
+
+  <div id="origen" hidden>
+    <strong id="origen-nombre"></strong>
+    <span id="origen-etiqueta"></span>
+  </div>
+
+  <aside id="catalogo">
+    <h2>Catálogo</h2>
+    <ul id="lista-catalogo"></ul>
   </aside>
 
-  <form id="pedido">
-    <input id="frase" type="text" placeholder="Ej.: mostrame una válvula de acero" autocomplete="off">
-    <button type="submit">Pedir</button>
-    <button type="button" id="reiniciar">Reiniciar vista</button>
-  </form>
+  <section id="camara" aria-label="Cámara y detección de manos" data-estado="iniciando">
+    <header class="camara-cabecera">
+      <span class="camara-punto" aria-hidden="true"></span>
+      <strong id="camara-titulo">Cámara</strong>
+      <span id="camara-fps"></span>
+      <button type="button" id="camara-detener" hidden>Detener</button>
+      <button type="button" id="camara-tamano" aria-label="Agrandar el recuadro" title="Agrandar">⤢</button>
+    </header>
+    <div class="camara-vista">
+      <video id="webcam" autoplay playsinline muted></video>
+      <canvas id="landmarks" width="640" height="480"></canvas>
+      <div id="camara-vacia" hidden>
+        <p id="camara-mensaje">Cámara no disponible</p>
+        <div class="camara-acciones">
+          <button type="button" id="camara-reintentar">Reintentar</button>
+          <button type="button" id="camara-simular">Simular manos</button>
+        </div>
+      </div>
+    </div>
+    <footer class="camara-pie">
+      <span><i class="muestra aplicado"></i>aplicado</span>
+      <span><i class="muestra detectado"></i>detectado</span>
+      <span class="camara-privacidad">Se procesa en tu equipo, no se guarda</span>
+    </footer>
+  </section>
+
+  <section id="ayuda" hidden>
+    <h2>Gestos</h2>
+    <dl>
+      <dt>Pellizco</dt><dd>Tomar y mover</dd>
+      <dt>Palma abierta</dt><dd>Rotar siguiendo la mano</dd>
+      <dt>Pellizco con las dos manos</dt><dd>Separar para agrandar, juntar para achicar</dd>
+      <dt>Puño</dt><dd>Reiniciar la vista</dd>
+    </dl>
+    <h2>Teclado</h2>
+    <dl>
+      <dt>← → ↑ ↓</dt><dd>Rotar</dd>
+      <dt>+ −</dt><dd>Escalar</dd>
+      <dt>R</dt><dd>Reiniciar</dd>
+      <dt>D</dt><dd>Métricas de depuración</dd>
+    </dl>
+  </section>
+
+  <pre id="depuracion" hidden></pre>
+
+  <footer id="controles">
+    <p id="aviso" role="alert" hidden></p>
+    <p id="interpretacion" hidden></p>
+    <div id="confirmacion" hidden>
+      <span>¿Es eso lo que pediste?</span>
+      <button type="button" id="confirmar-si">Sí</button>
+      <button type="button" id="confirmar-no">No</button>
+    </div>
+    <form id="pedido">
+      <input id="frase" type="text" placeholder="Ej.: mostrame una válvula de acero" autocomplete="off" aria-label="Pedido">
+      <button type="submit">Pedir</button>
+    </form>
+    <div id="botones" role="group" aria-label="Controles alternativos">
+      <button type="button" data-accion="izquierda" aria-label="Rotar a la izquierda">⟲</button>
+      <button type="button" data-accion="derecha" aria-label="Rotar a la derecha">⟳</button>
+      <button type="button" data-accion="achicar" aria-label="Achicar">−</button>
+      <button type="button" data-accion="agrandar" aria-label="Agrandar">+</button>
+      <button type="button" data-accion="reiniciar">Reiniciar</button>
+      <button type="button" id="boton-ayuda" aria-expanded="false">?</button>
+    </div>
+  </footer>
 
   <script type="module" src="js/main.js"></script>
 </body>
