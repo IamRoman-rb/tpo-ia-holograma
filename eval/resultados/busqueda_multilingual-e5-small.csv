@@ -1,0 +1,21 @@
+consulta,esperado,obtenido,mejor_candidato,similitud
+pieza para regular el caudal de una cañería,valvula_compuerta,rodamiento_bolas,rodamiento_bolas,0.825
+llave de paso,valvula_compuerta,valvula_compuerta,valvula_compuerta,0.93
+válvula esférica,valvula_compuerta,valvula_compuerta,valvula_compuerta,0.9
+llave para cortar el agua,valvula_compuerta,valvula_compuerta,valvula_compuerta,0.856
+rueda que transmite giro a otra,engranaje_recto,engranaje_recto,engranaje_recto,0.852
+piñón de transmisión,engranaje_recto,engranaje_recto,engranaje_recto,0.882
+rueda con dientes,engranaje_recto,engranaje_recto,engranaje_recto,0.909
+elemento de fijación roscado,tornillo_hexagonal,engranaje_recto,engranaje_recto,0.846
+tornillo con tuerca,tornillo_hexagonal,tornillo_hexagonal,tornillo_hexagonal,0.936
+perno de anclaje,tornillo_hexagonal,tornillo_hexagonal,tornillo_hexagonal,0.87
+pieza giratoria con esferas de metal,rodamiento_bolas,rodamiento_bolas,rodamiento_bolas,0.836
+cojinete de bolas,rodamiento_bolas,rodamiento_bolas,rodamiento_bolas,0.9
+balero,rodamiento_bolas,rodamiento_bolas,rodamiento_bolas,0.927
+máquina que convierte electricidad en movimiento,motor_electrico,motor_electrico,motor_electrico,0.853
+motor eléctrico de 5 HP,motor_electrico,motor_electrico,motor_electrico,0.896
+silla de oficina,,valvula_compuerta,valvula_compuerta,0.846
+zapatilla deportiva,,motor_electrico,motor_electrico,0.849
+bomba de agua,,valvula_compuerta,valvula_compuerta,0.856
+mesa de madera,,valvula_compuerta,valvula_compuerta,0.826
+teléfono celular,,engranaje_recto,engranaje_recto,0.861

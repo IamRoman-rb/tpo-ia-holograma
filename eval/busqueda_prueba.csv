@@ -1,0 +1,21 @@
+consulta,esperado
+pieza para regular el caudal de una cañería,valvula_compuerta
+llave de paso,valvula_compuerta
+válvula esférica,valvula_compuerta
+llave para cortar el agua,valvula_compuerta
+rueda que transmite giro a otra,engranaje_recto
+piñón de transmisión,engranaje_recto
+rueda con dientes,engranaje_recto
+elemento de fijación roscado,tornillo_hexagonal
+tornillo con tuerca,tornillo_hexagonal
+perno de anclaje,tornillo_hexagonal
+pieza giratoria con esferas de metal,rodamiento_bolas
+cojinete de bolas,rodamiento_bolas
+balero,rodamiento_bolas
+máquina que convierte electricidad en movimiento,motor_electrico
+motor eléctrico de 5 HP,motor_electrico
+silla de oficina,
+zapatilla deportiva,
+bomba de agua,
+mesa de madera,
+teléfono celular,

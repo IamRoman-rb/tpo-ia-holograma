@@ -1,0 +1,21 @@
+consulta,esperado,obtenido,mejor_candidato,similitud
+pieza para regular el caudal de una cañería,valvula_compuerta,engranaje_recto,engranaje_recto,0.683
+llave de paso,valvula_compuerta,valvula_compuerta,valvula_compuerta,1.0
+válvula esférica,valvula_compuerta,valvula_compuerta,valvula_compuerta,1.0
+llave para cortar el agua,valvula_compuerta,valvula_compuerta,valvula_compuerta,0.5
+rueda que transmite giro a otra,engranaje_recto,engranaje_recto,engranaje_recto,0.5
+piñón de transmisión,engranaje_recto,engranaje_recto,engranaje_recto,1.0
+rueda con dientes,engranaje_recto,engranaje_recto,engranaje_recto,0.5
+elemento de fijación roscado,tornillo_hexagonal,,-,0.0
+tornillo con tuerca,tornillo_hexagonal,tornillo_hexagonal,tornillo_hexagonal,1.0
+perno de anclaje,tornillo_hexagonal,tornillo_hexagonal,tornillo_hexagonal,1.0
+pieza giratoria con esferas de metal,rodamiento_bolas,rodamiento_bolas,rodamiento_bolas,0.642
+cojinete de bolas,rodamiento_bolas,rodamiento_bolas,rodamiento_bolas,1.0
+balero,rodamiento_bolas,rodamiento_bolas,rodamiento_bolas,1.0
+máquina que convierte electricidad en movimiento,motor_electrico,motor_electrico,motor_electrico,0.775
+motor eléctrico de 5 HP,motor_electrico,motor_electrico,motor_electrico,1.0
+silla de oficina,,,-,0.0
+zapatilla deportiva,,,-,0.0
+bomba de agua,,,-,0.0
+mesa de madera,,,-,0.0
+teléfono celular,,,-,0.0

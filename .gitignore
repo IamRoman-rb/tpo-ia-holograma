@@ -19,3 +19,6 @@ Thumbs.db
 # Modelos generados pesados (el catálogo precargado sí se versiona)
 backend/catalog/generated/
 *.tmp
+
+# Índices de embeddings que genera eval/eval_busqueda.py
+eval/resultados/indice_*.json
