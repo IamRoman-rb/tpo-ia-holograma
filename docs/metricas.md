@@ -16,7 +16,7 @@ Los detalles por frase quedan en `eval/resultados/`.
 | Gestos | Falsos positivos en 60 s en reposo | ≤ 2 | Pendiente | Necesita cámara |
 | Latencia | Gesto → pantalla | < 100 ms | Pendiente | El panel de depuración (tecla D) muestra el tiempo de procesamiento por fotograma |
 | Latencia | Pedido → modelo (catálogo) | < 2 s | Pendiente de medición formal | Observado por debajo de 2 s con el backend precargado |
-| Latencia | Pedido → modelo (generado) | Reportar | Pendiente | Generación 3D no integrada |
+| Latencia | Pedido → modelo (generado) | Reportar | Pendiente | `eval/generacion3d/evaluar_generadores_colab.ipynb` mide el tiempo de TripoSR y Shap-E; falta correrlo en Colab |
 | LLM | Aciertos de intención (30 frases) | ≥ 85 % | **Reglas: 80 % (24/30)** · LLM: pendiente | El LLM se evalúa cuando haya una clave de API |
 | Búsqueda | Recuperación correcta (20 pedidos) | ≥ 80 % | **Híbrido: 90 % (18/20)** | Palabras 80 % · MiniLM 75 % · E5 75 % (cada uno en su mejor umbral) |
 | Usabilidad | Éxito de tarea sin ayuda | ≥ 80 % | Pendiente | Fase 4 |
