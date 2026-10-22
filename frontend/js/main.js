@@ -65,15 +65,19 @@ async function ejecutar({ accion, objeto, parametros }, id) {
       if (factor) visor.escalarA(factor);
       break;
     case 'escalar':
+      visor.guardarEstado();
       visor.escalarA(visor.escala() * (factor ?? PASO_ESCALA));
       break;
     case 'vista':
+      visor.guardarEstado();
       visor.vista(vista);
       break;
     case 'rotar':
+      visor.guardarEstado();
       visor.rotar(Math.PI / 2, 0);
       break;
     case 'reiniciar':
+      visor.guardarEstado();
       visor.reiniciar();
       break;
   }
@@ -136,14 +140,25 @@ refrescarCatalogo()
   });
 
 // --- control alternativo: botones y teclado (para quien no pueda o no quiera usar gestos)
+// Cada acción guarda el estado antes de cambiar el objeto, para poder deshacerla
+const conHistorial = (accion) => () => {
+  visor.guardarEstado();
+  accion();
+};
+
+function deshacer() {
+  ui.mostrarEstado(visor.deshacer() ? 'cambio deshecho' : 'no hay nada para deshacer');
+}
+
 const acciones = {
-  izquierda: () => visor.rotar(-PASO_ROTACION, 0),
-  derecha: () => visor.rotar(PASO_ROTACION, 0),
-  arriba: () => visor.rotar(0, PASO_ROTACION),
-  abajo: () => visor.rotar(0, -PASO_ROTACION),
-  agrandar: () => visor.escalarA(visor.escala() * PASO_ESCALA),
-  achicar: () => visor.escalarA(visor.escala() / PASO_ESCALA),
-  reiniciar: () => visor.reiniciar(),
+  izquierda: conHistorial(() => visor.rotar(-PASO_ROTACION, 0)),
+  derecha: conHistorial(() => visor.rotar(PASO_ROTACION, 0)),
+  arriba: conHistorial(() => visor.rotar(0, PASO_ROTACION)),
+  abajo: conHistorial(() => visor.rotar(0, -PASO_ROTACION)),
+  agrandar: conHistorial(() => visor.escalarA(visor.escala() * PASO_ESCALA)),
+  achicar: conHistorial(() => visor.escalarA(visor.escala() / PASO_ESCALA)),
+  reiniciar: conHistorial(() => visor.reiniciar()),
+  deshacer,
 };
 
 document.getElementById('botones').addEventListener('click', (e) => {
@@ -154,7 +169,7 @@ document.getElementById('boton-ayuda').addEventListener('click', ui.alternarAyud
 
 const TECLAS = {
   ArrowLeft: 'izquierda', ArrowRight: 'derecha', ArrowUp: 'arriba', ArrowDown: 'abajo',
-  '+': 'agrandar', '=': 'agrandar', '-': 'achicar', r: 'reiniciar', R: 'reiniciar',
+  '+': 'agrandar', '=': 'agrandar', '-': 'achicar', r: 'reiniciar', R: 'reiniciar', z: 'deshacer', Z: 'deshacer',
 };
 addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT') return;

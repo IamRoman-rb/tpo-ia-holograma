@@ -10,6 +10,8 @@
 const ZONA_MUERTA = 0.002;            // ignora el temblor de los landmarks
 const RAD_POR_PANTALLA = 2 * Math.PI; // cruzar toda la pantalla con la palma = una vuelta
 
+const GESTOS_QUE_CAMBIAN = new Set(['pellizco', 'palma_abierta', 'escala_dos_manos', 'puño']);
+
 const puntoPellizco = (mano) => ({ x: (mano[4].x + mano[8].x) / 2, y: (mano[4].y + mano[8].y) / 2 });
 const centroPalma = (mano) => mano[9];
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -30,6 +32,9 @@ export function crearControles(visor) {
   return function actualizar(gesto, manos) {
     if (gesto !== gestoPrevio) {
       ancla = null;
+      // Al empezar un gesto que cambia el objeto se guarda el estado: así "Deshacer"
+      // vuelve a como estaba antes de todo el movimiento (sección 16.3)
+      if (GESTOS_QUE_CAMBIAN.has(gesto)) visor.guardarEstado();
       if (gesto === 'puño') visor.reiniciar();   // se dispara una vez al cerrar la mano
       if (gesto === 'escala_dos_manos') escalaInicial = visor.escala();
       gestoPrevio = gesto;

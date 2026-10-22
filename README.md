@@ -60,7 +60,9 @@ El script revisa los servicios, el plan B sin internet, el catálogo, la configu
 
 El recuadro de cámara (abajo a la derecha) muestra el esqueleto de cada mano y una etiqueta con el gesto que se detecta. **Cian** significa que el gesto se está aplicando al objeto y **ámbar** que se reconoce, pero todavía no alcanza la confianza mínima. El botón ⤢ agranda el recuadro. Si no hay cámara, **Simular manos** reproduce un recorrido con manos sintéticas (palma, pellizco, dos manos y puño) que pasa por el mismo clasificador. Sirve para probar y mostrar el sistema, pero no reemplaza las pruebas con manos reales.
 
-Sin cámara se puede usar el teclado (flechas para rotar, `+` y `−` para escalar, `R` para reiniciar) o los botones de la pantalla. Con la tecla `D` se abre el panel de depuración, que muestra las métricas de la mano en vivo y sirve para calibrar los umbrales de `frontend/js/gestures.js`.
+Sin cámara se puede usar el teclado (flechas para rotar, `+` y `−` para escalar, `R` para reiniciar) o los botones de la pantalla. **Deshacer** (botón o tecla `Z`) vuelve a como estaba el objeto antes del último cambio, por ejemplo si un gesto se detectó mal.
+
+Qué datos se procesan en el equipo y cuáles salen de él, sesgos y protecciones: [docs/uso_responsable.md](docs/uso_responsable.md). Con la tecla `D` se abre el panel de depuración, que muestra las métricas de la mano en vivo y sirve para calibrar los umbrales de `frontend/js/gestures.js`.
 
 ## Dataset de gestos y MLP
 
