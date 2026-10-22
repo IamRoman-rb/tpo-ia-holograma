@@ -1,0 +1,72 @@
+[
+  {
+    "id": "valvula_compuerta",
+    "nombre": "Válvula de compuerta",
+    "sinonimos": [
+      "válvula",
+      "valvula de acero",
+      "llave de paso",
+      "válvula industrial",
+      "válvula con volante"
+    ],
+    "descripcion": "Válvula de compuerta bridada con volante de accionamiento.",
+    "url": "models/valvula_compuerta.glb",
+    "origen": "catalogo"
+  },
+  {
+    "id": "engranaje_recto",
+    "nombre": "Engranaje recto",
+    "sinonimos": [
+      "engranaje",
+      "rueda dentada",
+      "piñón",
+      "engrane",
+      "corona dentada"
+    ],
+    "descripcion": "Engranaje recto de 24 dientes con cubo central.",
+    "url": "models/engranaje_recto.glb",
+    "origen": "catalogo"
+  },
+  {
+    "id": "tornillo_hexagonal",
+    "nombre": "Tornillo hexagonal con tuerca",
+    "sinonimos": [
+      "tornillo",
+      "bulón",
+      "perno",
+      "tuerca",
+      "tornillo con tuerca"
+    ],
+    "descripcion": "Tornillo de cabeza hexagonal con arandela y tuerca.",
+    "url": "models/tornillo_hexagonal.glb",
+    "origen": "catalogo"
+  },
+  {
+    "id": "rodamiento_bolas",
+    "nombre": "Rodamiento de bolas",
+    "sinonimos": [
+      "rodamiento",
+      "ruleman",
+      "rulemán",
+      "cojinete",
+      "balero"
+    ],
+    "descripcion": "Rodamiento rígido de una hilera de bolas.",
+    "url": "models/rodamiento_bolas.glb",
+    "origen": "catalogo"
+  },
+  {
+    "id": "motor_electrico",
+    "nombre": "Motor eléctrico",
+    "sinonimos": [
+      "motor",
+      "motor trifásico",
+      "motor industrial",
+      "motor con aletas",
+      "motor eléctrico industrial"
+    ],
+    "descripcion": "Motor eléctrico con carcasa aletada, eje y base de montaje.",
+    "url": "models/motor_electrico.glb",
+    "origen": "catalogo"
+  }
+]

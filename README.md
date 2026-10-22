@@ -26,11 +26,11 @@ cd backend
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-cp ../.env.example ../.env       # completar las claves
+cp ../.env.example ../.env       # opcional: ANTHROPIC_API_KEY para usar el LLM
 uvicorn main:app --reload --port 8000
 ```
 
-Verificar en <http://localhost:8000/health>.
+Verificar en <http://localhost:8000/health>. La primera vez descarga el modelo de embeddings (unos 500 MB, con PyTorch incluido en la instalación). Sin `ANTHROPIC_API_KEY`, los pedidos los interpreta un intérprete por reglas de respaldo.
 
 ### Frontend
 
@@ -39,7 +39,37 @@ cd frontend
 python -m http.server 5500
 ```
 
-Abrir <http://localhost:5500> y permitir el acceso a la cámara.
+Abrir <http://localhost:5500> y permitir el acceso a la cámara. El frontend funciona aunque el backend no esté levantado: los pedidos se buscan en el catálogo local.
+
+## Uso
+
+| Gesto | Acción |
+|---|---|
+| Pellizco (pulgar + índice) | Tomar y mover el objeto |
+| Palma abierta | Rotar siguiendo la mano |
+| Pellizco con las dos manos | Separar para agrandar, juntar para achicar |
+| Puño | Reiniciar la vista |
+
+El recuadro de cámara (abajo a la derecha) muestra el esqueleto de cada mano y una etiqueta con el gesto que se detecta. **Cian** significa que el gesto se está aplicando al objeto y **ámbar** que se reconoce, pero todavía no alcanza la confianza mínima. El botón ⤢ agranda el recuadro. Si no hay cámara, **Simular manos** reproduce un recorrido con manos sintéticas (palma, pellizco, dos manos y puño) que pasa por el mismo clasificador. Sirve para probar y mostrar el sistema, pero no reemplaza las pruebas con manos reales.
+
+Sin cámara se puede usar el teclado (flechas para rotar, `+` y `−` para escalar, `R` para reiniciar) o los botones de la pantalla. Con la tecla `D` se abre el panel de depuración, que muestra las métricas de la mano en vivo y sirve para calibrar los umbrales de `frontend/js/gestures.js`.
+
+## Dataset de gestos y MLP
+
+La página <http://localhost:5500/captura.html> sirve para grabar el dataset de gestos con la cámara. Los pasos para grabar y entrenar están en [ml/README.md](ml/README.md).
+
+## Catálogo, pruebas y evaluación
+
+```bash
+python scripts/generar_modelos_demo.py   # regenera frontend/models/*.glb y catalogo.json
+node frontend/tests/gestos.test.mjs      # pruebas de normalización, gestos y búsqueda local
+python -m pytest ml                      # la normalización de Python coincide con la del navegador (entorno de ml/)
+cd backend && python -m pytest tests     # pruebas del backend (con el entorno virtual activo)
+python eval/eval_intent.py               # aciertos de intención: reglas vs. LLM (desde la raíz)
+python eval/eval_busqueda.py             # búsqueda en el catálogo y calibración del umbral
+```
+
+Los resultados están en [docs/metricas.md](docs/metricas.md) y las decisiones técnicas en [docs/decisiones.md](docs/decisiones.md).
 
 ## Ramas
 

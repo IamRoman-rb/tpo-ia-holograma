@@ -1,0 +1,21 @@
+consulta,esperado,obtenido,mejor_candidato,similitud
+pieza para regular el caudal de una cañería,valvula_compuerta,engranaje_recto,engranaje_recto,0.683
+llave de paso,valvula_compuerta,valvula_compuerta,valvula_compuerta,1.0
+válvula esférica,valvula_compuerta,valvula_compuerta,valvula_compuerta,0.944
+llave para cortar el agua,valvula_compuerta,,valvula_compuerta,0.524
+rueda que transmite giro a otra,engranaje_recto,tornillo_hexagonal,tornillo_hexagonal,0.63
+piñón de transmisión,engranaje_recto,valvula_compuerta,valvula_compuerta,0.72
+rueda con dientes,engranaje_recto,engranaje_recto,engranaje_recto,0.945
+elemento de fijación roscado,tornillo_hexagonal,,tornillo_hexagonal,0.554
+tornillo con tuerca,tornillo_hexagonal,tornillo_hexagonal,tornillo_hexagonal,1.0
+perno de anclaje,tornillo_hexagonal,tornillo_hexagonal,tornillo_hexagonal,0.842
+pieza giratoria con esferas de metal,rodamiento_bolas,rodamiento_bolas,rodamiento_bolas,0.642
+cojinete de bolas,rodamiento_bolas,tornillo_hexagonal,tornillo_hexagonal,0.718
+balero,rodamiento_bolas,rodamiento_bolas,rodamiento_bolas,1.0
+máquina que convierte electricidad en movimiento,motor_electrico,motor_electrico,motor_electrico,0.775
+motor eléctrico de 5 HP,motor_electrico,motor_electrico,motor_electrico,0.813
+silla de oficina,,,engranaje_recto,0.36
+zapatilla deportiva,,,rodamiento_bolas,0.598
+bomba de agua,,,rodamiento_bolas,0.393
+mesa de madera,,,engranaje_recto,0.4
+teléfono celular,,,rodamiento_bolas,0.365
