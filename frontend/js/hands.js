@@ -2,9 +2,10 @@
 // El video se procesa en el equipo: nunca se envía ni se guarda.
 import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
 
-const WASM_URL = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm';
-const MODEL_URL =
-  'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
+// Archivos locales (frontend/vendor/): el visor funciona sin internet (plan B, riesgo 2).
+// Se descargan con scripts/descargar_dependencias.py.
+const WASM_URL = new URL('../vendor/mediapipe/wasm', import.meta.url).href;
+const MODEL_URL = new URL('../vendor/mediapipe/hand_landmarker.task', import.meta.url).href;
 
 let detector = null; // se crea una sola vez, aunque se reintente la cámara
 
