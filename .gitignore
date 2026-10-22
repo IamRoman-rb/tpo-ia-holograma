@@ -22,3 +22,4 @@ backend/catalog/generated/
 
 # Índices de embeddings que genera eval/eval_busqueda.py
 eval/resultados/indice_*.json
+.pytest_cache/

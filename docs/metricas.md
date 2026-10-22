@@ -12,7 +12,7 @@ Los detalles por frase quedan en `eval/resultados/`.
 | Área | Métrica | Meta | Resultado | Notas |
 |---|---|---|---|---|
 | Gestos | Precisión por gesto (persona no vista) | ≥ 90 % | Pendiente | Necesita cámara y dataset |
-| Gestos | Reglas vs. MLP | Reportar | Pendiente | Fase 3: MLP |
+| Gestos | Reglas vs. MLP | Reportar | Pendiente | El notebook `ml/train_mlp.ipynb` ya genera la comparación; falta grabar el dataset real |
 | Gestos | Falsos positivos en 60 s en reposo | ≤ 2 | Pendiente | Necesita cámara |
 | Latencia | Gesto → pantalla | < 100 ms | Pendiente | El panel de depuración (tecla D) muestra el tiempo de procesamiento por fotograma |
 | Latencia | Pedido → modelo (catálogo) | < 2 s | Pendiente de medición formal | Observado por debajo de 2 s con el backend precargado |

@@ -54,11 +54,16 @@ El recuadro de cámara (abajo a la derecha) muestra el esqueleto de cada mano y 
 
 Sin cámara se puede usar el teclado (flechas para rotar, `+` y `−` para escalar, `R` para reiniciar) o los botones de la pantalla. Con la tecla `D` se abre el panel de depuración, que muestra las métricas de la mano en vivo y sirve para calibrar los umbrales de `frontend/js/gestures.js`.
 
+## Dataset de gestos y MLP
+
+La página <http://localhost:5500/captura.html> sirve para grabar el dataset de gestos con la cámara. Los pasos para grabar y entrenar están en [ml/README.md](ml/README.md).
+
 ## Catálogo, pruebas y evaluación
 
 ```bash
 python scripts/generar_modelos_demo.py   # regenera frontend/models/*.glb y catalogo.json
 node frontend/tests/gestos.test.mjs      # pruebas de normalización, gestos y búsqueda local
+python -m pytest ml                      # la normalización de Python coincide con la del navegador (entorno de ml/)
 cd backend && python -m pytest tests     # pruebas del backend (con el entorno virtual activo)
 python eval/eval_intent.py               # aciertos de intención: reglas vs. LLM (desde la raíz)
 python eval/eval_busqueda.py             # búsqueda en el catálogo y calibración del umbral
