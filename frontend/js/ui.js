@@ -135,13 +135,19 @@ export function alternarDepuracion() {
   $('depuracion').hidden = !$('depuracion').hidden;
 }
 
-export function mostrarDepuracion(r, info) {
+let lineasGesto = [];
+
+// r e info son null cuando solo se actualizan las latencias (después de un pedido)
+export function mostrarDepuracion(r, info, latencias = []) {
+  if (r) {
+    lineasGesto = [`procesamiento: ${info.msProcesamiento.toFixed(1)} ms`, `crudo: ${r.crudo ?? '—'}`];
+    (r.metricas ?? []).forEach((m, i) => {
+      lineasGesto.push(`— mano ${i + 1}`);
+      for (const [k, v] of Object.entries(m)) lineasGesto.push(`${k}: ${v.toFixed(2)}`);
+    });
+  }
   const el = $('depuracion');
   if (el.hidden) return;
-  const lineas = [`procesamiento: ${info.msProcesamiento.toFixed(1)} ms`, `crudo: ${r.crudo ?? '—'}`];
-  (r.metricas ?? []).forEach((m, i) => {
-    lineas.push(`— mano ${i + 1}`);
-    for (const [k, v] of Object.entries(m)) lineas.push(`${k}: ${v.toFixed(2)}`);
-  });
-  el.textContent = lineas.join('\n');
+  const extra = latencias.length ? ['— latencias (mediana)', ...latencias] : [];
+  el.textContent = [...lineasGesto, ...extra].join('\n');
 }

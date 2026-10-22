@@ -1,0 +1,21 @@
+consulta,esperado
+válvula de bola,valvula_compuerta
+grifo industrial,valvula_compuerta
+llave de corte de gas,valvula_compuerta
+volante para abrir una cañería,valvula_compuerta
+engranaje helicoidal,engranaje_recto
+corona dentada de bicicleta,engranaje_recto
+pieza con dientes que transmite movimiento,engranaje_recto
+tornillo allen,tornillo_hexagonal
+bulones y tuercas,tornillo_hexagonal
+pieza roscada para unir dos chapas,tornillo_hexagonal
+rodamiento de rodillos,rodamiento_bolas
+rulemán de rueda de auto,rodamiento_bolas
+motor monofásico,motor_electrico
+silla,
+mesa,
+zapatilla,
+compresor de aire,
+taladro percutor,
+casco de seguridad,
+caja de cambios,

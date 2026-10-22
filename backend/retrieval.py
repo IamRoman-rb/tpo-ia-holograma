@@ -119,6 +119,12 @@ class Catalogo:
         if sim < UMBRAL_PALABRAS:
             if not self.modelo:
                 return None
+            # Una sola palabra sin coincidencia en el catálogo: los embeddings de palabras sueltas,
+            # sin contexto, no son confiables ("mesa" quedaba cerca de "rodamiento"). Las paráfrasis,
+            # que es lo que resuelven los embeddings, siempre tienen varias palabras. Se trata como
+            # un objeto que no está en el catálogo (ver docs/decisiones.md).
+            if len(_palabras(texto)) < 2:
+                return None
             item, sim = self.ranking_embeddings(texto)[0]
             metodo = "embeddings"
             if sim < umbral:
