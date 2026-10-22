@@ -5,11 +5,14 @@ catálogo (en ese caso el producto debería generarla). Compara la búsqueda por
 modelos de embeddings y el método híbrido que usa el producto, y barre el umbral de similitud
 para elegirlo con datos.
 
-Uso (desde la raíz):  python eval/eval_busqueda.py
+Uso (desde la raíz):
+    python eval/eval_busqueda.py                       # set de calibración (busqueda_prueba.csv)
+    python eval/eval_busqueda.py --set validacion      # set que no se usó para elegir el umbral
 La primera vez descarga los modelos de embeddings (cientos de MB).
 Ojo: el umbral se calibra sobre estas mismas 20 consultas. Para un número honesto, conviene
 medir el umbral elegido sobre un segundo set de consultas que no se haya usado para elegirlo.
 """
+import argparse
 import csv
 import sys
 from pathlib import Path
@@ -64,13 +67,28 @@ def evaluar(nombre, etiqueta, predecir, filas, umbral_actual):
         w.writerows(salida)
 
 
+SETS = {"calibracion": "busqueda_prueba.csv", "validacion": "busqueda_validacion.csv"}
+
+
 def main():
-    with open(Path(__file__).parent / "busqueda_prueba.csv", encoding="utf-8") as f:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--set", choices=list(SETS), default="calibracion")
+    ap.add_argument("--solo-producto", action="store_true", help="evalúa solo el método híbrido del producto")
+    args = ap.parse_args()
+    with open(Path(__file__).parent / SETS[args.set], encoding="utf-8") as f:
         filas = list(csv.DictReader(f))
+    print(f"Set: {args.set} ({len(filas)} consultas)")
+    sufijo = "" if args.set == "calibracion" else "_validacion"
     RESULTADOS.mkdir(exist_ok=True)
 
+    if args.solo_producto:
+        cat = Catalogo(ruta_indice=RESULTADOS / f"indice_{MODELO_EMBEDDINGS.split('/')[-1]}.json")
+        evaluar(f"Híbrido (palabras + {MODELO_EMBEDDINGS}) — el del producto", f"hibrido{sufijo}",
+                por_busqueda(cat), filas, UMBRAL)
+        return
+
     palabras = Catalogo(usar_embeddings=False)
-    evaluar("Palabras clave", "palabras", por_ranking(palabras.ranking_palabras), filas, UMBRAL_PALABRAS)
+    evaluar("Palabras clave", f"palabras{sufijo}", por_ranking(palabras.ranking_palabras), filas, UMBRAL_PALABRAS)
 
     for modelo in MODELOS:
         etiqueta = modelo.split("/")[-1]
@@ -78,9 +96,10 @@ def main():
         if not cat.modelo:
             print(f"\n(embeddings no disponibles con {modelo}: instalá sentence-transformers)")
             continue
-        evaluar(f"Embeddings · {modelo}", etiqueta, por_ranking(cat.ranking_embeddings), filas, UMBRAL)
+        evaluar(f"Embeddings · {modelo}", f"{etiqueta}{sufijo}", por_ranking(cat.ranking_embeddings), filas, UMBRAL)
         if modelo == MODELO_EMBEDDINGS:
-            evaluar(f"Híbrido (palabras + {modelo}) — el del producto", "hibrido", por_busqueda(cat), filas, UMBRAL)
+            evaluar(f"Híbrido (palabras + {modelo}) — el del producto", f"hibrido{sufijo}",
+                    por_busqueda(cat), filas, UMBRAL)
 
 
 if __name__ == "__main__":

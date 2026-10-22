@@ -31,4 +31,7 @@ def test_embeddings(tmp_path):
     r = cat.buscar("máquina que convierte electricidad en movimiento")
     assert r["id"] == "motor_electrico" and r["metodo"] == "embeddings"
     assert cat.buscar("zapatilla deportiva") is None
+    # palabras sueltas que no están en el catálogo: no se usan embeddings
+    assert cat.buscar("mesa") is None and cat.buscar("silla") is None
+    assert cat.buscar("balero")["id"] == "rodamiento_bolas"   # sinónimo: lo resuelven las palabras
     assert (tmp_path / "index.json").exists()

@@ -1,0 +1,21 @@
+consulta,esperado,obtenido,mejor_candidato,similitud
+válvula de bola,valvula_compuerta,valvula_compuerta,valvula_compuerta,1.0
+grifo industrial,valvula_compuerta,valvula_compuerta,valvula_compuerta,0.5
+llave de corte de gas,valvula_compuerta,valvula_compuerta,valvula_compuerta,0.5
+volante para abrir una cañería,valvula_compuerta,valvula_compuerta,valvula_compuerta,0.5
+engranaje helicoidal,engranaje_recto,engranaje_recto,engranaje_recto,1.0
+corona dentada de bicicleta,engranaje_recto,engranaje_recto,engranaje_recto,1.0
+pieza con dientes que transmite movimiento,engranaje_recto,engranaje_recto,engranaje_recto,0.78
+tornillo allen,tornillo_hexagonal,tornillo_hexagonal,tornillo_hexagonal,1.0
+bulones y tuercas,tornillo_hexagonal,tornillo_hexagonal,tornillo_hexagonal,1.0
+pieza roscada para unir dos chapas,tornillo_hexagonal,engranaje_recto,engranaje_recto,0.727
+rodamiento de rodillos,rodamiento_bolas,rodamiento_bolas,rodamiento_bolas,1.0
+rulemán de rueda de auto,rodamiento_bolas,rodamiento_bolas,rodamiento_bolas,1.0
+motor monofásico,motor_electrico,motor_electrico,motor_electrico,1.0
+silla,,,-,0.0
+mesa,,,-,0.0
+zapatilla,,,-,0.0
+compresor de aire,,,-,0.0
+taladro percutor,,engranaje_recto,engranaje_recto,0.798
+casco de seguridad,,,-,0.0
+caja de cambios,,,-,0.0
