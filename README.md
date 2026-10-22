@@ -62,6 +62,8 @@ La página <http://localhost:5500/captura.html> sirve para grabar el dataset de 
 
 La evaluación de TripoSR y Shap-E se corre en Google Colab, porque necesita GPU. Los pasos y la rúbrica de calidad están en [eval/generacion3d/README.md](eval/generacion3d/README.md).
 
+Para generar modelos desde el visor, se corre `backend/generador_colab/servidor_generacion.ipynb` en Colab y se copian a `.env` las tres líneas que imprime al final (`GEN3D_MODO`, `GEN3D_URL` y `GEN3D_TOKEN`). Con eso, un pedido que no está en el catálogo se genera, se guarda en `frontend/models/generados/` y queda en el catálogo para la próxima vez. Sin servidor, los pedidos se resuelven solo con el catálogo.
+
 ## Catálogo, pruebas y evaluación
 
 ```bash
