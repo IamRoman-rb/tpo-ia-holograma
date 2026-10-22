@@ -57,3 +57,38 @@ export function iniciarSimulacion(onResultados) {
   requestAnimationFrame(bucle);
   return () => { activo = false; };
 }
+
+/**
+ * Una mano con la pose pedida, moviéndose y variando distancia, ángulo y lado (para la
+ * herramienta de captura). Imita las variaciones que pide la sección 12.2.
+ */
+export function manoConVariaciones(pose, seg) {
+  const espejo = Math.floor(seg / 6) % 2 === 1; // alterna de mano cada 6 s
+  const x = 0.5 + 0.15 * Math.sin(seg * 0.9);
+  const y = 0.8 + 0.05 * Math.sin(seg * 1.3);
+  const tamano = 0.24 + 0.08 * Math.sin(seg * 0.5); // más cerca y más lejos de la cámara
+  const rot = 0.35 * Math.sin(seg * 0.7);
+  return {
+    manos: [aImagen(POSES[pose], tamano, x, y, { espejo, rot, ruido: RUIDO })],
+    lados: [espejo ? 'izquierda' : 'derecha'],
+  };
+}
+
+/** Simulación para la captura: la pose la decide `poseActual()` en cada cuadro. */
+export function iniciarSimulacionPose(poseActual, onResultados) {
+  let activo = true;
+  let ultimo = 0;
+  const inicio = performance.now();
+  const bucle = (ahora) => {
+    if (!activo) return;
+    if (ahora - ultimo >= 1000 / FPS) {
+      ultimo = ahora;
+      const { manos, lados } = manoConVariaciones(poseActual(), (ahora - inicio) / 1000);
+      onResultados(manos, { aspecto: 640 / 480, lados, msProcesamiento: 0, simulacion: true });
+    }
+    requestAnimationFrame(bucle);
+  };
+  requestAnimationFrame(bucle);
+  return () => { activo = false; };
+}
+

@@ -36,6 +36,8 @@ export const POSES = {
   'puño': mano(['dob', 'dob', 'dob', 'dob'], [-0.2, 0.7, -0.35]),
   pellizco: mano(['semi', 'ext', 'ext', 'ext'], sumar(puntaIndiceSemi, [0.03, 0, 0])),
   'señalar': mano(['ext', 'dob', 'dob', 'dob'], [-0.1, 0.6, -0.3]),
+  // mano relajada, dedos a medio doblar: la clase "ninguno"
+  ninguno: mano(['semi', 'semi', 'semi', 'semi']),
 };
 
 /**
@@ -43,11 +45,12 @@ export const POSES = {
  * s: tamaño de la mano en fracción del alto del cuadro · (ox, oy): posición de la muñeca.
  * espejo: invierte la mano (para simular la otra mano) · ruido: temblor aleatorio.
  */
-export function aImagen(pts, s, ox, oy, { aspecto = ASPECTO, espejo = false, ruido = 0 } = {}) {
+export function aImagen(pts, s, ox, oy, { aspecto = ASPECTO, espejo = false, ruido = 0, rot = 0 } = {}) {
   const r = () => (Math.random() - 0.5) * 2 * ruido;
-  return pts.map(([x, y, z]) => ({
-    x: ox + (s * (espejo ? -x : x)) / aspecto + r(),
-    y: oy - s * y + r(),
-    z: (s * z) / aspecto,
-  }));
+  const [c, sn] = [Math.cos(rot), Math.sin(rot)]; // giro de la mano en el plano, alrededor de la muñeca
+  return pts.map(([x0, y0, z]) => {
+    const x = (espejo ? -x0 : x0) * c - y0 * sn;
+    const y = (espejo ? -x0 : x0) * sn + y0 * c;
+    return { x: ox + (s * x) / aspecto + r(), y: oy - s * y + r(), z: (s * z) / aspecto };
+  });
 }

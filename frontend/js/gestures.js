@@ -46,6 +46,12 @@ function clasificarMano(m, pellizcaba) {
   return 'ninguno';
 }
 
+// Clasificación de un solo fotograma de una mano, sin histéresis ni ventana temporal.
+// Es la que se compara contra el MLP fotograma a fotograma (ml/evaluar_reglas.mjs).
+export function clasificarFotograma(puntos, aspecto) {
+  return clasificarMano(medir(normalizar(puntos, aspecto)), false);
+}
+
 export function crearClasificador() {
   let historial = [];
   let pellizcaban = [false, false];

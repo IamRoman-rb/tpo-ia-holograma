@@ -1,0 +1,104 @@
+/* Herramienta de captura del dataset. Reutiliza los colores y el recuadro de cámara de style.css. */
+
+body.captura {
+  height: auto;
+  min-height: 100vh;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.captura-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  max-width: 1200px;
+  margin: 0 auto 16px;
+}
+.captura-cabecera h1 { font-size: 20px; }
+.captura-cabecera p { margin: 4px 0 0; color: var(--tenue); }
+.captura-cabecera a { color: var(--acento); text-decoration: none; white-space: nowrap; }
+
+.tarjeta {
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 16px 18px;
+}
+.tarjeta h2 { margin: 16px 0 8px; }
+.tarjeta h2:first-child { margin-top: 0; }
+
+#paso-consentimiento { max-width: 640px; margin: 0 auto; }
+.lista-info { margin: 0 0 16px; padding-left: 18px; line-height: 1.6; }
+#form-consentimiento { display: grid; gap: 12px; }
+#form-consentimiento label { display: grid; gap: 4px; color: var(--tenue); }
+#form-consentimiento label.check { display: flex; gap: 8px; align-items: center; color: var(--texto); }
+#form-consentimiento input:not([type="checkbox"]) {
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  max-width: 220px;
+}
+
+button.primario { background: var(--acento); color: #00151f; border-color: var(--acento); font-weight: 600; }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+code { color: var(--acento); }
+
+#paso-captura {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr);
+  gap: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+#paso-captura[hidden] { display: none; }
+
+/* El recuadro de cámara deja de ser flotante en esta página */
+#camara.captura-camara { position: static; width: auto; align-self: start; }
+
+#cuenta {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 96px;
+  font-weight: 700;
+  color: var(--acento);
+  background: rgba(0, 0, 0, 0.35);
+}
+#cuenta[hidden] { display: none; }
+
+.aviso-mano { margin: 0; padding: 6px 12px; color: var(--alerta); font-size: 13px; }
+
+.fila-persona { display: flex; justify-content: space-between; color: var(--tenue); margin-bottom: 4px; }
+.fila-persona strong { color: var(--texto); }
+
+#clases { display: grid; gap: 6px; }
+.clase {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 8px;
+  text-align: left;
+  padding: 8px 10px;
+}
+.clase[aria-checked="true"] { border-color: var(--acento); }
+.clase .nombre { font-weight: 600; }
+.clase .cuenta { color: var(--tenue); font-variant-numeric: tabular-nums; }
+.clase .progreso { grid-column: 1 / -1; height: 4px; background: rgba(255, 255, 255, 0.08); border-radius: 2px; overflow: hidden; }
+.clase .progreso div { height: 100%; background: var(--acento); }
+.clase.completa .cuenta { color: #3ddc84; }
+
+.descripcion { color: var(--tenue); margin: 8px 0 0; font-size: 13px; }
+.fila-botones { display: flex; gap: 8px; flex-wrap: wrap; }
+.estado-grabacion { margin: 8px 0 0; min-height: 1.4em; }
+.estado-grabacion.grabando { color: var(--error); font-weight: 600; }
+
+.consejos { margin-top: 12px; color: var(--tenue); font-size: 13px; }
+.consejos summary { cursor: pointer; color: var(--texto); }
+.consejos ul { margin: 8px 0 0; padding-left: 18px; line-height: 1.6; }
+
+@media (max-width: 860px) {
+  #paso-captura { grid-template-columns: 1fr; }
+  .captura-cabecera { flex-direction: column; }
+}

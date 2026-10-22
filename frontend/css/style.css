@@ -256,3 +256,4 @@ body:has(#camara.grande) #catalogo { max-height: calc(100vh - min(560px, 46vw) *
   #lista-catalogo button { white-space: nowrap; }
   #controles { bottom: 8px; left: 8px; width: calc(100vw - 16px); }
 }
+#ayuda a { color: var(--acento); }

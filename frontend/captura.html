@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Captura de gestos</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/captura.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "@mediapipe/tasks-vision": "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs"
+      }
+    }
+  </script>
+</head>
+<body class="captura">
+  <header class="captura-cabecera">
+    <div>
+      <h1>Captura del dataset de gestos</h1>
+      <p>Protocolo de la sección 12: solo se guardan los 21 puntos de la mano, nunca imágenes.</p>
+    </div>
+    <a href="index.html">← Volver al visor</a>
+  </header>
+
+  <!-- Paso 1: consentimiento -->
+  <section id="paso-consentimiento" class="tarjeta">
+    <h2>Antes de empezar</h2>
+    <ul class="lista-info">
+      <li>La cámara se procesa en este navegador. <strong>No se guardan imágenes ni video.</strong></li>
+      <li>Por cada fotograma se guardan las coordenadas de los 21 puntos de la mano, el gesto, qué mano es y tu identificador.</li>
+      <li>Usá un identificador anónimo (por ejemplo <code>p03</code>), no tu nombre.</li>
+      <li>Los datos se usan solo para entrenar y evaluar el clasificador de gestos del TPO. Podés pedir que se borren en cualquier momento.</li>
+    </ul>
+    <form id="form-consentimiento">
+      <label>Identificador anónimo
+        <input id="persona" required pattern="[a-zA-Z0-9_-]{1,20}" placeholder="p01" autocomplete="off">
+      </label>
+      <label>Muestras por gesto
+        <input id="meta" type="number" min="20" max="1000" step="10" value="100">
+      </label>
+      <label class="check">
+        <input id="acepto" type="checkbox" required>
+        Entiendo qué datos se guardan y acepto participar
+      </label>
+      <button type="submit" class="primario">Empezar</button>
+    </form>
+  </section>
+
+  <!-- Paso 2: captura -->
+  <main id="paso-captura" hidden>
+    <section id="camara" class="captura-camara" aria-label="Cámara" data-estado="iniciando">
+      <header class="camara-cabecera">
+        <span class="camara-punto" aria-hidden="true"></span>
+        <strong id="camara-titulo">Cámara</strong>
+        <span id="camara-fps"></span>
+        <button type="button" id="camara-detener" hidden>Detener</button>
+      </header>
+      <div class="camara-vista">
+        <video id="webcam" autoplay playsinline muted></video>
+        <canvas id="landmarks" width="640" height="480"></canvas>
+        <div id="cuenta" hidden></div>
+        <div id="camara-vacia" hidden>
+          <p id="camara-mensaje">Cámara no disponible</p>
+          <div class="camara-acciones">
+            <button type="button" id="camara-reintentar">Reintentar</button>
+            <button type="button" id="camara-simular">Simular manos</button>
+          </div>
+        </div>
+      </div>
+      <p id="aviso-mano" class="aviso-mano" hidden></p>
+    </section>
+
+    <section class="tarjeta panel-captura">
+      <div class="fila-persona">
+        <span>Persona: <strong id="persona-actual"></strong></span>
+        <span id="total-muestras"></span>
+      </div>
+
+      <h2>1. Elegí el gesto</h2>
+      <div id="clases" role="radiogroup" aria-label="Gesto a grabar"></div>
+      <p id="descripcion-clase" class="descripcion"></p>
+
+      <h2>2. Grabá</h2>
+      <div class="fila-botones">
+        <button type="button" id="grabar" class="primario">Grabar (espacio)</button>
+        <button type="button" id="deshacer">Deshacer última toma</button>
+      </div>
+      <p id="estado-grabacion" class="estado-grabacion" aria-live="polite">Listo para grabar.</p>
+
+      <details class="consejos" open>
+        <summary>Variaciones para que el modelo generalice (sección 12.2)</summary>
+        <ul>
+          <li>Acercá y alejá la mano de la cámara (30 a 80 cm).</li>
+          <li>Girá un poco la mano y cambiá el ángulo.</li>
+          <li>Grabá la mitad con la mano derecha y la mitad con la izquierda.</li>
+          <li>Si podés, repetí con otra luz o con otro fondo.</li>
+          <li>Para <em>ninguno</em>: mano relajada, a medio cerrar, o movimientos al azar.</li>
+        </ul>
+      </details>
+
+      <h2>3. Descargá</h2>
+      <div class="fila-botones">
+        <button type="button" id="descargar" class="primario" disabled>Descargar CSV</button>
+      </div>
+      <p class="descripcion">Guardá el archivo en <code>ml/data/</code> del repositorio. Cada persona descarga su propio archivo.</p>
+    </section>
+  </main>
+
+  <script type="module" src="js/captura.js"></script>
+</body>
+</html>

@@ -95,7 +95,7 @@ export function crearOverlay(lienzo) {
      * manos: landmarks de MediaPipe · lados: 'derecha' | 'izquierda' por mano
      * r: resultado del clasificador · aplicado: gesto que se está aplicando al objeto
      */
-    dibujar(manos, lados, r, aplicado, { simulacion = false } = {}) {
+    dibujar(manos, lados, r, aplicado, { simulacion = false, etiquetas = null, color = null } = {}) {
       ctx.clearRect(0, 0, lienzo.width, lienzo.height);
       k = lienzo.width / (lienzo.clientWidth || lienzo.width);
       if (simulacion) {
@@ -108,11 +108,12 @@ export function crearOverlay(lienzo) {
       const centros = [];
       manos.slice(0, 2).forEach((mano, i) => {
         const gestoMano = dosManos ? 'pellizco' : (r.porMano?.[i] ?? 'ninguno');
-        const color = aplicado !== 'ninguno' && (dosManos || i === 0) ? COLORES.aplicado
-          : gestoMano !== 'ninguno' ? COLORES.detectado : COLORES.inactivo;
+        const colorMano = color ?? (aplicado !== 'ninguno' && (dosManos || i === 0) ? COLORES.aplicado
+          : gestoMano !== 'ninguno' ? COLORES.detectado : COLORES.inactivo);
         const lado = lados[i] ? `${lados[i][0].toUpperCase()}${lados[i].slice(1)} · ` : '';
-        const pts = dibujarMano(mano, color, `${lado}${NOMBRES[gestoMano] ?? gestoMano}`);
-        if (gestoMano === 'pellizco') lineaPellizco(pts, color);
+        const texto = etiquetas?.[i] ?? `${lado}${NOMBRES[gestoMano] ?? gestoMano}`;
+        const pts = dibujarMano(mano, colorMano, texto);
+        if (gestoMano === 'pellizco') lineaPellizco(pts, colorMano);
         centros.push([(pts[4][0] + pts[8][0]) / 2, (pts[4][1] + pts[8][1]) / 2]);
       });
 
