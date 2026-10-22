@@ -6,3 +6,6 @@
 *.wasm binary
 *.task binary
 *.onnx binary
+
+# Librerías de terceros: se guardan tal cual (sus hashes están en frontend/vendor/VERSIONES.md)
+frontend/vendor/** -text
