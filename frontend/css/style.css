@@ -257,3 +257,11 @@ body:has(#camara.grande) #catalogo { max-height: calc(100vh - min(560px, 46vw) *
   #controles { bottom: 8px; left: 8px; width: calc(100vw - 16px); }
 }
 #ayuda a { color: var(--acento); }
+.marca-ia {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  color: #1a1000;
+  background: var(--alerta);
+}

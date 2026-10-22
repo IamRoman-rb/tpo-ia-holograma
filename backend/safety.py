@@ -26,6 +26,10 @@ def _desconocido(motivo: str) -> dict:
             "confianza": 0.0, "motivo": motivo}
 
 
+def fuera_de_dominio(texto: str) -> bool:
+    return bool(set(normalizar(texto).split()) & TERMINOS_BLOQUEADOS)
+
+
 def validar_intencion(d: dict) -> dict:
     motor = d.get("motor")
     d = {k: v for k, v in d.items() if k != "motor"}
@@ -41,7 +45,7 @@ def validar_intencion(d: dict) -> dict:
     r = intencion.model_dump()
 
     # 2. Dominio: objetos que el producto no muestra
-    if r["objeto"] and set(normalizar(r["objeto"]).split()) & TERMINOS_BLOQUEADOS:
+    if r["objeto"] and fuera_de_dominio(r["objeto"]):
         return {**_desconocido("objeto fuera del dominio del producto"), "motor": motor}
 
     # 3. Límites
