@@ -375,8 +375,14 @@ def main():
         indice.append({"id": id_, "nombre": nombre, "sinonimos": sinonimos, "descripcion": descripcion,
                        "url": f"models/{id_}.glb", "origen": "catalogo"})
         print(f"{ruta.name:28s} {ruta.stat().st_size / 1024:7.1f} KB")
-    with open(SALIDA / "catalogo.json", "w", encoding="utf-8") as f:
+    # Conservar los modelos generados por IA que ya estaban en el catálogo
+    ruta_indice = SALIDA / "catalogo.json"
+    if ruta_indice.exists():
+        anteriores = json.loads(ruta_indice.read_text(encoding="utf-8"))
+        indice += [it for it in anteriores if it.get("origen") == "generado"]
+    with open(ruta_indice, "w", encoding="utf-8") as f:
         json.dump(indice, f, ensure_ascii=False, indent=2)
+        f.write("\n")
     print(f"catalogo.json con {len(indice)} modelos")
 
 

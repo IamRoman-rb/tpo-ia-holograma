@@ -103,6 +103,13 @@ export function mostrarCatalogo(items, alElegir) {
     const b = document.createElement('button');
     b.type = 'button';
     b.textContent = item.nombre;
+    if (item.origen === 'generado') {
+      const marca = document.createElement('span');
+      marca.className = 'marca-ia';
+      marca.textContent = 'IA';
+      marca.title = 'Generado por IA';
+      b.append(' ', marca);
+    }
     b.title = item.descripcion;
     b.dataset.id = item.id;
     b.setAttribute('aria-pressed', 'false');

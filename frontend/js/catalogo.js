@@ -12,7 +12,7 @@ export const UMBRAL_LOCAL = 0.5;
 function palabras(texto) {
   return texto
     .toLowerCase()
-    .normalize('NFD').replace(/[̀-ͯ]/g, '')   // sin tildes
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')   // sin tildes
     .replace(/[^a-z0-9ñ\s]/g, ' ')
     .split(/\s+/)
     .filter((w) => w && !RELLENO.has(w))
@@ -20,7 +20,7 @@ function palabras(texto) {
 }
 
 export async function cargarCatalogo() {
-  const r = await fetch('models/catalogo.json');
+  const r = await fetch('models/catalogo.json', { cache: 'no-store' }); // puede cambiar al generar modelos
   if (!r.ok) throw new Error(`catalogo.json respondió ${r.status}`);
   return r.json();
 }

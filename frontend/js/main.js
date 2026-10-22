@@ -32,7 +32,7 @@ async function atenderSinBackend(frase) {
   const encontrado = buscarLocal(frase, catalogo);
   if (encontrado) {
     const { item } = encontrado;
-    await mostrarModelo(item.url, item.nombre, 'catalogo', item.id);
+    await mostrarModelo(item.url, item.nombre, item.origen ?? 'catalogo', item.id);
   } else {
     ui.mostrarEstado('No encontré ese objeto en el catálogo. Probá con otro nombre.', 'error');
   }
@@ -44,8 +44,16 @@ async function ejecutar({ accion, objeto, parametros }, id) {
     case 'mostrar':
       try {
         ui.mostrarEstado('buscando la pieza…');
-        const r = await pedirObjeto(objeto);
+        // Si tarda, es que no estaba en el catálogo y se está generando (sección 15: indicador de carga)
+        const inicio = performance.now();
+        const reloj = setInterval(() => {
+          const s = Math.round((performance.now() - inicio) / 1000);
+          if (s >= 2 && id === pedidoActual) ui.mostrarEstado(`generando con IA… ${s} s`);
+        }, 1000);
+        const r = await pedirObjeto(objeto).finally(() => clearInterval(reloj));
         if (id !== pedidoActual) return;
+        // Un modelo recién generado se suma a la lista del catálogo
+        if (r.origen === 'generado') await refrescarCatalogo().catch(console.error);
         await mostrarModelo(r.modelo_url, r.nombre, r.origen, r.id);
       } catch (err) {
         if (id !== pedidoActual) return;
@@ -113,12 +121,15 @@ document.getElementById('pedido').addEventListener('submit', (e) => {
   campo.select();
 });
 
-cargarCatalogo()
-  .then((items) => {
-    catalogo = items;
-    ui.mostrarCatalogo(items, (item) => mostrarModelo(item.url, item.nombre, 'catalogo', item.id));
-    if (items.length) return mostrarModelo(items[0].url, items[0].nombre, 'catalogo', items[0].id);
-  })
+const elegirDelCatalogo = (item) => mostrarModelo(item.url, item.nombre, item.origen ?? 'catalogo', item.id);
+
+async function refrescarCatalogo() {
+  catalogo = await cargarCatalogo();
+  ui.mostrarCatalogo(catalogo, elegirDelCatalogo);
+}
+
+refrescarCatalogo()
+  .then(() => catalogo.length && elegirDelCatalogo(catalogo[0]))
   .catch((err) => {
     console.error(err);
     ui.mostrarEstado('No pude cargar el catálogo', 'error');
