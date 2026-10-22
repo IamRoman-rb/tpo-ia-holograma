@@ -58,6 +58,10 @@ Sin cámara se puede usar el teclado (flechas para rotar, `+` y `−` para escal
 
 La página <http://localhost:5500/captura.html> sirve para grabar el dataset de gestos con la cámara. Los pasos para grabar y entrenar están en [ml/README.md](ml/README.md).
 
+## Generación 3D
+
+La evaluación de TripoSR y Shap-E se corre en Google Colab, porque necesita GPU. Los pasos y la rúbrica de calidad están en [eval/generacion3d/README.md](eval/generacion3d/README.md).
+
 ## Catálogo, pruebas y evaluación
 
 ```bash
