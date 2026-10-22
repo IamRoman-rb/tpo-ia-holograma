@@ -41,6 +41,14 @@ python -m http.server 5500
 
 Abrir <http://localhost:5500> y permitir el acceso a la cámara. El frontend funciona aunque el backend no esté levantado: los pedidos se buscan en el catálogo local.
 
+## Antes de la defensa
+
+```bash
+bash scripts/check_all.sh --tests
+```
+
+El script revisa los servicios, el plan B sin internet, el catálogo, la configuración y las pruebas. Las librerías del frontend están en `frontend/vendor/`, así que el visor funciona sin internet. Ver [scripts/demo_offline.md](scripts/demo_offline.md).
+
 ## Uso
 
 | Gesto | Acción |
