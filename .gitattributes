@@ -1,0 +1,11 @@
+# Los scripts de shell necesitan finales de línea LF para correr en bash (también en Windows)
+*.sh text eol=lf
+
+# Binarios: sin conversión de finales de línea
+*.glb binary
+*.wasm binary
+*.task binary
+*.onnx binary
+
+# Librerías de terceros: se guardan tal cual (sus hashes están en frontend/vendor/VERSIONES.md)
+frontend/vendor/** -text

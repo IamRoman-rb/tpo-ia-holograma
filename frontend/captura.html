@@ -9,7 +9,7 @@
   <script type="importmap">
     {
       "imports": {
-        "@mediapipe/tasks-vision": "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs"
+        "@mediapipe/tasks-vision": "./vendor/mediapipe/vision_bundle.mjs"
       }
     }
   </script>
@@ -34,7 +34,7 @@
     </ul>
     <form id="form-consentimiento">
       <label>Identificador anónimo
-        <input id="persona" required pattern="[a-zA-Z0-9_-]{1,20}" placeholder="p01" autocomplete="off">
+        <input id="persona" required pattern="[a-zA-Z0-9_\-]{1,20}" placeholder="p01" autocomplete="off">
       </label>
       <label>Muestras por gesto
         <input id="meta" type="number" min="20" max="1000" step="10" value="100">
