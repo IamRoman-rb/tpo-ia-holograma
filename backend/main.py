@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -37,7 +38,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-limite = LimiteFrecuencia(maximo=30, ventana_s=60)
+# Configurable para mediciones (eval/medir_latencias.py); en uso normal, 30 por minuto
+limite = LimiteFrecuencia(maximo=int(os.getenv("LIMITE_PEDIDOS_MINUTO") or 30), ventana_s=60)
 # Generar usa GPU (y puede tener costo): límite mucho más bajo (sección 16.5)
 limite_generacion = LimiteFrecuencia(maximo=5, ventana_s=600)
 

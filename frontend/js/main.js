@@ -8,6 +8,7 @@ import { crearVisor } from './viewer.js';
 import { cargarCatalogo, buscarLocal } from './catalogo.js';
 import { interpretarPedido, pedirObjeto } from './api.js';
 import * as ui from './ui.js';
+import * as metricas from './metricas.js';
 
 const UMBRAL_CONFIANZA = 0.8;      // sección 7.3, flujo 1
 const PASO_ROTACION = Math.PI / 12;
@@ -19,9 +20,12 @@ const clasificar = crearClasificador();
 let catalogo = [];
 let pedidoActual = 0; // las respuestas de pedidos anteriores se descartan
 
+let ultimoModelo = { origen: null, t: 0 }; // para medir la latencia del pedido
+
 async function mostrarModelo(url, nombre, origen, id) {
   ui.mostrarEstado('cargando modelo…');
   await visor.cargarModelo(url);
+  ultimoModelo = { origen, t: performance.now() };
   ui.mostrarOrigen(nombre, origen);
   ui.marcarSeleccionado(id);
   ui.mostrarEstado('listo');
@@ -118,7 +122,14 @@ document.getElementById('pedido').addEventListener('submit', (e) => {
   const campo = document.getElementById('frase');
   const frase = campo.value.trim();
   if (!frase) return;
-  atenderPedido(frase).catch((err) => {
+  const t0 = performance.now();
+  atenderPedido(frase).then(async () => {
+    // Latencia de punta a punta: solo cuenta si este pedido terminó mostrando un modelo
+    if (ultimoModelo.t < t0) return;
+    await metricas.proximoCuadro();
+    metricas.registrar(ultimoModelo.origen === 'generado' ? 'pedido_generado' : 'pedido_catalogo', performance.now() - t0);
+    ui.mostrarDepuracion(null, null, metricas.lineasResumen());
+  }).catch((err) => {
     console.error(err);
     ui.mostrarEstado(err.estado ? err.message : 'No pude cargar el modelo, ¿probás de nuevo?', 'error');
   });
@@ -191,13 +202,17 @@ let ultimoCuadro = 0;
 let fps = 0;
 
 function alDetectar(manos, info) {
+  const t0 = performance.now();
   const r = clasificar(manos, info.aspecto);
   // Por debajo del umbral el gesto se muestra pero no se aplica
   const aplicado = r.confianza >= UMBRAL_CONFIANZA ? r.gesto : 'ninguno';
   overlay.dibujar(manos, info.lados ?? [], r, aplicado, { simulacion: info.simulacion });
   ui.mostrarGesto(r.gesto, r.confianza, UMBRAL_CONFIANZA);
-  ui.mostrarDepuracion(r, info);
   controles(aplicado, manos);
+  // Procesamiento del fotograma: detección de MediaPipe + clasificación + dibujo + controles
+  metricas.registrar(info.simulacion ? 'fotograma_simulado' : 'fotograma',
+    performance.now() - t0 + (info.msProcesamiento ?? 0));
+  ui.mostrarDepuracion(r, info, metricas.lineasResumen());
 
   const ahora = performance.now();
   if (ultimoCuadro) fps = 0.9 * fps + 0.1 * (1000 / (ahora - ultimoCuadro));
