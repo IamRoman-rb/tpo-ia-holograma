@@ -1,0 +1,11 @@
+numpy
+pandas
+scikit-learn
+matplotlib
+skl2onnx
+onnx
+onnxruntime
+# ejecutar el notebook y las pruebas
+ipykernel
+nbconvert
+pytest
