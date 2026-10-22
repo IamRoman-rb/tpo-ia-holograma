@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { crearHistorial } from './historial.js';
 
 export const ESCALA_MIN = 0.2;   // mismos límites que backend/safety.py
 export const ESCALA_MAX = 5;
@@ -39,6 +40,11 @@ export function crearVisor(contenedor) {
 
   // Estado objetivo: los gestos lo modifican y el pivote lo sigue con suavizado.
   const objetivo = { pos: new THREE.Vector3(), rotX: 0, rotY: 0, escala: 1 };
+  const historial = crearHistorial();
+  const estadoActual = () => ({
+    pos: objetivo.pos.toArray().map((v) => +v.toFixed(4)),
+    rotX: +objetivo.rotX.toFixed(4), rotY: +objetivo.rotY.toFixed(4), escala: +objetivo.escala.toFixed(4),
+  });
   const loader = new GLTFLoader();
   const reloj = new THREE.Clock();
 
@@ -77,7 +83,22 @@ export function crearVisor(contenedor) {
       contenedorModelo.scale.setScalar(2.6 / tam);
       pivote.clear();
       pivote.add(contenedorModelo);
+      historial.limpiar(); // deshacer no cruza de un modelo a otro
       this.reiniciar();
+    },
+
+    // Guarda el estado actual para poder volver con deshacer(). Se llama antes de cada cambio.
+    guardarEstado() {
+      historial.guardar(estadoActual());
+    },
+
+    // Vuelve al estado anterior. Devuelve false si no había nada para deshacer.
+    deshacer() {
+      const anterior = historial.deshacer(estadoActual());
+      if (!anterior) return false;
+      objetivo.pos.fromArray(anterior.pos);
+      ({ rotX: objetivo.rotX, rotY: objetivo.rotY, escala: objetivo.escala } = anterior);
+      return true;
     },
 
     // dx, dy en fracción de pantalla (positivo = derecha / arriba)

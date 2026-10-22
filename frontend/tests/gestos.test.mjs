@@ -6,6 +6,8 @@ import { crearClasificador } from '../js/gestures.js';
 import { buscarLocal } from '../js/catalogo.js';
 import { ASPECTO, POSES, aImagen } from '../js/manos_sinteticas.js';
 import { manosEn } from '../js/simulador.js';
+import { crearHistorial } from '../js/historial.js';
+import { crearControles } from '../js/controles.js';
 
 let fallas = 0;
 const ok = (cond, msg) => { console.log(`${cond ? 'OK   ' : 'FALLA'} ${msg}`); if (!cond) fallas++; };
@@ -54,6 +56,37 @@ for (const [seg, esperado] of [[0.75, 'ninguno'], [3.5, 'palma_abierta'], [7.25,
   const c = crearClasificador(); let r;
   for (let f = 0; f < 6; f++) r = c(manosEn(seg + f / 30).manos, ASPECTO);
   ok(r.gesto === esperado, `simulación en ${seg} s -> ${r.gesto}`);
+}
+
+// 7. Historial para "Deshacer"
+{
+  const h = crearHistorial(3);
+  const e = (x) => ({ pos: [x, 0, 0], rotX: 0, rotY: 0, escala: 1 });
+  h.guardar(e(0)); h.guardar(e(0)); h.guardar(e(1));
+  ok(h.cantidad === 2, `no guarda dos veces el mismo estado (${h.cantidad})`);
+  ok(h.deshacer(e(2)).pos[0] === 1 && h.deshacer(e(1)).pos[0] === 0, 'deshace en orden inverso');
+  ok(h.deshacer(e(0)) === null, 'sin estados: nada para deshacer');
+  h.guardar(e(5));
+  ok(h.deshacer(e(5)) === null, 'un estado igual al actual no cuenta como cambio');
+  for (let i = 0; i < 10; i++) h.guardar(e(i));
+  ok(h.cantidad === 3, `respeta el máximo (${h.cantidad})`);
+}
+
+// 8. Los controles guardan el estado una sola vez al empezar cada gesto
+{
+  const llamadas = [];
+  const visor = {
+    guardarEstado: () => llamadas.push('guardar'), reiniciar: () => llamadas.push('reiniciar'),
+    desplazar: () => {}, rotar: () => {}, escala: () => 1, escalarA: () => {},
+  };
+  const controles = crearControles(visor);
+  const mano = aImagen(POSES.pellizco, 0.2, 0.5, 0.8);
+  for (let f = 0; f < 5; f++) controles('pellizco', [mano]);
+  controles('ninguno', []);
+  controles('puño', [mano]);
+  controles('puño', [mano]);
+  ok(JSON.stringify(llamadas) === JSON.stringify(['guardar', 'guardar', 'reiniciar']),
+    `guarda al empezar el pellizco y antes del reinicio por puño (${llamadas.join(', ')})`);
 }
 
 console.log(fallas ? `\n${fallas} fallas` : '\nTodo OK');
