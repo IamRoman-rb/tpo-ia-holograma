@@ -124,10 +124,19 @@ class Catalogo:
             if sim < umbral:
                 return None
         return {"id": item["id"], "nombre": item["nombre"], "modelo_url": item["url"],
-                "similitud": round(sim, 3), "metodo": metodo}
+                "similitud": round(sim, 3), "metodo": metodo,
+                # un modelo generado antes y reutilizado sigue mostrándose como generado por IA
+                "origen": item.get("origen", "catalogo")}
+
+    def recargar(self):
+        """Vuelve a leer el catálogo reutilizando el modelo ya cargado (solo recalcula los embeddings)."""
+        self.items = json.loads(self.ruta_catalogo.read_text(encoding="utf-8"))
+        if self.modelo:
+            self.vectores = self._indice()
 
     def listar(self):
-        return [{k: it[k] for k in ("id", "nombre", "sinonimos", "descripcion", "url")} for it in self.items]
+        return [{**{k: it[k] for k in ("id", "nombre", "sinonimos", "descripcion", "url")},
+                 "origen": it.get("origen", "catalogo")} for it in self.items]
 
 
 _catalogo = None
@@ -138,6 +147,11 @@ def catalogo() -> Catalogo:
     if _catalogo is None:
         _catalogo = Catalogo()
     return _catalogo
+
+
+def recargar():
+    """Vuelve a leer el catálogo (por ejemplo, después de agregar un modelo generado)."""
+    catalogo().recargar()
 
 
 def buscar_similar(texto, umbral=None):
