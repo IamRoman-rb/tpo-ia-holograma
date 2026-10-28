@@ -39,3 +39,32 @@ El notebook:
 - exporta `ml/gesture_model.onnx`.
 
 Las filas grabadas en modo simulación (persona `simulacion`) se descartan automáticamente.
+
+## Entrenar con HaGRID (datos de internet)
+
+El MLP del visor se entrenó con **HaGRID** (Kapitanov, Makhlyarchuk y Kvanchiani, <https://github.com/hukenovs/hagrid>), licencia CC BY-SA 4.0 (variante de HaGRID). Se usa la muestra pública de 31.833 fotos a 384p: <https://huggingface.co/datasets/cj-mills/hagrid-sample-30k-384p> (1,0 GB).
+
+1. Descargar y descomprimir el zip **fuera del repositorio** (las fotos no se suben).
+2. Crear el entorno con Python 3.12, porque MediaPipe no tiene paquetes para 3.13:
+   ```bash
+   py -3.12 -m venv ml/.venv-mediapipe
+   ml/.venv-mediapipe/Scripts/python.exe -m pip install mediapipe pandas scikit-learn
+   ```
+3. Extraer los landmarks (unos 15 minutos con 6 procesos). Usa el mismo modelo de MediaPipe que el visor y guarda solo coordenadas en `ml/data/externo/hagrid.csv`:
+   ```bash
+   ml/.venv-mediapipe/Scripts/python.exe ml/extraer_hagrid.py <carpeta>/hagrid-sample-30k-384p --procesos 6
+   ```
+4. Separar por persona y evaluar las reglas sobre la prueba (la partición sale de `preparar.particion`):
+   ```bash
+   ml/.venv-mediapipe/Scripts/python.exe -I -c "import sys; sys.path.insert(0,'ml'); import preparar as p; d=p.cargar('ml/data/externo'); d['part']=d.persona.map(p.particion); c=[x for x in d.columns if x not in ('archivo','fila','part')]; import os; os.makedirs('ml/data/externo/prueba',exist_ok=True); d[d.part=='prueba'][c].to_csv('ml/data/externo/prueba/hagrid_prueba.csv',index=False)"
+   node ml/evaluar_reglas.mjs ml/data/externo/prueba ml/resultados/hagrid_reglas_prueba.csv
+   ```
+5. Entrenar, comparar y exportar el modelo para el navegador:
+   ```bash
+   ml/.venv-mediapipe/Scripts/python.exe ml/entrenar_mlp.py
+   ```
+   Elige la arquitectura y el umbral con validación, informa la prueba (reglas vs. MLP) y escribe `frontend/ml/mlp_gestos.json`, `ml/resultados/hagrid_mlp_reporte.json` y los casos de `frontend/tests/datos/mlp_casos.json`.
+
+Para calibrar umbrales de las reglas con datos (solo con la partición de entrenamiento): `node ml/explorar_metricas.mjs <csv>`.
+
+Correspondencia de clases: palm/stop → palma abierta · fist → puño · one → señalar · ok → pellizco (el más parecido que tiene HaGRID) · like → pulgar arriba · dislike → pulgar abajo · peace → victoria · el resto → ninguno.

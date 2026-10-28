@@ -1,0 +1,164 @@
+{
+  "fecha": "2026-10-28",
+  "dataset": "HaGRID sample 30k 384p (Hugging Face cj-mills/hagrid-sample-30k-384p), CC BY-SA 4.0",
+  "filas": {
+    "entrenamiento": 24328,
+    "validacion": 4759,
+    "prueba": 5416
+  },
+  "personas": {
+    "entrenamiento": 5475,
+    "validacion": 1188,
+    "prueba": 1134
+  },
+  "arquitectura": {
+    "capas_ocultas": [
+      128,
+      64
+    ],
+    "alpha": 0.001
+  },
+  "umbral_confianza": 0.9,
+  "comparacion_prueba": [
+    {
+      "metodo": "reglas",
+      "exactitud": 0.632,
+      "f1_macro": 0.6986,
+      "recall_gestos": 0.9314,
+      "falsas_alarmas_ninguno": 0.5381
+    },
+    {
+      "metodo": "mlp",
+      "exactitud": 0.9738,
+      "f1_macro": 0.9631,
+      "recall_gestos": 0.9534,
+      "falsas_alarmas_ninguno": 0.014
+    }
+  ],
+  "por_clase_mlp": {
+    "ninguno": {
+      "precision": 0.9758796821793416,
+      "recall": 0.9859518348623854,
+      "f1-score": 0.9808899030233885,
+      "support": 3488.0
+    },
+    "palma_abierta": {
+      "precision": 0.9820359281437125,
+      "recall": 0.9425287356321839,
+      "f1-score": 0.9618768328445748,
+      "support": 522.0
+    },
+    "pellizco": {
+      "precision": 0.9877551020408163,
+      "recall": 0.9877551020408163,
+      "f1-score": 0.9877551020408163,
+      "support": 245.0
+    },
+    "pulgar_abajo": {
+      "precision": 0.9791666666666666,
+      "recall": 0.9591836734693877,
+      "f1-score": 0.9690721649484536,
+      "support": 196.0
+    },
+    "pulgar_arriba": {
+      "precision": 0.934156378600823,
+      "recall": 0.9742489270386266,
+      "f1-score": 0.9537815126050421,
+      "support": 233.0
+    },
+    "puño": {
+      "precision": 0.968,
+      "recall": 0.968,
+      "f1-score": 0.968,
+      "support": 250.0
+    },
+    "señalar": {
+      "precision": 0.9570815450643777,
+      "recall": 0.9291666666666667,
+      "f1-score": 0.9429175475687104,
+      "support": 240.0
+    },
+    "victoria": {
+      "precision": 0.9692982456140351,
+      "recall": 0.9132231404958677,
+      "f1-score": 0.9404255319148936,
+      "support": 242.0
+    },
+    "accuracy": 0.973781388478582,
+    "macro avg": {
+      "precision": 0.9691716935387216,
+      "recall": 0.9575072600257417,
+      "f1-score": 0.9630898243682349,
+      "support": 5416.0
+    },
+    "weighted avg": {
+      "precision": 0.9738434148942517,
+      "recall": 0.973781388478582,
+      "f1-score": 0.9736883521782153,
+      "support": 5416.0
+    }
+  },
+  "por_clase_reglas": {
+    "ninguno": {
+      "precision": 0.9658273381294964,
+      "recall": 0.46186926605504586,
+      "f1-score": 0.6249030256012412,
+      "support": 3488.0
+    },
+    "palma_abierta": {
+      "precision": 0.35450104675505933,
+      "recall": 0.9731800766283525,
+      "f1-score": 0.519693094629156,
+      "support": 522.0
+    },
+    "pellizco": {
+      "precision": 0.6342105263157894,
+      "recall": 0.9836734693877551,
+      "f1-score": 0.7712,
+      "support": 245.0
+    },
+    "pulgar_abajo": {
+      "precision": 0.83,
+      "recall": 0.8469387755102041,
+      "f1-score": 0.8383838383838383,
+      "support": 196.0
+    },
+    "pulgar_arriba": {
+      "precision": 0.9285714285714286,
+      "recall": 0.8927038626609443,
+      "f1-score": 0.9102844638949672,
+      "support": 233.0
+    },
+    "puño": {
+      "precision": 0.6967930029154519,
+      "recall": 0.956,
+      "f1-score": 0.806070826306914,
+      "support": 250.0
+    },
+    "señalar": {
+      "precision": 0.4933920704845815,
+      "recall": 0.9333333333333333,
+      "f1-score": 0.6455331412103746,
+      "support": 240.0
+    },
+    "victoria": {
+      "precision": 0.3165266106442577,
+      "recall": 0.9338842975206612,
+      "f1-score": 0.47280334728033474,
+      "support": 242.0
+    },
+    "accuracy": 0.6320162481536189,
+    "macro avg": {
+      "precision": 0.652477752977008,
+      "recall": 0.872697885137037,
+      "f1-score": 0.6986089671633533,
+      "support": 5416.0
+    },
+    "weighted avg": {
+      "precision": 0.823021752405356,
+      "recall": 0.6320162481536189,
+      "f1-score": 0.6438643152905038,
+      "support": 5416.0
+    }
+  }
+}

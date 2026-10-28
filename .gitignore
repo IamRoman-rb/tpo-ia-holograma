@@ -23,3 +23,7 @@ backend/catalog/generated/
 # Índices de embeddings que genera eval/eval_busqueda.py
 eval/resultados/indice_*.json
 .pytest_cache/
+
+# Entorno de Python 3.12 con MediaPipe y datasets externos procesados (ml/extraer_hagrid.py)
+.venv-*/
+ml/data/externo/

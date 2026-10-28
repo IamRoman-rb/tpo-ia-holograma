@@ -10,12 +10,13 @@ La normalización es la MISMA que frontend/js/normalize.js (lo verifica test_pre
   2. Origen en la muñeca (punto 0).
   3. Escala: distancia muñeca → nudillo del dedo medio (punto 9).
 """
+import hashlib
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-CLASES = ["pellizco", "palma_abierta", "puño", "señalar", "ninguno"]
+CLASES = ["pellizco", "palma_abierta", "puño", "señalar", "pulgar_arriba", "pulgar_abajo", "victoria", "ninguno"]
 COLUMNAS_PUNTOS = [f"{e}{i}" for i in range(21) for e in "xyz"]
 PERSONA_SIMULADA = "simulacion"
 
@@ -42,6 +43,14 @@ def cargar(directorio, incluir_simulacion=False) -> pd.DataFrame:
     if not incluir_simulacion:
         df = df[df["persona"] != PERSONA_SIMULADA].reset_index(drop=True)
     return df
+
+
+def particion(persona: str) -> str:
+    """Partición fija por persona (15 % prueba, 15 % validación, 70 % entrenamiento).
+    Depende solo del identificador: la misma persona cae siempre en la misma parte, así el
+    modelo se evalúa con gente que no vio y los resultados se pueden reproducir."""
+    cubeta = int(hashlib.sha1(str(persona).encode("utf-8")).hexdigest(), 16) % 20
+    return "prueba" if cubeta < 3 else "validacion" if cubeta < 6 else "entrenamiento"
 
 
 def normalizar(df: pd.DataFrame) -> np.ndarray:

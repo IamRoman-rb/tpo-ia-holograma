@@ -73,7 +73,17 @@ console.log(JSON.stringify({ clases: CLASES.map((c) => c.id), csv: aCsv(muestras
     from preparar import CLASES, cargar
     assert datos["clases"] == CLASES, "las clases de la página y de Python no coinciden"
     df = cargar(tmp_path)
-    assert len(df) == 15                      # las 5 filas "simulacion" se descartan
+    n = len(CLASES)
+    assert len(df) == 3 * n                   # una fila "simulacion" por clase se descarta
     assert set(df["clase"]) == set(CLASES)
-    assert normalizar(df).shape == (15, 63)
-    assert len(cargar(tmp_path, incluir_simulacion=True)) == 20
+    assert normalizar(df).shape == (3 * n, 63)
+    assert len(cargar(tmp_path, incluir_simulacion=True)) == 4 * n
+
+
+def test_particion_por_persona_es_fija_y_proporcionada():
+    from preparar import particion
+    personas = [f"persona_{i}" for i in range(2000)]
+    partes = [particion(p) for p in personas]
+    assert partes == [particion(p) for p in personas]          # siempre la misma parte
+    assert abs(partes.count("prueba") / len(partes) - 0.15) < 0.03
+    assert abs(partes.count("validacion") / len(partes) - 0.15) < 0.03
