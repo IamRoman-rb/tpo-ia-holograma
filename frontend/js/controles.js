@@ -10,7 +10,7 @@
 const ZONA_MUERTA = 0.002;            // ignora el temblor de los landmarks
 const RAD_POR_PANTALLA = 2 * Math.PI; // cruzar toda la pantalla con la palma = una vuelta
 
-const GESTOS_QUE_CAMBIAN = new Set(['pellizco', 'palma_abierta', 'escala_dos_manos', 'puño']);
+const GESTOS_QUE_CAMBIAN = new Set(['pellizco', 'palma_abierta', 'escala_dos_manos', 'puño', 'señalar']);
 
 const puntoPellizco = (mano) => ({ x: (mano[4].x + mano[8].x) / 2, y: (mano[4].y + mano[8].y) / 2 });
 const centroPalma = (mano) => mano[9];
@@ -36,6 +36,7 @@ export function crearControles(visor) {
       // vuelve a como estaba antes de todo el movimiento (sección 16.3)
       if (GESTOS_QUE_CAMBIAN.has(gesto)) visor.guardarEstado();
       if (gesto === 'puño') visor.reiniciar();   // se dispara una vez al cerrar la mano
+      if (gesto === 'señalar') visor.desmontarSiguiente(); // una pieza por cada vez que se señala
       if (gesto === 'escala_dos_manos') escalaInicial = visor.escala();
       gestoPrevio = gesto;
     }
@@ -66,7 +67,7 @@ export function crearControles(visor) {
         break;
       }
       default:
-        // señalar: reservado para seleccionar/marcar (fase 3). ninguno: sin acción.
+        // señalar actúa una sola vez, al empezar el gesto (arriba). ninguno: sin acción.
         break;
     }
   };

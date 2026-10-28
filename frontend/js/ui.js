@@ -55,7 +55,8 @@ export function alternarTamanoCamara() {
 
 const NOMBRES_ACCION = {
   mostrar: 'mostrar', rotar: 'rotar', escalar: 'escalar', vista: 'cambiar la vista',
-  reiniciar: 'reiniciar', desconocido: 'no reconocido',
+  reiniciar: 'reiniciar', desmontar: 'desmontar una pieza', explotar: 'mostrar el despiece',
+  armar: 'armar todo', desconocido: 'no reconocido',
 };
 
 // "Entendí: mostrar «motor» · vista trasera · ×0.67 — 93 % (LLM)"
@@ -150,4 +151,29 @@ export function mostrarDepuracion(r, info, latencias = []) {
   if (el.hidden) return;
   const extra = latencias.length ? ['— latencias (mediana)', ...latencias] : [];
   el.textContent = [...lineasGesto, ...extra].join('\n');
+}
+
+// Panel de piezas. lista: [{ id, nombre, descripcion, fija, desmontada, seleccionada }]
+export function mostrarPiezas(lista, alElegir) {
+  $('piezas').hidden = lista.length < 2;
+  if (lista.length < 2) return;
+  const desmontables = lista.filter((p) => !p.fija);
+  $('piezas-cuenta').textContent = `${desmontables.filter((p) => p.desmontada).length}/${desmontables.length} afuera`;
+  $('lista-piezas').replaceChildren(...lista.map((p) => {
+    const li = document.createElement('li');
+    li.textContent = p.fija ? `${p.nombre} (fija)` : p.nombre;
+    li.classList.toggle('desmontada', p.desmontada);
+    li.classList.toggle('fija', p.fija);
+    li.classList.toggle('seleccionada', p.seleccionada);
+    li.addEventListener('click', () => alElegir(p.id));
+    return li;
+  }));
+  const elegida = lista.find((p) => p.seleccionada);
+  $('pieza-descripcion').textContent = elegida
+    ? `${elegida.nombre}: ${elegida.descripcion || 'sin descripción'}`
+    : 'Tocá una pieza en la lista o en el modelo para ver qué es.';
+}
+
+export function fijarExplosion(fraccion) {
+  $('explosion').value = Math.round(fraccion * 100);
 }

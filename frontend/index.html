@@ -30,6 +30,20 @@
     <div class="fila"><span>Estado</span><strong id="estado">iniciando…</strong></div>
   </section>
 
+  <section id="piezas" aria-label="Piezas del objeto" hidden>
+    <h2>Piezas <span id="piezas-cuenta"></span></h2>
+    <div class="piezas-botones">
+      <button type="button" data-pieza="desmontar" title="Sacar la próxima pieza (X o gesto de señalar)">Desmontar</button>
+      <button type="button" data-pieza="montar" title="Volver a poner la última pieza">Montar</button>
+      <button type="button" data-pieza="armar" title="Armar todo (A)">Armar todo</button>
+    </div>
+    <label class="explosion">Vista explotada
+      <input type="range" id="explosion" min="0" max="100" value="0">
+    </label>
+    <ol id="lista-piezas"></ol>
+    <p id="pieza-descripcion">Tocá una pieza en la lista o en el modelo para ver qué es.</p>
+  </section>
+
   <div id="origen" hidden>
     <strong id="origen-nombre"></strong>
     <span id="origen-etiqueta"></span>
@@ -73,6 +87,7 @@
       <dt>Palma abierta</dt><dd>Rotar siguiendo la mano</dd>
       <dt>Pellizco con las dos manos</dt><dd>Separar para agrandar, juntar para achicar</dd>
       <dt>Puño</dt><dd>Reiniciar la vista</dd>
+      <dt>Señalar</dt><dd>Desmontar la próxima pieza</dd>
     </dl>
     <h2>Teclado</h2>
     <dl>
@@ -80,6 +95,8 @@
       <dt>+ −</dt><dd>Escalar</dd>
       <dt>R</dt><dd>Reiniciar</dd>
       <dt>Z</dt><dd>Deshacer el último cambio (también si un gesto se detectó mal)</dd>
+      <dt>X</dt><dd>Desmontar la próxima pieza</dd>
+      <dt>A</dt><dd>Armar todo</dd>
       <dt>D</dt><dd>Métricas de depuración</dd>
     </dl>
     <h2>Privacidad</h2>
