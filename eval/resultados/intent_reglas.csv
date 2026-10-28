@@ -14,7 +14,7 @@ agrandalo un poco,True,,escalar,,,1.5,0.7,0
 achicalo a la mitad,True,,escalar,,,0.5,0.7,0
 más grande,True,,escalar,,,1.5,0.7,0
 reducilo,True,,escalar,,,0.67,0.7,0
-ampliá tres veces,False,escala 1.5,escalar,,,1.5,0.7,0
+ampliá tres veces,True,,escalar,,,3.0,0.7,0
 mostrame la parte de atrás,True,,vista,,trasera,,0.7,0
 quiero verlo desde arriba,False,acción mostrar,mostrar,verlo,superior,,0.7,0
 de costado,True,,vista,,lateral,,0.7,0

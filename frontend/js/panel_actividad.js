@@ -288,11 +288,20 @@ export function crearPanelActividad(raiz, { enVentana = false, alAbrirVentana = 
         p.espera?.remove();
         const i = m.intencion;
         const t = i.traza ?? {};
+        const sinLlm = t.error ? `<span class="act-tenue">LLM no disponible: ${escapar(t.error)}</span>` : '';
         const motor = i.motor === 'llm'
           ? `<span class="act-chip llm">LLM</span> ${escapar(t.modelo ?? '')}`
-          : `<span class="act-chip reglas">reglas</span> ${t.error ? `<span class="act-tenue">LLM no disponible: ${escapar(t.error)}</span>` : ''}`;
+          : i.motor === 'modelo'
+            ? `<span class="act-chip modelo">modelo propio</span> ${sinLlm}`
+            : `<span class="act-chip reglas">reglas</span> ${sinLlm}`;
         const tokens = t.tokens_entrada != null ? ` · ${t.tokens_entrada} → ${t.tokens_salida} tokens` : '';
         paso(p, '', `${motor}<br><span class="act-tenue">LLM ${ms(t.ms_llm)} · backend ${ms(i.tiempo_ms)} · total ${ms(m.msTotal)}${tokens}</span>`);
+        // El modelo propio da la probabilidad de cada acción: se ven las tres más altas
+        if (t.probabilidades) {
+          const lista = Object.entries(t.probabilidades)
+            .map(([a, v]) => `${escapar(a)} ${Math.round(v * 100)} %`).join(' · ');
+          paso(p, '', `<span class="act-tenue">Probabilidades: ${lista}</span>`);
+        }
         const validada = { accion: i.accion, objeto: i.objeto, parametros: i.parametros, confianza: i.confianza };
         const cambio = t.crudo && JSON.stringify({ ...t.crudo, parametros: { vista: null, factor_escala: null, ...t.crudo.parametros } })
           !== JSON.stringify({ ...validada, parametros: { vista: null, factor_escala: null, ...validada.parametros } });
@@ -322,11 +331,13 @@ export function crearPanelActividad(raiz, { enVentana = false, alAbrirVentana = 
         break;
       }
       case 'ejecutado':
+        if (p.terminado) break; // ya se mostró cómo terminó (por ejemplo, un error al buscar el objeto)
         p.terminado = true;
         paso(p, 'act-ok', `✓ ${escapar(m.resumen ?? 'listo')}`);
         break;
       case 'error':
         p.espera?.remove();
+        if (p.terminado) break;
         p.terminado = true;
         paso(p, 'act-error', `✕ ${escapar(m.mensaje)}`);
         break;

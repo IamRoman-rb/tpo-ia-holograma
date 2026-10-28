@@ -1,12 +1,13 @@
 """Mide los aciertos de la interpretación de intención contra frases_prueba.csv (meta: >= 85 %).
 
-Compara los dos motores: el LLM y el intérprete por reglas (línea base). Cada salida pasa
+Compara los tres motores: el LLM, el intérprete entrenado (backend/intent_modelo.py) y las reglas (línea base). Cada salida pasa
 por safety.py, igual que en el producto. Un acierto exige que coincidan la acción, la vista,
 el factor de escala y, para "mostrar", que el objeto contenga la palabra clave esperada.
 
 Uso (desde la raíz):
     python eval/eval_intent.py                 # ambos motores (el LLM solo si hay credenciales)
     python eval/eval_intent.py --motor reglas
+    python eval/eval_intent.py --motor modelo --frases validacion   # el set con el que se eligió el modelo
 Cada corrida del LLM hace 30 llamadas a la API (tiene costo).
 """
 import argparse
@@ -25,6 +26,7 @@ from dotenv import load_dotenv  # noqa: E402
 load_dotenv(RAIZ / ".env")
 
 import intent  # noqa: E402
+import intent_modelo  # noqa: E402
 from safety import validar_intencion  # noqa: E402
 from texto import normalizar  # noqa: E402
 
@@ -56,8 +58,9 @@ def evaluar_fila(fila, r):
     return errores
 
 
-def correr(motor, filas):
-    funcion = intent.interpretar_llm if motor == "llm" else intent.interpretar_reglas
+def correr(motor, filas, sufijo=""):
+    funcion = {"llm": intent.interpretar_llm, "modelo": intent_modelo.interpretar_modelo,
+               "reglas": intent.interpretar_reglas}[motor]
     salida, aciertos, tiempos = [], 0, []
     for fila in filas:
         t0 = time.perf_counter()
@@ -71,7 +74,7 @@ def correr(motor, filas):
                        "ms": round(tiempos[-1])})
 
     RESULTADOS.mkdir(exist_ok=True)
-    with open(RESULTADOS / f"intent_{motor}.csv", "w", newline="", encoding="utf-8") as f:
+    with open(RESULTADOS / f"intent_{motor}{sufijo}.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(salida[0]))
         w.writeheader()
         w.writerows(salida)
@@ -96,17 +99,18 @@ def llm_disponible():
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--motor", choices=["reglas", "llm", "ambos"], default="ambos")
+    ap.add_argument("--motor", choices=["reglas", "modelo", "llm", "todos"], default="todos")
+    ap.add_argument("--frases", choices=["prueba", "validacion", "nuevas"], default="prueba")
     args = ap.parse_args()
 
-    with open(Path(__file__).parent / "frases_prueba.csv", encoding="utf-8") as f:
+    with open(Path(__file__).parent / f"frases_{args.frases}.csv", encoding="utf-8") as f:
         filas = list(csv.DictReader(f))
 
-    motores = ["reglas", "llm"] if args.motor == "ambos" else [args.motor]
+    motores = ["reglas", "modelo", "llm"] if args.motor == "todos" else [args.motor]
     for motor in motores:
         if motor == "llm" and not llm_disponible():
             continue
-        correr(motor, filas)
+        correr(motor, filas, "" if args.frases == "prueba" else f"_{args.frases}")
 
 
 if __name__ == "__main__":

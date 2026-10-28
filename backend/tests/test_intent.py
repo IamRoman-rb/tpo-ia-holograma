@@ -72,8 +72,13 @@ def test_llm_completa_la_traza():
     assert traza["fin"] == "end_turn" and traza["ms_llm"] >= 0 and "modelo" in traza
 
 
+def _sin_modelo_entrenado():
+    raise intent.intent_modelo.ModeloNoDisponible("prueba")
+
+
 def test_sin_llm_la_traza_dice_por_que(monkeypatch):
     monkeypatch.setattr(intent, "_cliente_llm", lambda: ClienteFalso("esto no es json"))
+    monkeypatch.setattr(intent.intent_modelo, "cargar", _sin_modelo_entrenado)
     r = intent.interpretar("mostrame un engranaje")
     assert r["motor"] == "reglas" and r["traza"]["error"].startswith("RespuestaInvalida")
 
@@ -83,7 +88,25 @@ def test_llm_rechazo_devuelve_desconocido():
     assert r["accion"] == "desconocido" and r["confianza"] == 0.0
 
 
-def test_llm_json_invalido_cae_a_reglas(monkeypatch):
+def test_sin_llm_ni_modelo_entrenado_caen_las_reglas(monkeypatch):
     monkeypatch.setattr(intent, "_cliente_llm", lambda: ClienteFalso("esto no es json"))
+    monkeypatch.setattr(intent.intent_modelo, "cargar", _sin_modelo_entrenado)
     r = intent.interpretar("mostrame un engranaje")
     assert r["motor"] == "reglas" and r["accion"] == "mostrar"
+
+
+def test_sin_llm_se_usa_el_modelo_entrenado(monkeypatch):
+    monkeypatch.setattr(intent, "_cliente_llm", lambda: ClienteFalso("esto no es json"))
+    respuesta = {"accion": "rotar", "objeto": None, "parametros": {"vista": None, "factor_escala": None},
+                 "confianza": 0.8}
+    monkeypatch.setattr(intent.intent_modelo, "interpretar_modelo", lambda f, traza=None: dict(respuesta))
+    r = intent.interpretar("giralo")
+    assert r["motor"] == "modelo" and r["accion"] == "rotar" and "error" in r["traza"]
+
+
+@pytest.mark.parametrize("frase, factor", [
+    ("ampliá tres veces", 3.0), ("agrandalo 2 veces", 2.0), ("hacelo tres veces más chico", 0.333),
+    ("hacelo más chiquito", 0.67),
+])
+def test_factor_con_numeros_en_palabras(frase, factor):
+    assert intent._factor(intent.normalizar(frase)) == factor

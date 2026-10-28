@@ -509,6 +509,7 @@ body.holograma-ar #pedido input { width: min(360px, 60vw); flex: none; }
 }
 .act-chip.llm { background: rgba(43, 212, 255, 0.2); color: var(--acento); }
 .act-chip.reglas { background: rgba(255, 184, 77, 0.2); color: var(--alerta); }
+.act-chip.modelo { background: rgba(61, 255, 176, 0.18); color: #3dffb0; }
 .act-chip.generado { background: var(--alerta); color: #1a1000; }
 .act-chip.voz { background: rgba(255, 107, 107, 0.2); color: var(--error); }
 .act-girando {

@@ -68,7 +68,7 @@ export function mostrarInterpretacion(i) {
   if (i.objeto) partes.push(`«${escapar(i.objeto)}»`);
   if (i.parametros?.vista) partes.push(`vista ${i.parametros.vista}`);
   if (i.parametros?.factor_escala) partes.push(`×${i.parametros.factor_escala}`);
-  const motor = i.motor === 'llm' ? 'LLM' : 'reglas';
+  const motor = { llm: 'LLM', modelo: 'modelo propio' }[i.motor] ?? 'reglas';
   const el = $('interpretacion');
   el.innerHTML = `Entendí: ${partes.join(' · ')} — ${Math.round(i.confianza * 100)} % (${motor})`;
   el.hidden = false;

@@ -14,6 +14,7 @@ Si sentence-transformers no está instalado, se usa solo el paso 1.
 La fuente de verdad del catálogo es frontend/models/catalogo.json. Los embeddings se
 guardan en backend/catalog/index.json y se recalculan si el catálogo o el modelo cambian.
 """
+import functools
 import hashlib
 import json
 import logging
@@ -32,6 +33,14 @@ RUTA_INDICE = Path(__file__).parent / "catalog" / "index.json"
 MODELO_EMBEDDINGS = os.getenv("EMBEDDINGS_MODEL") or "paraphrase-multilingual-MiniLM-L12-v2"
 UMBRAL_PALABRAS = 0.5
 UMBRAL = float(os.getenv("SIMILARITY_THRESHOLD") or 0.62)  # embeddings; calibrado en eval/eval_busqueda.py
+
+@functools.lru_cache(maxsize=2)
+def cargar_embeddings(nombre):
+    """Modelo de embeddings de oraciones, cargado una sola vez: lo comparten la búsqueda del catálogo y el
+    intérprete de pedidos entrenado (intent_modelo.py)."""
+    from sentence_transformers import SentenceTransformer
+    return SentenceTransformer(nombre)
+
 
 RELLENO = {"un", "una", "unos", "unas", "el", "la", "los", "las", "de", "del", "con", "para", "y", "a"}
 
@@ -66,8 +75,7 @@ class Catalogo:
     @staticmethod
     def _cargar_modelo(nombre):
         try:
-            from sentence_transformers import SentenceTransformer
-            return SentenceTransformer(nombre)
+            return cargar_embeddings(nombre)
         except Exception as e:  # no instalado, sin internet en la primera descarga, etc.
             log.warning("Embeddings no disponibles (%s); se usa búsqueda por palabras", e)
             return None

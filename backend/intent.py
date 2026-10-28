@@ -15,6 +15,7 @@ from pathlib import Path
 
 import anthropic
 
+import intent_modelo
 from schemas import ESQUEMA_INTENCION
 from texto import normalizar
 
@@ -45,15 +46,22 @@ def _cliente_llm() -> anthropic.Anthropic:
 
 
 def interpretar(frase: str) -> dict:
-    """Devuelve la intención (sin validar) e indica qué motor la produjo en "motor".
-    En "traza" queda lo que pasó con el LLM (modelo, tokens, tiempo o el error): lo muestra el panel de actividad."""
+    """Devuelve la intención (sin validar) e indica qué motor la produjo en "motor":
+    el LLM; si no está disponible, el intérprete entrenado (intent_modelo.py); y si tampoco, las reglas.
+    En "traza" queda lo que pasó (modelo, tokens, tiempo o el error): lo muestra el panel de actividad."""
     traza = {"modelo": MODELO}
     try:
         return {**interpretar_llm(frase, traza=traza), "motor": "llm", "traza": traza}
     except (anthropic.AnthropicError, RespuestaInvalida, TypeError) as e:
         # TypeError: el SDK no encontró credenciales.
-        log.warning("LLM no disponible (%s: %s); se usan las reglas", type(e).__name__, e)
+        log.warning("LLM no disponible (%s: %s); se usa el intérprete entrenado", type(e).__name__, e)
         traza["error"] = f"{type(e).__name__}: {e}"[:160]
+    try:
+        traza_modelo = {}
+        r = intent_modelo.interpretar_modelo(frase, traza=traza_modelo)
+        return {**r, "motor": "modelo", "traza": {**traza, **traza_modelo}}
+    except intent_modelo.ModeloNoDisponible as e:
+        log.warning("Intérprete entrenado no disponible (%s); se usan las reglas", e)
         return {**interpretar_reglas(frase), "motor": "reglas", "traza": traza}
 
 
@@ -106,13 +114,16 @@ VISTAS = [
     ("superior", _PREFIJO_VISTA + r"(?:arriba|encima|superior|planta)"),
 ]
 
+NUMEROS = {"dos": 2, "tres": 3, "cuatro": 4, "cinco": 5}
+
 ESCALAS = [
     (r"\b(\d+(?:[.,]\d+)?)\s*veces\b", None),
+    (rf"\b({'|'.join(NUMEROS)})\s+veces\b", None),
     (r"\bel doble\b|\bdoble\b|\bduplica", 2.0),
     (r"\bel triple\b|\btriple\b|\btriplica", 3.0),
     (r"\bla mitad\b|\bmitad\b", 0.5),
     (r"\bagrand|\bmas grande|\baument|\bamplia|\bzoom\b|\bacerca", 1.5),
-    (r"\bachic|\bmas chic|\bmas pequen|\breduc|\bdisminu|\baleja", 0.67),
+    (r"\bachic|\bmas chic|\bmas chiqu|\bmas pequen|\breduc|\bdisminu|\baleja", 0.67),
 ]
 
 
@@ -120,7 +131,13 @@ def _factor(t):
     for patron, valor in ESCALAS:
         m = re.search(patron, t)
         if m:
-            return float(m.group(1).replace(",", ".")) if valor is None else valor
+            if valor is not None:
+                return valor
+            n = m.group(1)
+            veces = float(NUMEROS[n]) if n in NUMEROS else float(n.replace(",", "."))
+            # "tres veces más chico" achica: es 1/3, no 3
+            achica = re.search(r"\bmas (?:chic|chiqu|pequen)|\bmenos|\bachic|\breduc", t)
+            return round(1 / veces, 3) if achica and veces else veces
     return None
 
 

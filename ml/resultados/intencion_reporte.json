@@ -1,0 +1,78 @@
+{
+  "fecha": "2026-10-28",
+  "frases": {
+    "entrenamiento": 4400,
+    "validacion": 59,
+    "prueba": 38
+  },
+  "comparacion_accion": [
+    {
+      "embeddings": "paraphrase-multilingual-MiniLM-L12-v2",
+      "cabezal": "logistica",
+      "exactitud_validacion": 0.9322,
+      "f1_validacion": 0.9476,
+      "exactitud_prueba": 0.8158,
+      "segundos": 0.5
+    },
+    {
+      "embeddings": "paraphrase-multilingual-MiniLM-L12-v2",
+      "cabezal": "mlp_256",
+      "exactitud_validacion": 0.9661,
+      "f1_validacion": 0.9697,
+      "exactitud_prueba": 0.8158,
+      "segundos": 2.1
+    },
+    {
+      "embeddings": "paraphrase-multilingual-MiniLM-L12-v2",
+      "cabezal": "mlp_512_256",
+      "exactitud_validacion": 0.9661,
+      "f1_validacion": 0.9697,
+      "exactitud_prueba": 0.8421,
+      "segundos": 5.2
+    },
+    {
+      "embeddings": "paraphrase-multilingual-MiniLM-L12-v2",
+      "cabezal": "mlp_1024_512_256",
+      "exactitud_validacion": 0.9661,
+      "f1_validacion": 0.9697,
+      "exactitud_prueba": 0.8158,
+      "segundos": 10.8
+    },
+    {
+      "embeddings": "intfloat/multilingual-e5-small",
+      "cabezal": "logistica",
+      "exactitud_validacion": 0.9831,
+      "f1_validacion": 0.9903,
+      "exactitud_prueba": 0.8421,
+      "segundos": 0.4
+    },
+    {
+      "embeddings": "intfloat/multilingual-e5-small",
+      "cabezal": "mlp_256",
+      "exactitud_validacion": 0.9831,
+      "f1_validacion": 0.9903,
+      "exactitud_prueba": 0.8421,
+      "segundos": 2.1
+    },
+    {
+      "embeddings": "intfloat/multilingual-e5-small",
+      "cabezal": "mlp_512_256",
+      "exactitud_validacion": 0.9661,
+      "f1_validacion": 0.9732,
+      "exactitud_prueba": 0.7895,
+      "segundos": 3.7
+    },
+    {
+      "embeddings": "intfloat/multilingual-e5-small",
+      "cabezal": "mlp_1024_512_256",
+      "exactitud_validacion": 0.9492,
+      "f1_validacion": 0.9612,
+      "exactitud_prueba": 0.7895,
+      "segundos": 8.4
+    }
+  ],
+  "elegido": {
+    "embeddings": "intfloat/multilingual-e5-small",
+    "cabezal": "logistica"
+  }
+}

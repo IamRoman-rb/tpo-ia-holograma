@@ -239,8 +239,10 @@ async function ejecutar({ accion, objeto, parametros }, id) {
 // Para el panel de actividad: cómo terminó el pedido, según el último estado que se mostró
 function publicarFin(id) {
   const estado = document.getElementById('estado');
-  publicarPedido(id, estado.classList.contains('error') ? 'error' : 'ejecutado',
-    { resumen: estado.textContent, mensaje: estado.textContent });
+  const error = estado.classList.contains('error');
+  // Con un error, el estado dice "atención" y el detalle está en el aviso
+  const texto = error ? document.getElementById('aviso').textContent || estado.textContent : estado.textContent;
+  publicarPedido(id, error ? 'error' : 'ejecutado', { resumen: texto, mensaje: texto });
 }
 
 async function atenderPedido(frase, { porVoz = false } = {}) {
