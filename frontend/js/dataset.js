@@ -5,7 +5,10 @@ export const CLASES = [
   { id: 'pellizco', nombre: 'Pellizco', descripcion: 'Pulgar e índice juntos. En el visor: tomar y mover el objeto.' },
   { id: 'palma_abierta', nombre: 'Palma abierta', descripcion: 'Mano abierta frente a la cámara. En el visor: rotar.' },
   { id: 'puño', nombre: 'Puño', descripcion: 'Mano cerrada. En el visor: reiniciar la vista.' },
-  { id: 'señalar', nombre: 'Señalar', descripcion: 'Índice extendido y el resto de los dedos cerrados. En el visor: seleccionar o marcar.' },
+  { id: 'señalar', nombre: 'Señalar', descripcion: 'Índice extendido y el resto de los dedos cerrados. En el visor: apuntar y elegir una pieza.' },
+  { id: 'pulgar_arriba', nombre: 'Pulgar arriba', descripcion: 'Puño con el pulgar hacia arriba. En el visor: confirmar.' },
+  { id: 'pulgar_abajo', nombre: 'Pulgar abajo', descripcion: 'Puño con el pulgar hacia abajo. En el visor: deshacer.' },
+  { id: 'victoria', nombre: 'Victoria', descripcion: 'Índice y medio extendidos y separados en V. En el visor: aislar la pieza elegida o abrir el despiece.' },
   { id: 'ninguno', nombre: 'Ninguno', descripcion: 'Mano relajada, a medio cerrar, o movimientos al azar. Es fundamental: sin esta clase el modelo ve un gesto en cualquier cosa.' },
 ];
 

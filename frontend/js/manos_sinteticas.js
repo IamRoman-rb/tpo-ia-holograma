@@ -9,10 +9,11 @@ const sumar = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 // Nudillos de índice, medio, anular y meñique (unidad = muñeca → nudillo medio)
 const BASES = [[-0.35, 1, 0], [-0.1, 1, 0], [0.12, 1, 0], [0.32, 0.95, 0]];
 
-function dedo(base, modo) {
+// abrir: inclinación lateral de un dedo extendido (para la V de la victoria)
+function dedo(base, modo, abrir = 0) {
   if (modo === 'ext') {
-    const p = sumar(base, [0, 0.45, 0]), d = sumar(p, [0, 0.28, 0]);
-    return [base, p, d, sumar(d, [0, 0.22, 0])];
+    const p = sumar(base, [abrir * 0.45, 0.45, 0]), d = sumar(p, [abrir * 0.28, 0.28, 0]);
+    return [base, p, d, sumar(d, [abrir * 0.22, 0.22, 0])];
   }
   if (modo === 'dob') {
     const p = sumar(base, [0, 0, -0.45]), d = sumar(p, [0, -0.28, 0]);
@@ -23,11 +24,15 @@ function dedo(base, modo) {
   return [base, p, d, sumar(d, [-0.05, 0, -0.15])];
 }
 
-function mano(modos, puntaPulgar) {
+function mano(modos, puntaPulgar, aperturas = []) {
   const pts = [[0, 0, 0], [-0.35, 0.25, 0], [-0.6, 0.5, 0], [-0.75, 0.75, 0], puntaPulgar ?? [-0.85, 0.95, 0]];
-  modos.forEach((m, i) => pts.push(...dedo(BASES[i], m)));
+  modos.forEach((m, i) => pts.push(...dedo(BASES[i], m, aperturas[i])));
   return pts;
 }
+
+// Gira una pose media vuelta alrededor de la muñeca (en el plano de la imagen)
+const darVuelta = (pts) => pts.map(([x, y, z]) => [-x, -y, z]);
+const pulgarArriba = mano(['dob', 'dob', 'dob', 'dob'], [-0.85, 1.6, 0]);
 
 const puntaIndiceSemi = dedo(BASES[0], 'semi')[3];
 
@@ -36,6 +41,9 @@ export const POSES = {
   'puño': mano(['dob', 'dob', 'dob', 'dob'], [-0.2, 0.7, -0.35]),
   pellizco: mano(['semi', 'ext', 'ext', 'ext'], sumar(puntaIndiceSemi, [0.03, 0, 0])),
   'señalar': mano(['ext', 'dob', 'dob', 'dob'], [-0.1, 0.6, -0.3]),
+  pulgar_arriba: pulgarArriba,
+  pulgar_abajo: darVuelta(pulgarArriba),
+  victoria: mano(['ext', 'ext', 'dob', 'dob'], [0.05, 0.55, -0.3], [-0.35, 0.25]),
   // mano relajada, dedos a medio doblar: la clase "ninguno"
   ninguno: mano(['semi', 'semi', 'semi', 'semi']),
 };

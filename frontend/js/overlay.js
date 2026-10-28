@@ -20,7 +20,8 @@ const COLORES = {
 
 const NOMBRES = {
   pellizco: 'Pellizco', palma_abierta: 'Palma abierta', 'puño': 'Puño',
-  'señalar': 'Señalar', escala_dos_manos: 'Dos manos', ninguno: 'Sin gesto',
+  'señalar': 'Señalar', pulgar_arriba: 'Pulgar arriba', pulgar_abajo: 'Pulgar abajo', victoria: 'Victoria',
+  escala_dos_manos: 'Dos manos', ninguno: 'Sin gesto',
 };
 
 export function crearOverlay(lienzo) {
