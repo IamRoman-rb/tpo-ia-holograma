@@ -4,6 +4,8 @@
 
 Inteligencia Artificial · UADE · 2do cuatrimestre 2026. La propuesta completa está en [docs/propuesta.md](docs/propuesta.md).
 
+Arquitectura (entregable 4): [docs/arquitectura.md](docs/arquitectura.md), con el diagrama editable en [docs/arquitectura.drawio](docs/arquitectura.drawio).
+
 ## Estructura
 
 | Carpeta | Contenido |
