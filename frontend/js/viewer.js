@@ -73,7 +73,6 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = 
   escena.add(grilla);
 
   let estilo = estiloInicial;
-  grilla.visible = estilo !== 'holograma';
   const puntoRedondo = texturaPunto();
 
   // El pivote es lo que se manipula; el modelo cargado vive adentro, centrado.
@@ -550,11 +549,15 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = 
     /** 'solido' (materiales del modelo) o 'holograma' (piezas de colores con aristas y puntos). */
     fijarEstilo(nuevo) {
       estilo = nuevo;
-      grilla.visible = estilo !== 'holograma';
       if (modelo) aplicarEstilo(modelo);
     },
 
     estilo: () => estilo,
+
+    /** La grilla del piso: se oculta cuando el video de la cámara es el fondo. */
+    mostrarGrilla(visible) {
+      grilla.visible = visible;
+    },
 
     elemento: renderer.domElement,
   };

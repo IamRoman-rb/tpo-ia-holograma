@@ -69,9 +69,11 @@ El guion de los 15 minutos, la demo paso a paso y las respuestas a las preguntas
 
 Los gestos los reconoce una red neuronal (MLP) entrenada con fotos reales de miles de personas, o las reglas geométricas: se elige en el panel de la izquierda (**Clasificador**).
 
-### Holograma sobre la cámara
+### Holograma
 
-Con el botón **Holograma** (o la tecla `H`) activado, que es lo que viene por defecto, el video de la cámara ocupa toda la pantalla y el objeto se dibuja encima como un holograma. Cada pieza tiene su color neón y se ve con sus aristas, una nube de puntos y un relleno tenue. A los costados aparecen etiquetas con el nombre y la función de cada pieza, con una línea guía hasta ella; al tocar una etiqueta se elige esa pieza. El esqueleto de la mano se dibuja sobre la mano real, el cursor de señalar queda en la punta del índice, al rotar con la palma aparece un aro y al escalar con las dos manos se ve el zoom. El catálogo pasa a ser una fila de pestañas abajo. **Paneles** muestra el panel de piezas y **Despiece** abre o cierra la vista explotada. Sin cámara, el holograma se ve sobre el fondo oscuro y el recuadro de cámara sigue abajo a la derecha. Apagando **Holograma** se vuelve a la vista de estudio, con los materiales del modelo.
+Con el botón **Holograma** (o la tecla `H`) activado, que es lo que viene por defecto, el objeto se dibuja como un holograma sobre el fondo oscuro, con la cámara en su recuadro abajo a la derecha. Cada pieza tiene su color neón y se ve con sus aristas, una nube de puntos y un relleno tenue. A los costados aparecen etiquetas con el nombre y la función de cada pieza, con una línea guía hasta ella; al tocar una etiqueta se elige esa pieza. El catálogo pasa a ser una fila de pestañas abajo. **Paneles** muestra el panel de piezas y **Despiece** abre o cierra la vista explotada. Apagando **Holograma** se vuelve a la vista de estudio, con los materiales del modelo.
+
+**Cámara de fondo** (o la tecla `C`, apagado por defecto) pone el video de la cámara a pantalla completa detrás del holograma: el esqueleto de la mano se dibuja sobre la mano real, el cursor de señalar queda en la punta del índice, al rotar con la palma aparece un aro y al escalar con las dos manos se ve el zoom.
 
 ### Actividad de la IA en vivo
 
