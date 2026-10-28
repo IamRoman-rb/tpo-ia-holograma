@@ -10,6 +10,7 @@ import json
 import logging
 import os
 import re
+import time
 from pathlib import Path
 
 import anthropic
@@ -44,19 +45,24 @@ def _cliente_llm() -> anthropic.Anthropic:
 
 
 def interpretar(frase: str) -> dict:
-    """Devuelve la intención (sin validar) e indica qué motor la produjo en "motor"."""
+    """Devuelve la intención (sin validar) e indica qué motor la produjo en "motor".
+    En "traza" queda lo que pasó con el LLM (modelo, tokens, tiempo o el error): lo muestra el panel de actividad."""
+    traza = {"modelo": MODELO}
     try:
-        return {**interpretar_llm(frase), "motor": "llm"}
+        return {**interpretar_llm(frase, traza=traza), "motor": "llm", "traza": traza}
     except (anthropic.AnthropicError, RespuestaInvalida, TypeError) as e:
         # TypeError: el SDK no encontró credenciales.
         log.warning("LLM no disponible (%s: %s); se usan las reglas", type(e).__name__, e)
-        return {**interpretar_reglas(frase), "motor": "reglas"}
+        traza["error"] = f"{type(e).__name__}: {e}"[:160]
+        return {**interpretar_reglas(frase), "motor": "reglas", "traza": traza}
 
 
 # ------------------------------------------------------------------- motor LLM
 
-def interpretar_llm(frase: str, cliente=None) -> dict:
+def interpretar_llm(frase: str, cliente=None, traza=None) -> dict:
+    """traza (opcional): se completa con el modelo que respondió, los tokens, el motivo de fin y el tiempo."""
     cliente = cliente or _cliente_llm()
+    t0 = time.perf_counter()
     extra = {"betas": ["server-side-fallback-2026-07-01"], "fallbacks": "default"} if MODELO in MODELOS_CON_FALLBACK else {}
     r = cliente.beta.messages.create(
         model=MODELO,
@@ -67,6 +73,11 @@ def interpretar_llm(frase: str, cliente=None) -> dict:
         output_config={"effort": "low", "format": {"type": "json_schema", "schema": ESQUEMA_INTENCION}},
         **extra,
     )
+    if traza is not None:
+        uso = getattr(r, "usage", None)
+        traza.update(modelo=getattr(r, "model", None) or MODELO, fin=r.stop_reason,
+                     tokens_entrada=getattr(uso, "input_tokens", None), tokens_salida=getattr(uso, "output_tokens", None),
+                     ms_llm=round((time.perf_counter() - t0) * 1000))
     if r.stop_reason == "refusal":
         return dict(DESCONOCIDO)
     if r.stop_reason == "max_tokens":

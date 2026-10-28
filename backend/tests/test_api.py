@@ -23,6 +23,8 @@ def test_health(cliente):
 def test_intent(cliente):
     r = cliente.post("/intent", json={"frase": "mostrame un rulemán desde arriba"}).json()
     assert r["accion"] == "mostrar" and r["parametros"]["vista"] == "superior" and r["motor"] == "reglas"
+    # La traza trae la respuesta antes de validar, para el panel de actividad
+    assert r["traza"]["crudo"]["accion"] == "mostrar"
 
 
 def test_object_del_catalogo(cliente):

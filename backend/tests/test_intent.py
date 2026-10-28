@@ -64,6 +64,20 @@ def test_llm_pide_salida_estructurada_y_parsea():
     assert cliente.kwargs["messages"] == [{"role": "user", "content": "hacelo el doble de grande"}]
 
 
+def test_llm_completa_la_traza():
+    cliente = ClienteFalso(json.dumps({"accion": "reiniciar", "objeto": None,
+                                       "parametros": {"vista": None, "factor_escala": None}, "confianza": 0.9}))
+    traza = {}
+    interpretar_llm("reiniciá", cliente, traza=traza)
+    assert traza["fin"] == "end_turn" and traza["ms_llm"] >= 0 and "modelo" in traza
+
+
+def test_sin_llm_la_traza_dice_por_que(monkeypatch):
+    monkeypatch.setattr(intent, "_cliente_llm", lambda: ClienteFalso("esto no es json"))
+    r = intent.interpretar("mostrame un engranaje")
+    assert r["motor"] == "reglas" and r["traza"]["error"].startswith("RespuestaInvalida")
+
+
 def test_llm_rechazo_devuelve_desconocido():
     r = interpretar_llm("algo", ClienteFalso(stop_reason="refusal"))
     assert r["accion"] == "desconocido" and r["confianza"] == 0.0

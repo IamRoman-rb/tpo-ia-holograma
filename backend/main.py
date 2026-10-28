@@ -64,8 +64,10 @@ def intent(p: Pedido, request: Request):
     _controlar_frecuencia(request)
     t0 = time.perf_counter()
     crudo = interpretar(p.frase)          # LLM (o reglas si no hay LLM), devuelve dict
+    # La traza (y la respuesta antes de validar) es para el panel de actividad del visor
+    traza = {**(crudo.pop("traza", None) or {}), "crudo": {k: v for k, v in crudo.items() if k != "motor"}}
     resultado = validar_intencion(crudo)  # esquema + filtros + límites
-    return {**resultado, "tiempo_ms": round((time.perf_counter() - t0) * 1000)}
+    return {**resultado, "traza": traza, "tiempo_ms": round((time.perf_counter() - t0) * 1000)}
 
 
 @app.post("/object")
