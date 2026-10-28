@@ -3,7 +3,7 @@
 Ver el plan completo en la sección 15 de [propuesta.md](propuesta.md). Para reproducir los números (desde la raíz):
 
 ```bash
-python eval/eval_intent.py                                  # intención: reglas y LLM (el LLM necesita ANTHROPIC_API_KEY)
+python eval/eval_intent.py                                  # intención: reglas, modelo entrenado y LLM (el LLM necesita ANTHROPIC_API_KEY)
 python eval/eval_busqueda.py                                # búsqueda: comparación de métodos y barrido de umbral
 python eval/eval_busqueda.py --set validacion --solo-producto   # búsqueda en el set que no se usó para calibrar
 python eval/medir_latencias.py                              # latencias del backend (con LIMITE_PEDIDOS_MINUTO=1000)
@@ -14,33 +14,64 @@ Los detalles por frase y por pedido quedan en `eval/resultados/`.
 
 | Área | Métrica | Meta | Resultado | Notas |
 |---|---|---|---|---|
-| Gestos | Precisión por gesto (persona no vista) | ≥ 90 % | **MLP: 95,3 %** (recall medio de los 7 gestos, fotos de HaGRID) · con cámara: pendiente | Ver "Gestos con datos de internet" abajo |
-| Gestos | Reglas vs. MLP | Reportar | **Exactitud 63,2 % vs. 97,4 %** · falsas alarmas 53,8 % vs. 1,4 % | 5.416 manos de personas que el modelo no vio |
+| Gestos | Precisión por gesto (persona no vista) | ≥ 90 % | **Red v2: 96,3 %** (recall medio de los 7 gestos, fotos de HaGRID) · con cámara: pendiente | Ver "Gestos con datos de internet" abajo |
+| Gestos | Reglas vs. red | Reportar | **Exactitud 62,4 % vs. 97,9 %** · falsas alarmas 55,3 % vs. 1,3 % | 42.875 manos de 3.416 personas que la red no vio |
 | Gestos | Falsos positivos en 60 s en reposo | ≤ 2 | Pendiente | Incluido en el protocolo de pruebas; necesita cámara |
 | Latencia | Gesto → pantalla | < 100 ms | Pendiente | Con cámara: panel de depuración (tecla D), línea `fotograma` |
 | Latencia | Pedido → modelo (catálogo) | < 2 s | **Backend: 14 ms** (mediana; p95 15 ms) · de punta a punta: pendiente | Medido con el **intérprete por reglas**. Con el LLM, la interpretación va a tardar del orden de segundos: hay que medirlo |
 | Latencia | Pedido → modelo (generado) | Reportar | Pendiente | El notebook de Colab mide TripoSR y Shap-E |
 | Generación | Modelos por piezas válidos, partes clave y calidad (10 pedidos) | Reportar | Pendiente | `eval/eval_ensamble.py`; necesita clave de API. Mide también segundos y costo por modelo |
-| LLM | Aciertos de intención (38 frases) | ≥ 85 % | **Reglas: 82 % (31/38)** · LLM: pendiente | El LLM se evalúa cuando haya una clave de API. Se sumaron 4 frases de desarmado y 4 de análisis de piezas; con las 30 originales las reglas daban 80 % (24/30) |
+| LLM | Aciertos de intención (38 frases) | ≥ 85 % | **Modelo entrenado: 84 % · reglas: 84 %** · LLM: pendiente | En 50 frases nuevas, que no vio ninguno de los dos: **modelo 88 %, reglas 68 %**. Ver "Intérprete de pedidos entrenado" abajo. El LLM se evalúa cuando haya una clave de API |
 | Búsqueda | Recuperación correcta (20 pedidos) | ≥ 80 % | **Híbrido: 90 % en calibración y 90 % en validación** | Ver el detalle abajo |
 | Usabilidad | Éxito de tarea sin ayuda | ≥ 80 % | Pendiente | Protocolo con 5 tareas en `eval/pruebas_usuarios/protocolo.md` |
 
 ## Gestos con datos de internet (HaGRID)
 
-`ml/extraer_hagrid.py` y `ml/entrenar_mlp.py`. Fuente: muestra de 31.833 fotos de HaGRID (Hugging Face `cj-mills/hagrid-sample-30k-384p`, CC BY-SA 4.0). MediaPipe encontró y asignó **34.503 manos de 7.798 personas**. Partición fija por persona: 24.328 manos para entrenar, 4.759 para validar y **5.416 para la prueba (1.134 personas que el modelo no vio)**.
+**Versión 2 (la del visor):** `ml/extraer_hagrid.py` y `ml/entrenar_red_gestos.py` (PyTorch). Fuente: muestra de **254.661 fotos** de HaGRID (Hugging Face `cj-mills/hagrid-sample-250k-384p`, 6,8 GB, CC BY-SA 4.0). MediaPipe encontró y asignó **276.237 manos de 23.205 personas**. Partición fija por persona: 195.699 manos para entrenar, 37.663 para validar y **42.875 para la prueba (3.416 personas que la red no vio)**. La red v1 (entrenada con la muestra de 30k) se evaluó en la misma prueba: la partición por persona es la misma, así que tampoco vio a esas personas.
 
 | Método | Exactitud | F1 macro | Gestos reconocidos (recall medio) | Falsas alarmas (manos sin gesto tomadas como gesto) |
 |---|---|---|---|---|
-| Reglas (`gestures.js`) | 63,2 % | 0,699 | 93,1 % | **53,8 %** |
-| **MLP** (128-64, umbral 0,9) | **97,4 %** | **0,963** | **95,3 %** | **1,4 %** |
+| Reglas (`gestures.js`) | 62,4 % | 0,695 | 92,6 % | **55,3 %** |
+| Red v1 (128-64, 34.503 manos, sin aumento) | 97,6 % | 0,966 | 95,4 % | 1,2 % |
+| **Red v2** (128-64, 276.237 manos, con aumento, umbral 0,8) | **97,9 %** | **0,969** | **96,3 %** | **1,3 %** |
 
-**Por clase (prueba, MLP):** palma 94 %, pellizco 99 %, pulgar abajo 96 %, pulgar arriba 97 %, puño 97 %, señalar 93 %, victoria 91 %, ninguno 99 %. Matrices de confusión: `ml/resultados/hagrid_{mlp,reglas}_confusion.csv`.
+**Por clase (prueba, red v2):** palma 98 %, pellizco 97 %, pulgar abajo 97 %, pulgar arriba 97 %, puño 98 %, señalar 94 %, victoria 93 %, ninguno 99 %. Matrices de confusión: `ml/resultados/hagrid_{red_v2,reglas}_confusion.csv`; reporte completo: `ml/resultados/hagrid_red_v2_reporte.json`.
 
-**Qué muestra la comparación.** Las reglas encuentran casi todos los gestos, pero también "ven" gestos donde no los hay: una mano con cuatro dedos extendidos es una palma para ellas, y dos dedos juntos hacia arriba, una victoria. En el visor, cada falsa alarma es una acción que nadie pidió. El MLP aprendió esas diferencias de miles de ejemplos.
+**¿Sirvió agrandar la red?** No. Con las 276.237 manos se compararon cinco tamaños (F1 macro en validación):
 
-**Sesgo por mano:** el MLP reconoce los gestos igual con la mano derecha (95,3 %) que con la izquierda (95,1 %). **Por persona:** de 177 personas con al menos 3 gestos en la prueba, la mediana es 100 % y 8 quedan por debajo del 80 %.
+| Capas ocultas | Parámetros | F1 validación |
+|---|---|---|
+| **128-64** | **16.968** | **0,960** |
+| 256-128 | 50.312 | 0,958 |
+| 512-256 | 166.152 | 0,958 |
+| 512-256-128 | 198.024 | 0,958 |
+| 1024-512-256 | 723.720 | 0,960 |
+
+Con 40 veces más parámetros, la red da lo mismo, y las grandes dejan de mejorar a las pocas épocas. El límite está en los datos y no en la red: 21 puntos con ruido de detección, gestos que se parecen ("señalar" y "victoria" son los de menor recall) y un pellizco que en HaGRID es el gesto "ok". Se queda la más chica: pesa 88 KB y en el navegador tarda microsegundos. Lo que sí mejoró fue tener **8 veces más datos** y el **aumento de datos** (manos espejadas, inclinadas ±25°, giradas en profundidad y con ruido): 0,960 de F1 en validación con aumento contra 0,954 sin aumento.
+
+**Qué muestra la comparación con las reglas.** Las reglas encuentran casi todos los gestos, pero también "ven" gestos donde no los hay: una mano con cuatro dedos extendidos es una palma para ellas, y dos dedos juntos hacia arriba, una victoria. En el visor, cada falsa alarma es una acción que nadie pidió. La red aprendió esas diferencias de miles de ejemplos.
+
+**Sesgo por mano:** la red v2 reconoce los gestos con la mano derecha (96,0 %) y con la izquierda (97,0 %) de forma parecida. **Por persona:** de 790 personas con al menos 3 gestos en la prueba, la mediana es 100 % y 27 (3,4 %) quedan por debajo del 80 %. Con la v1 eran 8 de 177 (4,5 %), pero en una prueba más chica.
+
+**Versión 1 (para reproducirla):** `ml/entrenar_mlp.py` (scikit-learn) con la muestra de 31.833 fotos (34.503 manos de 7.798 personas). En su propia prueba (5.416 manos, 1.134 personas) daba 97,4 % de exactitud, 95,3 % de gestos reconocidos y 1,4 % de falsas alarmas.
 
 **Límites de esta medición.** Son fotos, no video de una cámara web; HaGRID no tiene un pellizco puro (se usó el gesto "ok"); y las personas de HaGRID no son usuarios del visor. Falta medir con la cámara (protocolo en `eval/pruebas_usuarios/`).
+
+## Intérprete de pedidos entrenado (respaldo del LLM)
+
+`ml/intencion/generar_frases.py` y `ml/intencion/entrenar_intencion.py`; corre en `backend/intent_modelo.py`. Entrenado con 4.400 frases generadas con plantillas (400 por acción), sin los objetos ni las frases de los sets de medición. Se mide de punta a punta, con los filtros de seguridad: `python eval/eval_intent.py --frases {prueba,validacion,nuevas}`. El detalle por frase queda en `eval/resultados/intent_{reglas,modelo}[_validacion|_nuevas].csv`.
+
+| Set | Frases | Quién lo vio antes | Reglas | Modelo entrenado |
+|---|---|---|---|---|
+| Validación (`eval/frases_validacion.csv`) | 59 | El modelo: se usó para elegirlo y para ampliar las plantillas | 66 % | 100 % (optimista) |
+| Prueba (`eval/frases_prueba.csv`) | 38 | Las reglas: se escribieron mirándolo | 84 % | 84 % |
+| **Nuevo (`eval/frases_nuevas.csv`)** | **50** | **Ninguno** | **68 %** | **88 %** |
+
+El número que vale es el del set nuevo, medido antes de cualquier cambio. Después se corrigió "N veces más chico" (daba ×N en vez de ×1/N, en los dos motores), una falla que se encontró justamente con este set: con el arreglo da 90 % y 70 %, pero esos números ya no son a ciegas. En la prueba empatan: las reglas juegan de local (se escribieron con esas frases), y el modelo confunde "traeme el engranaje" y "quiero ver un rulemán" con analizar una pieza.
+
+**Tamaño del clasificador** (exactitud de la acción en validación): con los embeddings `multilingual-e5-small`, una regresión logística o una capa de 256 dan 98,3 %, y redes de 512-256 y 1024-512-256 bajan a 96,6 % y 94,9 %. Con MiniLM, todas quedan entre 93 % y 97 %. Agrandar el cabezal no ayuda con 4.400 frases de plantilla: lo que más mejoró el resultado fue ampliar el vocabulario de las plantillas. Elegido: e5-small + logística. Detalle en `ml/resultados/intencion_reporte.json`.
+
+**Latencia:** 12 ms de mediana por frase en CPU (contra 2 segundos o más del LLM).
 
 ## Latencias
 

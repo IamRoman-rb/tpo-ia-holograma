@@ -84,7 +84,7 @@ flowchart TB
 |---|---|
 | [1] Visión por computadora | `frontend/js/hands.js` |
 | [2] Reglas + MLP | `frontend/js/normalize.js`, `gestures.js`, `mlp.js`, `controles.js` · `ml/extraer_hagrid.py`, `ml/entrenar_mlp.py` (datos de HaGRID), `ml/train_mlp.ipynb` (dataset propio) |
-| [3] LLM | `backend/intent.py`, `backend/prompts/intent_system.txt` · pedidos por voz: `frontend/js/voz.js` |
+| [3] LLM | `backend/intent.py`, `backend/prompts/intent_system.txt` · respaldo entrenado sin internet: `backend/intent_modelo.py`, `ml/intencion/` · pedidos por voz: `frontend/js/voz.js` |
 | [4] IA generativa 3D | `backend/generate3d.py`, `backend/ensamble.py`, `backend/geometria.py`, `backend/prompts/ensamble_system.txt`, `backend/generador_colab/servidor_generacion.ipynb` |
 | Desarmado por piezas | `frontend/js/piezas.js`, `frontend/js/viewer.js` |
 | Holograma sobre la cámara | `frontend/js/holograma.js`, `frontend/js/etiquetas.js`, `frontend/js/viewer.js`, `frontend/js/overlay.js` |

@@ -94,13 +94,17 @@ Sin cámara se puede usar el teclado (flechas para rotar, `+` y `−` para escal
 
 Qué datos se procesan en el equipo y cuáles salen de él, sesgos y protecciones: [docs/uso_responsable.md](docs/uso_responsable.md). Con la tecla `D` se abre el panel de depuración, que muestra las métricas de la mano en vivo y sirve para calibrar los umbrales de `frontend/js/gestures.js`.
 
+### Pedidos sin LLM
+
+Los pedidos escritos o por voz los interpreta el LLM (Claude). Si no hay clave o no hay internet, los interpreta un **modelo propio entrenado** que corre en el equipo (`backend/intent_modelo.py`): reconoce la acción con embeddings de la frase y una red entrenada con 4.400 frases rioplatenses, y un etiquetador entrenado encuentra el nombre del objeto. En 50 frases nuevas acierta 88 %, contra 68 % de las reglas que usaba antes ([docs/metricas.md](docs/metricas.md#intérprete-de-pedidos-entrenado-respaldo-del-llm)). Si tampoco está ese modelo, quedan las reglas. El visor y el panel de actividad muestran qué motor respondió.
+
 ### Pedidos por voz
 
 El botón del micrófono (o la tecla `V`) escucha un pedido en español y lo trata igual que uno escrito. Si el pedido vino por voz, la respuesta también se escucha. Funciona en Chrome y Edge; en Firefox queda solo el texto. En esos navegadores el audio lo procesa su servicio de voz, salvo que puedan reconocerlo en el equipo (ver [docs/uso_responsable.md](docs/uso_responsable.md)).
 
 ## Dataset de gestos y MLP
 
-El MLP del visor (`frontend/ml/mlp_gestos.json`) está entrenado con **HaGRID**, un dataset público de fotos de gestos de miles de personas: 97,4 % de exactitud con personas que no vio, contra 63,2 % de las reglas. Cómo se reproduce: [ml/README.md](ml/README.md#entrenar-con-hagrid-datos-de-internet). Resultados: [docs/metricas.md](docs/metricas.md).
+La red de gestos del visor (`frontend/ml/mlp_gestos.json`, versión 2) está entrenada con **HaGRID**, un dataset público de fotos de gestos: 276.237 manos de más de 23 mil personas, con aumento de datos. Con personas que no vio acierta 97,9 %, contra 62,4 % de las reglas, y confunde una mano sin gesto con un gesto solo el 1,3 % de las veces. Se probaron redes de hasta 724 mil parámetros, pero no mejoraron a la de 17 mil. Cómo se reproduce: [ml/README.md](ml/README.md#entrenar-con-hagrid-datos-de-internet). Resultados: [docs/metricas.md](docs/metricas.md).
 
 La página <http://localhost:5500/captura.html> sirve para grabar un dataset propio con la cámara. Los pasos para grabar y entrenar están en [ml/README.md](ml/README.md).
 

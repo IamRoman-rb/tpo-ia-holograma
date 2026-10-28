@@ -33,7 +33,7 @@ Para cada punto se indica qué está **implementado** (y dónde), y qué está *
 
 - El video **nunca** se envía: en el código no hay ninguna llamada de red con imágenes. Se puede comprobar en las herramientas de desarrollador del navegador (pestaña Red): solo hay pedidos de texto a `localhost:8000`.
 - La ayuda del visor (botón **?**) explica qué se procesa en el equipo y qué se envía a un servicio externo.
-- Sin clave de API y con la generación desactivada, ningún dato sale del equipo: la intención la resuelve el intérprete por reglas (`backend/intent.py`) y los objetos salen solo del catálogo.
+- Sin clave de API y con la generación desactivada, ningún dato sale del equipo: la intención la resuelve el intérprete entrenado (`backend/intent_modelo.py`), y si no está, el de reglas (`backend/intent.py`), los dos en el equipo y los objetos salen solo del catálogo.
 
 ### Pedidos por voz (`frontend/js/voz.js`)
 
@@ -76,7 +76,7 @@ MediaPipe puede rendir peor con ciertos tonos de piel, poca luz, manos con difer
 | Evaluación **por persona**: el resultado se informa para cada persona, así se ve si alguna queda peor | `ml/train_mlp.ipynb` |
 | Se registra **qué mano** se usó en cada muestra | columna `mano` del dataset |
 
-**Medido con fotos (HaGRID, 1.134 personas no vistas):** el MLP reconoce los gestos con la mano derecha (95,3 %) igual que con la izquierda (95,1 %). De 177 personas con al menos 3 gestos, 8 quedan por debajo del 80 %. La muestra de HaGRID no trae edad ni tono de piel, así que esos sesgos no se pudieron medir.
+**Medido con fotos (HaGRID, 3.416 personas no vistas):** la red de gestos (versión 2) reconoce los gestos con la mano derecha (96,0 %) y con la izquierda (97,0 %) de forma parecida. De 790 personas con al menos 3 gestos, la mediana es 100 % y 27 (3,4 %) quedan por debajo del 80 %. La muestra de HaGRID no trae edad ni tono de piel, así que esos sesgos no se pudieron medir.
 
 **Pendiente (fase 4): medir con personas reales.** Completar esta tabla con las pruebas de usuarios (sección 15.2), con 20 intentos por gesto en cada condición:
 
@@ -92,7 +92,8 @@ MediaPipe puede rendir peor con ciertos tonos de piel, poca luz, manos con difer
 
 - El prompt pide interpretar español rioplatense (`backend/prompts/intent_system.txt`).
 - Las 30 frases de prueba (`eval/frases_prueba.csv`) incluyen voseo y formas coloquiales ("me mostrás…?", "girálo", "dale una vuelta").
-- El intérprete por reglas falla justamente con formas naturales: 80 % de aciertos. **Pendiente:** medir el LLM con la misma batería cuando haya clave.
+- El intérprete por reglas falla justamente con formas naturales: 84 % en las frases de prueba y 68 % en 50 frases nuevas. **Pendiente:** medir el LLM con la misma batería cuando haya clave.
+- El intérprete entrenado (`backend/intent_modelo.py`), que reemplaza a las reglas cuando no hay LLM, aprendió de frases generadas con plantillas escritas por una sola persona en español rioplatense. Puede fallar con otras variantes del español o con formas que las plantillas no cubren. Su confianza es real (la probabilidad de la red): si es baja, el visor pide confirmar antes de ejecutar. Corre en el equipo, sin enviar la frase a ningún servicio.
 
 ### Generador 3D
 
