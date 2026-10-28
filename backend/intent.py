@@ -145,12 +145,31 @@ RE_ARMAR = (r"\b(?:arma|armalo|armala|armar|armalos|monta|montalo|montala|montar
             r"|\bvolve a armar|\bjunta (?:las )?piezas")
 PALABRAS_DESPIECE = r"\b(?:el |la )?(?:despiece|piezas|partes|desarmad[oa]s?|desmontad[oa]s?|explotad[oa]s?)\b"
 
+# Analizar una pieza sola ("mostrame solo el volante", "aislá el impulsor") y volver al objeto entero
+RE_CONJUNTO = (r"\bvolve\w* al (?:conjunto|objeto|modelo)\b|\bsali\w* del analisis|\bmostra\w* todo\b|\bver todo\b"
+               r"|\b(?:el )?(?:conjunto|objeto) (?:entero|completo)\b")
+RE_AISLAR = r"\baisla\w*|\banaliza\w*|\b(?:solo|solamente|unicamente) (?:el|la|los|las)\b|\bpor separado\b"
+_SIN_NOMBRE = {"", "pieza", "esa", "esa pieza", "esta", "esta pieza", "la pieza", "la elegida", "elegida"}
+
+
+def _pieza(t):
+    """Nombre de la pieza a aislar, o None si se refiere a la que ya está elegida ("analizala")."""
+    m = re.search(rf"\b(?:solo|solamente|unicamente|aisla\w*|analiza\w*)\s+(?:{ARTICULOS}\s+)?(.*)", t)
+    resto = m.group(1) if m else (_objeto(t) or "")
+    resto = re.split(r"\b(?:por separado|sola|solo|y|por favor)\b|[.,]", resto)[0]
+    resto = re.sub(rf"^(?:{ARTICULOS}\s+)", "", resto.strip()).strip()
+    return None if resto in _SIN_NOMBRE else resto
+
 
 def interpretar_reglas(frase: str) -> dict:
     t = normalizar(frase)
     objeto, vista, factor = _objeto(t), _vista(t), _factor(t)
 
-    if re.search(RE_EXPLOTAR, t):
+    if re.search(RE_CONJUNTO, t):
+        accion, objeto = "conjunto", None
+    elif re.search(RE_AISLAR, t):
+        accion, objeto = "aislar", _pieza(t)
+    elif re.search(RE_EXPLOTAR, t):
         accion = "explotar"
         # "mostrame la válvula desarmada": el objeto es la válvula, no "válvula desarmada"
         if objeto:

@@ -51,7 +51,7 @@ def evaluar_fila(fila, r):
         errores.append(f"vista {r['parametros']['vista']}")
     if not factor_ok(fila["factor_escala"], r["parametros"]["factor_escala"]):
         errores.append(f"escala {r['parametros']['factor_escala']}")
-    if fila["accion"] == "mostrar" and fila["objeto_clave"] not in normalizar(r["objeto"] or ""):
+    if fila["accion"] in ("mostrar", "aislar") and fila["objeto_clave"] not in normalizar(r["objeto"] or ""):
         errores.append(f"objeto {r['objeto']!r}")
     return errores
 

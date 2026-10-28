@@ -25,6 +25,11 @@ from intent import interpretar_llm, interpretar_reglas
     ("mostrame el despiece", "explotar", None, None, None),
     ("mostrame la válvula desarmada", "explotar", "valvula", None, None),
     ("armalo de nuevo", "armar", None, None, None),
+    ("mostrame solo el volante", "aislar", "volante", None, None),
+    ("aislá el impulsor", "aislar", "impulsor", None, None),
+    ("analizala", "aislar", None, None, None),
+    ("mostrame el vástago por separado", "aislar", "vastago", None, None),
+    ("volvé al conjunto", "conjunto", None, None, None),
 ])
 def test_reglas(frase, accion, objeto, vista, factor):
     r = interpretar_reglas(frase)

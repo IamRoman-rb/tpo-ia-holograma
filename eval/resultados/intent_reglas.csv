@@ -33,3 +33,7 @@ desarmalo,True,,desmontar,,,,0.7,0
 sacale una pieza,True,,desmontar,,,,0.7,0
 mostrame el despiece de la válvula,True,,explotar,valvula,,,0.7,0
 armalo de nuevo,True,,armar,,,,0.7,0
+analizá solamente la brida,True,,aislar,solamente la brida,,,0.7,0
+quiero ver el impulsor solo,False,acción mostrar,mostrar,impulsor solo,,,0.7,0
+volvé al objeto completo,True,,conjunto,,,,0.7,0
+salí del análisis,True,,conjunto,,,,0.7,0

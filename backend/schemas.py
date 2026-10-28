@@ -3,7 +3,8 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
-Accion = Literal["mostrar", "rotar", "escalar", "vista", "reiniciar", "desmontar", "explotar", "armar", "desconocido"]
+Accion = Literal["mostrar", "rotar", "escalar", "vista", "reiniciar", "desmontar", "explotar", "armar", "aislar", "conjunto",
+                 "desconocido"]
 Vista = Literal["frontal", "trasera", "lateral", "superior"]
 
 LARGO_MAXIMO_FRASE = 300
@@ -40,7 +41,8 @@ class RespuestaObjeto(BaseModel):
 ESQUEMA_INTENCION = {
     "type": "object",
     "properties": {
-        "accion": {"type": "string", "enum": ["mostrar", "rotar", "escalar", "vista", "reiniciar", "desmontar", "explotar", "armar", "desconocido"]},
+        "accion": {"type": "string", "enum": ["mostrar", "rotar", "escalar", "vista", "reiniciar", "desmontar",
+                                               "explotar", "armar", "aislar", "conjunto", "desconocido"]},
         "objeto": {"anyOf": [{"type": "string"}, {"type": "null"}]},
         "parametros": {
             "type": "object",
