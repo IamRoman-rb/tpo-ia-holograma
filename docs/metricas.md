@@ -20,7 +20,7 @@ Los detalles por frase y por pedido quedan en `eval/resultados/`.
 | Latencia | Gesto → pantalla | < 100 ms | Pendiente | Con cámara: panel de depuración (tecla D), línea `fotograma` |
 | Latencia | Pedido → modelo (catálogo) | < 2 s | **Backend: 14 ms** (mediana; p95 15 ms) · de punta a punta: pendiente | Medido con el **intérprete por reglas**. Con el LLM, la interpretación va a tardar del orden de segundos: hay que medirlo |
 | Latencia | Pedido → modelo (generado) | Reportar | Pendiente | El notebook de Colab mide TripoSR y Shap-E |
-| LLM | Aciertos de intención (30 frases) | ≥ 85 % | **Reglas: 80 % (24/30)** · LLM: pendiente | El LLM se evalúa cuando haya una clave de API |
+| LLM | Aciertos de intención (34 frases) | ≥ 85 % | **Reglas: 82 % (28/34)** · LLM: pendiente | El LLM se evalúa cuando haya una clave de API. Las 4 frases nuevas son de desarmado; con las 30 originales las reglas daban 80 % (24/30) |
 | Búsqueda | Recuperación correcta (20 pedidos) | ≥ 80 % | **Híbrido: 90 % en calibración y 90 % en validación** | Ver el detalle abajo |
 | Usabilidad | Éxito de tarea sin ayuda | ≥ 80 % | Pendiente | Protocolo con 5 tareas en `eval/pruebas_usuarios/protocolo.md` |
 

@@ -20,11 +20,13 @@ flowchart TB
         BUSQ["Búsqueda híbrida [5]"] --> DEC2{¿en el catálogo?}
         DEC2 -->|sí| CAT[(Catálogo)]
         DEC2 -->|no| GEN["generate3d.py [4]"] -->|guarda| CAT
+        GEN --> ENS["ensamble.py: valida el diseño<br/>y arma el .glb por piezas"]
     end
     subgraph EXT["Servicios externos (opcionales)"]
         CLAUDE[Claude]
         COLAB["Colab GPU: TripoSR o Shap-E [4]"]
     end
+    ENS -.->|"pedido → diseño por piezas (JSON)"| CLAUDE
     ORQ -->|POST /intent| LLM
     LLM -.->|si falla| REG
     LLM -.->|texto| CLAUDE
@@ -48,8 +50,11 @@ flowchart TB
 2. La intención se valida [6]: esquema, objetos fuera del dominio, límites y pedidos por minuto.
 3. El visor muestra lo entendido y pide confirmación si la confianza es menor a 0,5.
 4. El objeto va a `POST /object`. La búsqueda híbrida [5] prueba primero por palabras clave y después por embeddings.
-5. Si está en el catálogo, se devuelve. Si no, se genera en Colab [4], se valida el `.glb`, se guarda en el catálogo y se devuelve. El próximo pedido parecido sale al instante.
+5. Si está en el catálogo, se devuelve. Si no, se genera [4], se guarda en el catálogo y se devuelve. El próximo pedido parecido sale al instante. Hay dos generadores:
+   - **Por piezas** (por defecto con clave de API): Claude devuelve el diseño del objeto como un JSON de piezas, cada una hecha de formas simples con medidas, material, orden de desmontaje y dirección de salida. `ensamble.py` valida el diseño (formas, medidas y cantidades dentro de rango) y lo convierte en un `.glb` con un nodo por pieza.
+   - **Colab** (TripoSR o Shap-E): devuelve una sola malla; se valida el `.glb` (cabecera, largo y tamaño).
 6. El visor carga el modelo y muestra su origen: "del catálogo" o "generado por IA, no apto para fabricación sin revisión".
+7. Si el modelo tiene piezas, el panel **Piezas** las lista. Se desmontan de a una (botón, tecla `X`, gesto de señalar o "sacale una pieza"), se separan todas con la vista explotada ("mostrame la válvula desarmada") y se vuelven a armar. Cada pieza sale en su dirección y a una distancia que depende de su orden, para que no se superpongan.
 
 **Si algo falla:** sin backend, el visor busca en el catálogo local; sin LLM, interpreta con reglas; sin cámara, quedan los botones y el teclado; sin servidor de generación, se usan solo los modelos del catálogo.
 
@@ -61,14 +66,15 @@ flowchart TB
 | Three.js, MediaPipe y modelo de manos | `frontend/vendor/` (dentro del proyecto) | Funciona sin internet (riesgo 2) |
 | Interpretación del pedido | Backend local + Claude (externo) | Calidad de comprensión; respaldo por reglas sin red |
 | Validación, búsqueda y catálogo | Backend local | Sin dependencia de internet en la demo |
-| Generación 3D | Colab con GPU (externo) | Necesita GPU; lo generado queda en el catálogo |
+| Generación 3D por piezas | Backend local + Claude (externo) | No necesita GPU; el diseño se valida y se arma en el backend |
+| Generación 3D con TripoSR o Shap-E | Colab con GPU (externo) | Necesita GPU; lo generado queda en el catálogo |
 
 ## Contratos (backend)
 
 | Método | Ruta | Recibe | Devuelve |
 |---|---|---|---|
-| GET | `/health` | — | estado, tipo de búsqueda, cantidad de piezas, si la generación está activa |
-| POST | `/intent` | `{"frase"}` | `{"accion", "objeto", "parametros": {"vista", "factor_escala"}, "confianza", "requiere_confirmacion", "motor"}` |
+| GET | `/health` | — | estado, tipo de búsqueda, cantidad de modelos del catálogo, generador activo (`ensamble`, `remoto` o `desactivado`) |
+| POST | `/intent` | `{"frase"}` | `{"accion", "objeto", "parametros": {"vista", "factor_escala"}, "confianza", "requiere_confirmacion", "motor"}` · acciones: mostrar, rotar, escalar, vista, reiniciar, desmontar, explotar, armar, desconocido |
 | POST | `/object` | `{"frase"}` (el objeto) | `{"origen", "id", "nombre", "modelo_url", "similitud", "metodo"}` · 404 si no está y no se puede generar · 422 si está fuera del dominio |
 | GET | `/catalog` | — | la lista de piezas del catálogo |
 
@@ -79,7 +85,8 @@ flowchart TB
 | [1] Visión por computadora | `frontend/js/hands.js` |
 | [2] Reglas + MLP | `frontend/js/normalize.js`, `gestures.js`, `controles.js` · `ml/train_mlp.ipynb` |
 | [3] LLM | `backend/intent.py`, `backend/prompts/intent_system.txt` |
-| [4] IA generativa 3D | `backend/generate3d.py`, `backend/generador_colab/servidor_generacion.ipynb` |
+| [4] IA generativa 3D | `backend/generate3d.py`, `backend/ensamble.py`, `backend/geometria.py`, `backend/prompts/ensamble_system.txt`, `backend/generador_colab/servidor_generacion.ipynb` |
+| Desarmado por piezas | `frontend/js/piezas.js`, `frontend/js/viewer.js` |
 | [5] Embeddings y búsqueda | `backend/retrieval.py` |
 | [6] Reglas de seguridad | `backend/safety.py`, `backend/schemas.py` |
 

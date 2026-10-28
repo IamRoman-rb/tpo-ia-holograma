@@ -59,6 +59,11 @@ El script revisa los servicios, el plan B sin internet, el catálogo, la configu
 | Palma abierta | Rotar siguiendo la mano |
 | Pellizco con las dos manos | Separar para agrandar, juntar para achicar |
 | Puño | Reiniciar la vista |
+| Señalar (solo el índice) | Desmontar la próxima pieza |
+
+### Desarmar el objeto
+
+Los modelos están hechos por piezas. El panel **Piezas** las lista en el orden en que se desmontan: **Desmontar** saca la próxima, **Montar** vuelve a poner la última, **Armar todo** las junta y la barra **Vista explotada** las separa de a poco. Al tocar una pieza en la lista o en el modelo, se resalta y se muestra para qué sirve. También funciona con el teclado (`X` desmonta, `A` arma) y con pedidos escritos: "mostrame la válvula desarmada", "sacale una pieza", "armalo de nuevo". Deshacer también vuelve atrás el desarmado.
 
 El recuadro de cámara (abajo a la derecha) muestra el esqueleto de cada mano y una etiqueta con el gesto que se detecta. **Cian** significa que el gesto se está aplicando al objeto y **ámbar** que se reconoce, pero todavía no alcanza la confianza mínima. El botón ⤢ agranda el recuadro. Si no hay cámara, **Simular manos** reproduce un recorrido con manos sintéticas (palma, pellizco, dos manos y puño) que pasa por el mismo clasificador. Sirve para probar y mostrar el sistema, pero no reemplaza las pruebas con manos reales.
 
@@ -72,15 +77,21 @@ La página <http://localhost:5500/captura.html> sirve para grabar el dataset de 
 
 ## Generación 3D
 
-La evaluación de TripoSR y Shap-E se corre en Google Colab, porque necesita GPU. Los pasos y la rúbrica de calidad están en [eval/generacion3d/README.md](eval/generacion3d/README.md).
+Un pedido que no está en el catálogo se puede generar de dos formas (variable `GEN3D_MODO` en `.env`):
 
-Para generar modelos desde el visor, se corre `backend/generador_colab/servidor_generacion.ipynb` en Colab y se copian a `.env` las tres líneas que imprime al final (`GEN3D_MODO`, `GEN3D_URL` y `GEN3D_TOKEN`). Con eso, un pedido que no está en el catálogo se genera, se guarda en `frontend/models/generados/` y queda en el catálogo para la próxima vez. Sin servidor, los pedidos se resuelven solo con el catálogo.
+- **Por piezas con el LLM** (`ensamble`, la opción por defecto si hay `ANTHROPIC_API_KEY`). Claude diseña el objeto como un ensamble de formas simples (cilindros, conos, tubos, engranajes, cajas…) con medidas, materiales, orden de desmontaje y dirección de salida de cada pieza. El backend valida ese diseño y lo convierte en un `.glb` con una pieza por nodo, así que lo generado se puede desarmar igual que el catálogo. No necesita GPU. El prompt está en `backend/prompts/ensamble_system.txt`.
+- **TripoSR o Shap-E en Colab** (`remoto`). Dan formas más orgánicas, pero en una sola malla: no se pueden desarmar. La evaluación se corre en Google Colab, porque necesita GPU. Los pasos y la rúbrica de calidad están en [eval/generacion3d/README.md](eval/generacion3d/README.md).
+
+En los dos casos, lo generado se guarda en `frontend/models/generados/` y queda en el catálogo para la próxima vez.
+
+Para usar Colab, se corre `backend/generador_colab/servidor_generacion.ipynb` en Colab y se copian a `.env` las tres líneas que imprime al final (`GEN3D_MODO`, `GEN3D_URL` y `GEN3D_TOKEN`). Sin clave de API ni servidor, los pedidos se resuelven solo con el catálogo.
 
 ## Catálogo, pruebas y evaluación
 
 ```bash
 python scripts/generar_modelos_demo.py   # regenera frontend/models/*.glb y catalogo.json
 node frontend/tests/gestos.test.mjs      # pruebas de normalización, gestos y búsqueda local
+node frontend/tests/piezas.test.mjs      # orden y recorrido del desarmado
 python -m pytest ml                      # la normalización de Python coincide con la del navegador (entorno de ml/)
 cd backend && python -m pytest tests     # pruebas del backend (con el entorno virtual activo)
 python eval/eval_intent.py               # aciertos de intención: reglas vs. LLM (desde la raíz)
