@@ -96,6 +96,7 @@ python -m pytest ml                      # la normalización de Python coincide 
 cd backend && python -m pytest tests     # pruebas del backend (con el entorno virtual activo)
 python eval/eval_intent.py               # aciertos de intención: reglas vs. LLM (desde la raíz)
 python eval/eval_busqueda.py             # búsqueda en el catálogo y calibración del umbral
+python eval/eval_ensamble.py             # generación por piezas con el LLM (tiene costo; --prueba para probar sin API)
 ```
 
 Los resultados están en [docs/metricas.md](docs/metricas.md) y las decisiones técnicas en [docs/decisiones.md](docs/decisiones.md).
