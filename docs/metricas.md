@@ -14,16 +14,33 @@ Los detalles por frase y por pedido quedan en `eval/resultados/`.
 
 | Área | Métrica | Meta | Resultado | Notas |
 |---|---|---|---|---|
-| Gestos | Precisión por gesto (persona no vista) | ≥ 90 % | Pendiente | Protocolo y planilla en `eval/pruebas_usuarios/`; necesita cámara |
-| Gestos | Reglas vs. MLP | Reportar | Pendiente | `ml/train_mlp.ipynb` ya genera la comparación; falta grabar el dataset |
+| Gestos | Precisión por gesto (persona no vista) | ≥ 90 % | **MLP: 95,3 %** (recall medio de los 7 gestos, fotos de HaGRID) · con cámara: pendiente | Ver "Gestos con datos de internet" abajo |
+| Gestos | Reglas vs. MLP | Reportar | **Exactitud 63,2 % vs. 97,4 %** · falsas alarmas 53,8 % vs. 1,4 % | 5.416 manos de personas que el modelo no vio |
 | Gestos | Falsos positivos en 60 s en reposo | ≤ 2 | Pendiente | Incluido en el protocolo de pruebas; necesita cámara |
 | Latencia | Gesto → pantalla | < 100 ms | Pendiente | Con cámara: panel de depuración (tecla D), línea `fotograma` |
 | Latencia | Pedido → modelo (catálogo) | < 2 s | **Backend: 14 ms** (mediana; p95 15 ms) · de punta a punta: pendiente | Medido con el **intérprete por reglas**. Con el LLM, la interpretación va a tardar del orden de segundos: hay que medirlo |
 | Latencia | Pedido → modelo (generado) | Reportar | Pendiente | El notebook de Colab mide TripoSR y Shap-E |
 | Generación | Modelos por piezas válidos, partes clave y calidad (10 pedidos) | Reportar | Pendiente | `eval/eval_ensamble.py`; necesita clave de API. Mide también segundos y costo por modelo |
-| LLM | Aciertos de intención (34 frases) | ≥ 85 % | **Reglas: 82 % (28/34)** · LLM: pendiente | El LLM se evalúa cuando haya una clave de API. Las 4 frases nuevas son de desarmado; con las 30 originales las reglas daban 80 % (24/30) |
+| LLM | Aciertos de intención (38 frases) | ≥ 85 % | **Reglas: 82 % (31/38)** · LLM: pendiente | El LLM se evalúa cuando haya una clave de API. Se sumaron 4 frases de desarmado y 4 de análisis de piezas; con las 30 originales las reglas daban 80 % (24/30) |
 | Búsqueda | Recuperación correcta (20 pedidos) | ≥ 80 % | **Híbrido: 90 % en calibración y 90 % en validación** | Ver el detalle abajo |
 | Usabilidad | Éxito de tarea sin ayuda | ≥ 80 % | Pendiente | Protocolo con 5 tareas en `eval/pruebas_usuarios/protocolo.md` |
+
+## Gestos con datos de internet (HaGRID)
+
+`ml/extraer_hagrid.py` y `ml/entrenar_mlp.py`. Fuente: muestra de 31.833 fotos de HaGRID (Hugging Face `cj-mills/hagrid-sample-30k-384p`, CC BY-SA 4.0). MediaPipe encontró y asignó **34.503 manos de 7.798 personas**. Partición fija por persona: 24.328 manos para entrenar, 4.759 para validar y **5.416 para la prueba (1.134 personas que el modelo no vio)**.
+
+| Método | Exactitud | F1 macro | Gestos reconocidos (recall medio) | Falsas alarmas (manos sin gesto tomadas como gesto) |
+|---|---|---|---|---|
+| Reglas (`gestures.js`) | 63,2 % | 0,699 | 93,1 % | **53,8 %** |
+| **MLP** (128-64, umbral 0,9) | **97,4 %** | **0,963** | **95,3 %** | **1,4 %** |
+
+**Por clase (prueba, MLP):** palma 94 %, pellizco 99 %, pulgar abajo 96 %, pulgar arriba 97 %, puño 97 %, señalar 93 %, victoria 91 %, ninguno 99 %. Matrices de confusión: `ml/resultados/hagrid_{mlp,reglas}_confusion.csv`.
+
+**Qué muestra la comparación.** Las reglas encuentran casi todos los gestos, pero también "ven" gestos donde no los hay: una mano con cuatro dedos extendidos es una palma para ellas, y dos dedos juntos hacia arriba, una victoria. En el visor, cada falsa alarma es una acción que nadie pidió. El MLP aprendió esas diferencias de miles de ejemplos.
+
+**Sesgo por mano:** el MLP reconoce los gestos igual con la mano derecha (95,3 %) que con la izquierda (95,1 %). **Por persona:** de 177 personas con al menos 3 gestos en la prueba, la mediana es 100 % y 8 quedan por debajo del 80 %.
+
+**Límites de esta medición.** Son fotos, no video de una cámara web; HaGRID no tiene un pellizco puro (se usó el gesto "ok"); y las personas de HaGRID no son usuarios del visor. Falta medir con la cámara (protocolo en `eval/pruebas_usuarios/`).
 
 ## Latencias
 

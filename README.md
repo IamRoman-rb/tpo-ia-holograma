@@ -58,10 +58,18 @@ El script revisa los servicios, el plan B sin internet, el catálogo, la configu
 | Pellizco (pulgar + índice) | Tomar y mover el objeto |
 | Palma abierta | Rotar siguiendo la mano |
 | Pellizco con las dos manos | Separar para agrandar, juntar para achicar |
-| Puño | Reiniciar la vista |
-| Señalar (solo el índice) | Desmontar la próxima pieza |
+| Señalar (solo el índice) | Mover el cursor; apuntar 0,8 s a una pieza la elige |
+| Pellizco sobre la pieza elegida | Sacar solo esa pieza y moverla |
+| Victoria (índice y medio en V) | Analizar la pieza elegida; sin pieza elegida, abrir o cerrar el despiece |
+| Puño | Salir del análisis; si no se está analizando, reiniciar la vista |
+| Pulgar arriba | Confirmar un pedido |
+| Pulgar abajo | Deshacer el último cambio |
+
+Los gestos los reconoce una red neuronal (MLP) entrenada con fotos reales de miles de personas, o las reglas geométricas: se elige en el panel de la izquierda (**Clasificador**).
 
 ### Desarmar el objeto
+
+Para **analizar una pieza**: señalala un momento (o tocala en la lista o en el modelo) y hacé la victoria, apretá `I` o el botón **Analizar**. Queda sola, centrada y grande, con un panel que dice qué es, de qué material y cuánto mide; se gira con la palma. El puño, `Esc` o "volvé al conjunto" la devuelven a su lugar. También se puede pedir: "mostrame solo el volante".
 
 Los modelos están hechos por piezas. El panel **Piezas** las lista en el orden en que se desmontan: **Desmontar** saca la próxima, **Montar** vuelve a poner la última, **Armar todo** las junta y la barra **Vista explotada** las separa de a poco. Al tocar una pieza en la lista o en el modelo, se resalta y se muestra para qué sirve. También funciona con el teclado (`X` desmonta, `A` arma) y con pedidos escritos: "mostrame la válvula desarmada", "sacale una pieza", "armalo de nuevo". Deshacer también vuelve atrás el desarmado.
 
@@ -71,9 +79,15 @@ Sin cámara se puede usar el teclado (flechas para rotar, `+` y `−` para escal
 
 Qué datos se procesan en el equipo y cuáles salen de él, sesgos y protecciones: [docs/uso_responsable.md](docs/uso_responsable.md). Con la tecla `D` se abre el panel de depuración, que muestra las métricas de la mano en vivo y sirve para calibrar los umbrales de `frontend/js/gestures.js`.
 
+### Pedidos por voz
+
+El botón del micrófono (o la tecla `V`) escucha un pedido en español y lo trata igual que uno escrito. Si el pedido vino por voz, la respuesta también se escucha. Funciona en Chrome y Edge; en Firefox queda solo el texto. En esos navegadores el audio lo procesa su servicio de voz, salvo que puedan reconocerlo en el equipo (ver [docs/uso_responsable.md](docs/uso_responsable.md)).
+
 ## Dataset de gestos y MLP
 
-La página <http://localhost:5500/captura.html> sirve para grabar el dataset de gestos con la cámara. Los pasos para grabar y entrenar están en [ml/README.md](ml/README.md).
+El MLP del visor (`frontend/ml/mlp_gestos.json`) está entrenado con **HaGRID**, un dataset público de fotos de gestos de miles de personas: 97,4 % de exactitud con personas que no vio, contra 63,2 % de las reglas. Cómo se reproduce: [ml/README.md](ml/README.md#entrenar-con-hagrid-datos-de-internet). Resultados: [docs/metricas.md](docs/metricas.md).
+
+La página <http://localhost:5500/captura.html> sirve para grabar un dataset propio con la cámara. Los pasos para grabar y entrenar están en [ml/README.md](ml/README.md).
 
 ## Generación 3D
 
@@ -91,7 +105,9 @@ Para usar Colab, se corre `backend/generador_colab/servidor_generacion.ipynb` en
 ```bash
 python scripts/generar_modelos_demo.py   # regenera frontend/models/*.glb y catalogo.json
 node frontend/tests/gestos.test.mjs      # pruebas de normalización, gestos y búsqueda local
-node frontend/tests/piezas.test.mjs      # orden y recorrido del desarmado
+node frontend/tests/piezas.test.mjs      # orden y recorrido del desarmado, análisis de una pieza
+node frontend/tests/mlp.test.mjs         # el MLP en JavaScript da lo mismo que en Python
+node frontend/tests/voz.test.mjs         # pedidos por voz (con un reconocimiento falso)
 python -m pytest ml                      # la normalización de Python coincide con la del navegador (entorno de ml/)
 cd backend && python -m pytest tests     # pruebas del backend (con el entorno virtual activo)
 python eval/eval_intent.py               # aciertos de intención: reglas vs. LLM (desde la raíz)
