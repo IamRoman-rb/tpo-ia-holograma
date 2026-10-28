@@ -315,7 +315,14 @@ document.getElementById('pedido').addEventListener('submit', (e) => {
 
 // --- pedidos por voz: el texto reconocido sigue el mismo camino que uno escrito
 const botonMicrofono = document.getElementById('microfono');
+const estadoVoz = document.getElementById('estado-voz');
 let voz = null;
+
+function mostrarEstadoVoz(estado, texto) {
+  estadoVoz.dataset.estado = estado;
+  estadoVoz.textContent = texto;
+  estadoVoz.hidden = !texto;
+}
 
 async function prepararVoz() {
   const Reconocimiento = reconocimientoDisponible();
@@ -326,10 +333,12 @@ async function prepararVoz() {
     local,
     alParcial: (texto) => {
       campo.value = texto;
+      mostrarEstadoVoz('escuchando', `Te escucho: «${texto}»`);
       actividad.publicar({ tipo: 'voz', estado: 'escuchando', texto });
     },
     alFinal: (texto) => {
       campo.value = texto;
+      mostrarEstadoVoz('reconocido', `Reconocí: «${texto}». Procesando pedido…`);
       actividad.publicar({ tipo: 'voz', estado: 'final', texto });
       pedidoPorVoz = true;
       document.getElementById('pedido').requestSubmit();
@@ -339,9 +348,18 @@ async function prepararVoz() {
       actividad.publicar({ tipo: 'voz', estado: estado === 'escuchando' ? 'escuchando' : 'inactivo', texto: '' });
       botonMicrofono.classList.toggle('escuchando', estado === 'escuchando');
       botonMicrofono.setAttribute('aria-pressed', String(estado === 'escuchando'));
-      if (estado === 'escuchando') ui.mostrarEstado('escuchando…');
-      else if (estado === 'error') ui.mostrarEstado(detalle, 'error');
-      else if (detalle) ui.mostrarEstado(detalle);
+      if (estado === 'escuchando') {
+        mostrarEstadoVoz(estado, 'Escuchando… hablá ahora y nombrá un objeto.');
+        ui.mostrarEstado('escuchando…');
+      } else if (estado === 'error') {
+        mostrarEstadoVoz(estado, detalle);
+        ui.mostrarEstado(detalle, 'error');
+      } else if (detalle) {
+        mostrarEstadoVoz(estado, detalle);
+        ui.mostrarEstado(detalle);
+      } else if (!estadoVoz.dataset.estado || estadoVoz.dataset.estado === 'escuchando') {
+        mostrarEstadoVoz('', '');
+      }
     },
   });
   botonMicrofono.hidden = false;

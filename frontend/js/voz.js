@@ -37,6 +37,7 @@ export function crearVoz({ alParcial = () => {}, alFinal = () => {}, alEstado = 
   if (!Reconocimiento) return null;
   let rec = null;
   let finalizado = false;
+  let fallo = false;
 
   const voz = {
     escuchando: false,
@@ -50,16 +51,13 @@ export function crearVoz({ alParcial = () => {}, alFinal = () => {}, alEstado = 
       rec.continuous = false;
       if (local && 'processLocally' in rec) rec.processLocally = true;
       finalizado = false;
+      fallo = false;
 
       rec.onresult = (e) => {
-        let texto = '';
-        let esFinal = false;
-        for (let i = 0; i < e.results.length; i++) {
-          texto += e.results[i][0].transcript;
-          esFinal ||= e.results[i].isFinal;
-        }
-        texto = texto.trim();
-        if (esFinal && texto && !finalizado) {
+        const resultados = Array.from(e.results, (r) => r[0]?.transcript?.trim() ?? '');
+        const texto = resultados.filter(Boolean).join(' ');
+        const ultimo = e.results[e.results.length - 1];
+        if (ultimo?.isFinal && texto && !finalizado) {
           finalizado = true;
           alFinal(texto);
         } else if (texto) {
@@ -68,20 +66,34 @@ export function crearVoz({ alParcial = () => {}, alFinal = () => {}, alEstado = 
       };
       rec.onerror = (e) => {
         // "no-speech" y "aborted" no son fallas: el usuario no habló o canceló
-        if (e.error === 'no-speech' || e.error === 'aborted') return alEstado('listo', 'No escuché nada.');
+        if (e.error === 'no-speech' || e.error === 'aborted') {
+          fallo = true;
+          voz.escuchando = false;
+          return alEstado('listo', e.error === 'no-speech' ? 'No escuché nada.' : 'Escucha detenida.');
+        }
         const motivo = e.error === 'not-allowed' || e.error === 'service-not-allowed'
           ? 'No hay permiso para usar el micrófono.'
           : e.error === 'network' ? 'El reconocimiento de voz necesita internet.'
           : 'No pude reconocer la voz.';
+        fallo = true;
+        voz.escuchando = false;
         alEstado('error', motivo);
       };
       rec.onend = () => {
         voz.escuchando = false;
-        if (!finalizado) alEstado('listo');
+        if (!finalizado && !fallo) alEstado('listo');
       };
       voz.escuchando = true;
       alEstado('escuchando');
-      rec.start();
+      try {
+        rec.start();
+      } catch (e) {
+        fallo = true;
+        voz.escuchando = false;
+        alEstado('error', e.name === 'NotAllowedError'
+          ? 'No hay permiso para usar el micrófono.'
+          : 'No se pudo iniciar el reconocimiento de voz.');
+      }
     },
     detener() {
       rec?.stop();
