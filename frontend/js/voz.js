@@ -26,24 +26,35 @@ export async function puedeReconocerLocal(Reconocimiento) {
 }
 
 /**
- * Crea un reconocedor de un solo pedido por vez.
+ * Crea un reconocedor de voz. En modo continuo vuelve a escuchar después de procesar cada pedido.
  *   alParcial(texto): lo que se va entendiendo (para mostrarlo mientras se habla)
  *   alFinal(texto):   el pedido completo
- *   alEstado(estado, detalle): 'escuchando' | 'listo' | 'error'
- * Devuelve { escuchar(), detener(), escuchando, local } o null si el navegador no tiene la API.
+ *   alEstado(estado, detalle): 'escuchando' | 'procesando' | 'listo' | 'error'
+ * Devuelve { escuchar(), reanudar(), detener(), activo, escuchando, local } o null si no hay API.
  */
-export function crearVoz({ alParcial = () => {}, alFinal = () => {}, alEstado = () => {}, local = false },
-  Reconocimiento = reconocimientoDisponible()) {
+export function crearVoz({
+  alParcial = () => {},
+  alFinal = () => {},
+  alEstado = () => {},
+  local = false,
+  continuo = false,
+  esperaReinicioMs = 350,
+}, Reconocimiento = reconocimientoDisponible()) {
   if (!Reconocimiento) return null;
   let rec = null;
+  let reinicio = null;
   let finalizado = false;
   let fallo = false;
+  let procesando = false;
 
   const voz = {
+    activo: false,
     escuchando: false,
     local,
-    escuchar() {
-      if (voz.escuchando) return;
+    _iniciar() {
+      if (!voz.activo || voz.escuchando || procesando) return;
+      clearTimeout(reinicio);
+      reinicio = null;
       rec = new Reconocimiento();
       rec.lang = IDIOMA;
       rec.interimResults = true;
@@ -59,6 +70,9 @@ export function crearVoz({ alParcial = () => {}, alFinal = () => {}, alEstado = 
         const ultimo = e.results[e.results.length - 1];
         if (ultimo?.isFinal && texto && !finalizado) {
           finalizado = true;
+          procesando = true;
+          alEstado('procesando');
+          rec.stop();
           alFinal(texto);
         } else if (texto) {
           alParcial(texto);
@@ -67,36 +81,70 @@ export function crearVoz({ alParcial = () => {}, alFinal = () => {}, alEstado = 
       rec.onerror = (e) => {
         // "no-speech" y "aborted" no son fallas: el usuario no habló o canceló
         if (e.error === 'no-speech' || e.error === 'aborted') {
-          fallo = true;
           voz.escuchando = false;
-          return alEstado('listo', e.error === 'no-speech' ? 'No escuché nada.' : 'Escucha detenida.');
+          if (e.error === 'no-speech') alEstado('listo', 'No escuché nada; sigo escuchando.');
+          return;
         }
         const motivo = e.error === 'not-allowed' || e.error === 'service-not-allowed'
           ? 'No hay permiso para usar el micrófono.'
           : e.error === 'network' ? 'El reconocimiento de voz necesita internet.'
           : 'No pude reconocer la voz.';
         fallo = true;
+        voz.activo = false;
         voz.escuchando = false;
         alEstado('error', motivo);
       };
       rec.onend = () => {
         voz.escuchando = false;
-        if (!finalizado && !fallo) alEstado('listo');
+        if (fallo) return;
+        if (procesando) {
+          if (!continuo) {
+            voz.activo = false;
+            procesando = false;
+          }
+          return;
+        }
+        if (voz.activo && continuo) {
+          if (!finalizado) alEstado('listo', 'Sigo escuchando.');
+          reinicio = setTimeout(() => voz._iniciar(), esperaReinicioMs);
+        } else {
+          voz.activo = false;
+          if (!finalizado) alEstado('listo');
+        }
       };
+      finalizado = false;
+      fallo = false;
       voz.escuchando = true;
       alEstado('escuchando');
       try {
         rec.start();
       } catch (e) {
         fallo = true;
+        voz.activo = false;
         voz.escuchando = false;
         alEstado('error', e.name === 'NotAllowedError'
-          ? 'No hay permiso para usar el micrófono.'
+          ? 'No hay permiso para usar el micrófono. Pulsa el botón para volver a intentarlo.'
           : 'No se pudo iniciar el reconocimiento de voz.');
       }
     },
+    escuchar() {
+      voz.activo = true;
+      procesando = false;
+      voz._iniciar();
+    },
+    reanudar() {
+      procesando = false;
+      if (voz.activo && continuo && !voz.escuchando) {
+        reinicio = setTimeout(() => voz._iniciar(), esperaReinicioMs);
+      }
+    },
     detener() {
+      voz.activo = false;
+      procesando = false;
+      clearTimeout(reinicio);
+      reinicio = null;
       rec?.stop();
+      if (!voz.escuchando) alEstado('listo', 'Micrófono pausado.');
     },
   };
   return voz;
@@ -105,9 +153,13 @@ export function crearVoz({ alParcial = () => {}, alFinal = () => {}, alEstado = 
 /** Lee en voz alta una respuesta corta (solo si el pedido vino por voz). */
 export function decir(texto, global = globalThis) {
   const sintesis = global.speechSynthesis;
-  if (!sintesis || !global.SpeechSynthesisUtterance) return;
+  if (!sintesis || !global.SpeechSynthesisUtterance) return Promise.resolve();
   sintesis.cancel();
   const u = new global.SpeechSynthesisUtterance(texto);
   u.lang = IDIOMA;
-  sintesis.speak(u);
+  return new Promise((resolver) => {
+    u.onend = resolver;
+    u.onerror = resolver;
+    sintesis.speak(u);
+  });
 }

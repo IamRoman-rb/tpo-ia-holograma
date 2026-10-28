@@ -268,8 +268,8 @@ async function atenderPedido(frase, { porVoz = false } = {}) {
   ui.mostrarInterpretacion(intencion);
   // Si se pidió hablando, la respuesta también se escucha (sin el porcentaje ni el motor)
   if (porVoz) {
-    decir(intencion.accion === 'desconocido' ? 'No entendí el pedido.'
-      : document.getElementById('interpretacion').textContent.split(' — ')[0]);
+    respuestaHablada = Promise.resolve(decir(intencion.accion === 'desconocido' ? 'No entendí el pedido.'
+      : document.getElementById('interpretacion').textContent.split(' — ')[0]));
   }
   if (intencion.accion === 'desconocido') {
     const motivo = intencion.motivo ? ` (${intencion.motivo})` : '';
@@ -309,6 +309,11 @@ document.getElementById('pedido').addEventListener('submit', (e) => {
     console.error(err);
     ui.mostrarEstado(err.estado ? err.message : 'No pude cargar el modelo, ¿probás de nuevo?', 'error');
     publicarFin(pedidoActual);
+  }).finally(async () => {
+    if (porVoz) {
+      await respuestaHablada;
+      voz?.reanudar();
+    }
   });
   campo.select();
 });
@@ -317,6 +322,7 @@ document.getElementById('pedido').addEventListener('submit', (e) => {
 const botonMicrofono = document.getElementById('microfono');
 const estadoVoz = document.getElementById('estado-voz');
 let voz = null;
+let respuestaHablada = Promise.resolve();
 
 function mostrarEstadoVoz(estado, texto) {
   estadoVoz.dataset.estado = estado;
@@ -331,6 +337,7 @@ async function prepararVoz() {
   const campo = document.getElementById('frase');
   voz = crearVoz({
     local,
+    continuo: true,
     alParcial: (texto) => {
       campo.value = texto;
       mostrarEstadoVoz('escuchando', `Te escucho: «${texto}»`);
@@ -347,10 +354,13 @@ async function prepararVoz() {
       // Lo reconocido queda en el pedido (con la marca "voz"); acá solo se muestra mientras se escucha
       actividad.publicar({ tipo: 'voz', estado: estado === 'escuchando' ? 'escuchando' : 'inactivo', texto: '' });
       botonMicrofono.classList.toggle('escuchando', estado === 'escuchando');
-      botonMicrofono.setAttribute('aria-pressed', String(estado === 'escuchando'));
+      botonMicrofono.setAttribute('aria-pressed', String(voz?.activo ?? false));
+      botonMicrofono.setAttribute('aria-label', voz?.activo ? 'Pausar micrófono' : 'Activar micrófono');
       if (estado === 'escuchando') {
-        mostrarEstadoVoz(estado, 'Escuchando… hablá ahora y nombrá un objeto.');
+        mostrarEstadoVoz(estado, 'Micrófono activo: hablá y nombrá un objeto.');
         ui.mostrarEstado('escuchando…');
+      } else if (estado === 'procesando') {
+        mostrarEstadoVoz(estado, 'Pedido reconocido; procesándolo…');
       } else if (estado === 'error') {
         mostrarEstadoVoz(estado, detalle);
         ui.mostrarEstado(detalle, 'error');
@@ -363,13 +373,16 @@ async function prepararVoz() {
     },
   });
   botonMicrofono.hidden = false;
-  botonMicrofono.title = local ? 'Pedir por voz (V) · se reconoce en este equipo'
-    : 'Pedir por voz (V) · el audio lo procesa el servicio de voz del navegador';
+  botonMicrofono.title = local
+    ? 'Escucha continua (V para pausar o activar) · se reconoce en este equipo'
+    : 'Escucha continua (V para pausar o activar) · el audio lo procesa el servicio de voz del navegador';
+  mostrarEstadoVoz('listo', 'Activando micrófono…');
+  voz.escuchar();
 }
 
 function alternarVoz() {
   if (!voz) return ui.mostrarEstado('Este navegador no reconoce la voz: escribí el pedido.', 'error');
-  if (voz.escuchando) voz.detener();
+  if (voz.activo) voz.detener();
   else voz.escuchar();
 }
 botonMicrofono.addEventListener('click', alternarVoz);
