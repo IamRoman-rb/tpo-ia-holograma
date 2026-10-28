@@ -3,6 +3,9 @@
 //
 // El video se muestra en espejo con CSS. El lienzo no se espeja (si no, el texto saldría
 // al revés): en su lugar, cada x se dibuja como (1 - x).
+//
+// En el modo holograma el lienzo cubre toda la pantalla, encima de la mano real: el esqueleto se dibuja
+// fino y luminoso, sin marco, con un aro alrededor de la palma mientras rota y el zoom entre las dos manos.
 
 const CONEXIONES = [
   [0, 1], [1, 2], [2, 3], [3, 4],             // pulgar
@@ -26,9 +29,10 @@ const NOMBRES = {
 
 export function crearOverlay(lienzo) {
   const ctx = lienzo.getContext('2d');
-  // El lienzo tiene la resolución del video (640 px) pero se muestra más chico: k lleva
-  // los tamaños de texto y trazo a píxeles de pantalla para que se lean en cualquier tamaño.
+  // El lienzo tiene su propia resolución y se muestra más chico o más grande (con object-fit: cover):
+  // k lleva los tamaños de texto y trazo a píxeles de pantalla para que se lean en cualquier tamaño.
   let k = 1;
+  let ar = false;
 
   const punto = (p) => [(1 - p.x) * lienzo.width, p.y * lienzo.height];
 
@@ -49,8 +53,13 @@ export function crearOverlay(lienzo) {
   function dibujarMano(mano, color, texto) {
     const pts = mano.map(punto);
 
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2 * k;
+    // Holograma: trazo blanco fino con un halo del color del estado
+    ctx.strokeStyle = ar ? 'rgba(255, 255, 255, 0.85)' : color;
+    ctx.lineWidth = (ar ? 1.5 : 2) * k;
+    if (ar) {
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 8 * k;
+    }
     ctx.beginPath();
     for (const [a, b] of CONEXIONES) {
       ctx.moveTo(...pts[a]);
@@ -67,19 +76,37 @@ export function crearOverlay(lienzo) {
       ctx.lineWidth = 1 * k;
       ctx.stroke();
     }
+    ctx.shadowBlur = 0;
 
-    // marco de la mano
+    // marco de la mano (en el modo holograma, solo la etiqueta)
     const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
     const m = 8 * k;
     const [x0, y0] = [Math.min(...xs) - m, Math.min(...ys) - m];
     const [x1, y1] = [Math.max(...xs) + m, Math.max(...ys) + m];
-    ctx.setLineDash([4 * k, 3 * k]);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1 * k;
-    ctx.strokeRect(x0, y0, x1 - x0, y1 - y0);
-    ctx.setLineDash([]);
+    if (!ar) {
+      ctx.setLineDash([4 * k, 3 * k]);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1 * k;
+      ctx.strokeRect(x0, y0, x1 - x0, y1 - y0);
+      ctx.setLineDash([]);
+    }
     etiqueta(texto, x0, y0, color);
     return pts;
+  }
+
+  // Aro alrededor de la palma mientras la mano rota el objeto
+  function aroPalma(pts, color) {
+    const [cx, cy] = pts[9];
+    const r = 1.5 * Math.hypot(pts[9][0] - pts[0][0], pts[9][1] - pts[0][1]);
+    const giro = (performance.now() / 600) % (2 * Math.PI);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3 * k;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 10 * k;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, giro, giro + 1.5 * Math.PI);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
   }
 
   function lineaPellizco(pts, color) {
@@ -96,9 +123,10 @@ export function crearOverlay(lienzo) {
      * manos: landmarks de MediaPipe · lados: 'derecha' | 'izquierda' por mano
      * r: resultado del clasificador · aplicado: gesto que se está aplicando al objeto
      */
-    dibujar(manos, lados, r, aplicado, { simulacion = false, etiquetas = null, color = null } = {}) {
+    dibujar(manos, lados, r, aplicado, { simulacion = false, etiquetas = null, color = null, holograma = false, zoom = null } = {}) {
       ctx.clearRect(0, 0, lienzo.width, lienzo.height);
-      k = lienzo.width / (lienzo.clientWidth || lienzo.width);
+      ar = holograma;
+      k = 1 / Math.max((lienzo.clientWidth || lienzo.width) / lienzo.width, (lienzo.clientHeight || lienzo.height) / lienzo.height);
       if (simulacion) {
         ctx.font = `700 ${11 * k}px system-ui, sans-serif`;
         ctx.fillStyle = 'rgba(255, 184, 77, 0.9)';
@@ -115,6 +143,7 @@ export function crearOverlay(lienzo) {
         const texto = etiquetas?.[i] ?? `${lado}${NOMBRES[gestoMano] ?? gestoMano}`;
         const pts = dibujarMano(mano, colorMano, texto);
         if (gestoMano === 'pellizco') lineaPellizco(pts, colorMano);
+        if (ar && aplicado === 'palma_abierta' && i === 0) aroPalma(pts, COLORES.detectado);
         centros.push([(pts[4][0] + pts[8][0]) / 2, (pts[4][1] + pts[8][1]) / 2]);
       });
 
@@ -127,6 +156,10 @@ export function crearOverlay(lienzo) {
         ctx.lineTo(...centros[1]);
         ctx.stroke();
         ctx.setLineDash([]);
+        if (zoom != null) {
+          const [mx, my] = [(centros[0][0] + centros[1][0]) / 2, (centros[0][1] + centros[1][1]) / 2];
+          etiqueta(`zoom ${zoom.toFixed(2)}×`, mx - 34 * k, my - 8 * k, ctx.strokeStyle);
+        }
       }
     },
 

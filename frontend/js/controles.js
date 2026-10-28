@@ -50,8 +50,9 @@ function delta(actual, ancla) {
 /**
  * alEvento(tipo, datos) avisa lo que la interfaz tiene que mostrar:
  * 'seleccion' (info de la pieza), 'aislar' (info), 'salir', 'despiece', 'confirmar', 'deshacer'.
+ * aPantalla(punto de la cámara) → { u, v } en la vista: por defecto aVista; en el modo holograma, donde se ve el dedo.
  */
-export function crearControles(visor, { alEvento = () => {} } = {}) {
+export function crearControles(visor, { alEvento = () => {}, aPantalla = aVista } = {}) {
   let gestoPrevio = 'ninguno';
   let ancla = null;
   let escalaInicial = 1;
@@ -72,7 +73,7 @@ export function crearControles(visor, { alEvento = () => {} } = {}) {
         break;
       case 'pellizco': {
         // Se toma una sola pieza si se pellizca la que está elegida (o la que se acababa de apuntar)
-        const { u, v } = aVista(puntoPellizco(manos[0]));
+        const { u, v } = aPantalla(puntoPellizco(manos[0]));
         const elegida = visor.seleccionada();
         const bajo = visor.apuntar(u, v, 1);
         const reciente = ahora - apuntadaEn < MEMORIA_APUNTADO_MS && ultimaApuntada === elegida;
@@ -116,7 +117,7 @@ export function crearControles(visor, { alEvento = () => {} } = {}) {
 
     switch (gesto) {
       case 'señalar': {
-        const { u, v } = aVista(manos[0][8]);
+        const { u, v } = aPantalla(manos[0][8]);
         const id = visor.apuntar(u, v, progreso);
         if (id) {
           ultimaApuntada = id;
@@ -138,7 +139,7 @@ export function crearControles(visor, { alEvento = () => {} } = {}) {
           else visor.desplazar(dx, dy);
         }
         if (piezaTomada) {
-          const { u, v } = aVista(p);
+          const { u, v } = aPantalla(p);
           visor.apuntar(u, v, 1);
         }
         ancla = p;

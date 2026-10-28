@@ -1,9 +1,12 @@
 // Escena Three.js: carga de .glb, transformaciones suavizadas del objeto y desmontaje por piezas.
 // Las piezas se pueden apuntar (cursor de la mano), mover de a una y aislar para analizarlas.
+// Dos estilos: "solido" (materiales del .glb) y "holograma" (cada pieza en un color neón, con aristas,
+// nube de puntos y relleno tenue, pensado para verse sobre el video de la cámara).
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { crearHistorial } from './historial.js';
+import { areaSuperficie, colorPieza, crearAzar, puntosEnSuperficie } from './holograma.js';
 import {
   desplazamiento, encuadreAislada, nombreMaterial, prepararPiezas, siguienteParaDesmontar, textoMedidas,
   ultimaDesmontada,
@@ -17,9 +20,28 @@ const RAPIDEZ_PIEZAS = 6;       // el desmontaje es más lento, para que se vea 
 const COLOR_SELECCION = new THREE.Color(0x2bd4ff);
 const NEGRO = new THREE.Color(0x000000);
 const OPACIDAD_ATENUADA = 0.08; // las demás piezas mientras se analiza una
+const PUNTOS_POR_MODELO = 14000; // nube de puntos del estilo holograma, repartida según el área de cada malla
+const OPACIDAD_HOLO = { relleno: 0.1, aristas: 0.7, puntos: 0.9 };
 
-/** alCambiarPiezas(lista) se llama cada vez que cambia el estado de las piezas. */
-export function crearVisor(contenedor, { alCambiarPiezas = () => {} } = {}) {
+// Textura de un punto redondo y difuso: con mezcla aditiva, la nube de puntos brilla
+function texturaPunto() {
+  const lienzo = document.createElement('canvas');
+  lienzo.width = lienzo.height = 32;
+  const ctx = lienzo.getContext('2d');
+  const g = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+  g.addColorStop(0, 'rgba(255,255,255,1)');
+  g.addColorStop(0.35, 'rgba(255,255,255,0.6)');
+  g.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 32, 32);
+  return new THREE.CanvasTexture(lienzo);
+}
+
+/**
+ * alCambiarPiezas(lista) se llama cada vez que cambia el estado de las piezas.
+ * alCuadro({ piezas, escala }) se llama en cada cuadro con dónde se ve cada pieza en la pantalla (para las etiquetas).
+ */
+export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = null, estilo: estiloInicial = 'solido' } = {}) {
   const escena = new THREE.Scene();
   const camara = new THREE.PerspectiveCamera(50, contenedor.clientWidth / contenedor.clientHeight, 0.1, 100);
   camara.position.set(0, 0.3, DISTANCIA_CAMARA);
@@ -49,6 +71,10 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {} } = {}) {
   grilla.material.transparent = true;
   grilla.material.opacity = 0.35;
   escena.add(grilla);
+
+  let estilo = estiloInicial;
+  grilla.visible = estilo !== 'holograma';
+  const puntoRedondo = texturaPunto();
 
   // El pivote es lo que se manipula; el modelo cargado vive adentro, centrado.
   const pivote = new THREE.Group();
@@ -139,11 +165,73 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {} } = {}) {
       contenedorModelo.position.lerp(new THREE.Vector3(...destino.posicion), ap);
     }
     renderer.render(escena, camara);
+    alCuadro?.({ piezas: proyectarPiezas(), escala: objetivo.escala });
   });
+
+  // Dónde se ve el centro de cada pieza, en coordenadas normalizadas de la vista (0,0 arriba a la izquierda)
+  const proyectado = new THREE.Vector3();
+  function proyectarPiezas() {
+    if (!contenedorModelo) return [];
+    return piezas.map((p) => {
+      proyectado.fromArray(centroActual(p));
+      contenedorModelo.localToWorld(proyectado).project(camara);
+      return {
+        id: p.id, nombre: p.nombre, descripcion: p.descripcion, color: p.color,
+        x: (proyectado.x + 1) / 2, y: (1 - proyectado.y) / 2, opacidad: p.opacidad,
+        seleccionada: p.id === seleccionada, aislada: p.id === aislada,
+      };
+    });
+  }
+
+  // Capas del estilo holograma para cada malla de una pieza: relleno tenue, aristas y nube de puntos.
+  // Se crean una sola vez al cargar el modelo; cambiar de estilo solo las muestra u oculta.
+  function prepararHolograma(raiz, color, areaModelo) {
+    const mezcla = { transparent: true, depthWrite: false, blending: THREE.AdditiveBlending };
+    const mallas = [];
+    raiz.traverse((m) => { if (m.isMesh) mallas.push(m); });
+    for (const m of mallas) {
+      const relleno = new THREE.MeshBasicMaterial({ color, opacity: OPACIDAD_HOLO.relleno, side: THREE.DoubleSide, ...mezcla });
+      relleno.userData = { holo: true, opacidadBase: OPACIDAD_HOLO.relleno };
+      m.userData.materiales = { solido: m.material, holograma: relleno };
+
+      const aristas = new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry, 1),
+        new THREE.LineBasicMaterial({ color, opacity: OPACIDAD_HOLO.aristas, ...mezcla }));
+      aristas.material.userData = { holo: true, opacidadBase: OPACIDAD_HOLO.aristas };
+
+      const pos = m.geometry.attributes.position.array;
+      const indices = m.geometry.index?.array ?? null;
+      const n = Math.round(Math.min(4000, Math.max(120, PUNTOS_POR_MODELO * areaSuperficie(pos, indices) / areaModelo)));
+      const nube = new THREE.BufferGeometry();
+      nube.setAttribute('position', new THREE.BufferAttribute(puntosEnSuperficie(pos, indices, n, crearAzar(n)), 3));
+      const puntos = new THREE.Points(nube, new THREE.PointsMaterial({
+        color, size: 0.03, sizeAttenuation: true, map: puntoRedondo, opacity: OPACIDAD_HOLO.puntos, ...mezcla,
+      }));
+      puntos.material.userData = { holo: true, opacidadBase: OPACIDAD_HOLO.puntos };
+
+      for (const capa of [aristas, puntos]) {
+        capa.userData.capaHolograma = true;
+        capa.raycast = () => {}; // el cursor apunta a la malla, no a sus aristas ni a sus puntos
+        m.add(capa);
+      }
+    }
+    aplicarEstilo(raiz);
+  }
+
+  function aplicarEstilo(raiz) {
+    raiz.traverse((o) => {
+      if (o.userData.materiales) o.material = o.userData.materiales[estilo === 'holograma' ? 'holograma' : 'solido'];
+      if (o.userData.capaHolograma) o.visible = estilo === 'holograma';
+    });
+  }
 
   function aplicarOpacidad(p) {
     const transparente = p.opacidad < 0.99;
     p.obj.traverse((m) => {
+      // Holograma: la pieza elegida o apuntada se ve más llena
+      if (m.material?.userData.holo) {
+        m.material.opacity = Math.min(1, m.material.userData.opacidadBase * (1 + 6 * p.resalte)) * p.opacidad;
+        return;
+      }
       if (!m.isMesh) return;
       if (m.material.transparent !== transparente) {
         m.material.transparent = transparente;
@@ -193,6 +281,7 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {} } = {}) {
         libre: new THREE.Vector3(),        // desplazamiento a mano (pieza tomada con un pellizco)
         libreActual: new THREE.Vector3(),
         opacidad: 1,
+        resalte: 0,
       };
     });
     return datos.length > 1 ? prepararPiezas(datos, centro, tamano) : [];
@@ -211,10 +300,12 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {} } = {}) {
   function resaltar() {
     for (const p of piezas) {
       const intensidad = p.id === seleccionada ? 0.35 : p.id === apuntada ? 0.18 : 0;
+      p.resalte = intensidad;
       p.obj.traverse((m) => {
-        if (!m.isMesh || !m.material.emissive) return;
-        m.material.emissive.copy(intensidad ? COLOR_SELECCION : NEGRO);
-        m.material.emissiveIntensity = intensidad;
+        const material = m.userData.materiales?.solido ?? m.material;
+        if (!m.isMesh || !material.emissive) return;
+        material.emissive.copy(intensidad ? COLOR_SELECCION : NEGRO);
+        material.emissiveIntensity = intensidad;
       });
     }
   }
@@ -243,6 +334,14 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {} } = {}) {
       const caja = new THREE.Box3().setFromObject(modelo);
       piezas = leerPiezas(modelo, caja);
       objetivosPiezas = piezas.map(() => 0);
+      // Estilo holograma: un color por pieza (o uno solo si el modelo no está armado por piezas)
+      let areaModelo = 0;
+      modelo.traverse((m) => {
+        if (m.isMesh) areaModelo += areaSuperficie(m.geometry.attributes.position.array, m.geometry.index?.array ?? null);
+      });
+      piezas.forEach((p, i) => { p.color = colorPieza(i); });
+      if (piezas.length) piezas.forEach((p) => prepararHolograma(p.obj, p.color, areaModelo || 1));
+      else prepararHolograma(modelo, colorPieza(0), areaModelo || 1);
       seleccionada = apuntada = aislada = null;
       const tam = caja.getSize(new THREE.Vector3()).length() || 1;
       modelo.position.sub(caja.getCenter(new THREE.Vector3()));
@@ -447,6 +546,15 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {} } = {}) {
         orden: p.fija ? null : p.orden,
       };
     },
+
+    /** 'solido' (materiales del modelo) o 'holograma' (piezas de colores con aristas y puntos). */
+    fijarEstilo(nuevo) {
+      estilo = nuevo;
+      grilla.visible = estilo !== 'holograma';
+      if (modelo) aplicarEstilo(modelo);
+    },
+
+    estilo: () => estilo,
 
     elemento: renderer.domElement,
   };

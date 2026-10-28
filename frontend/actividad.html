@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Actividad de la IA</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="ventana-actividad">
+  <!-- Muestra en vivo lo que hacen la red neuronal de gestos y el LLM del visor abierto en otra pestaña.
+       Recibe los datos por un BroadcastChannel del navegador: no hay servidor en el medio. -->
+  <section id="actividad" aria-label="Actividad de la IA"></section>
+  <p id="actividad-espera">Esperando al visor… Abrí <a href="index.html">el visor</a> en otra pestaña o ventana de este navegador.</p>
+  <script type="module">
+    import { crearPanelActividad } from './js/panel_actividad.js';
+    import { escucharDesdeVentana } from './js/actividad.js';
+
+    const panel = crearPanelActividad(document.getElementById('actividad'), { enVentana: true });
+    const espera = document.getElementById('actividad-espera');
+    let ultimo = 0;
+    escucharDesdeVentana((m) => {
+      ultimo = Date.now();
+      espera.hidden = true;
+      panel.recibir(m);
+    });
+    // Si el visor se cierra o deja de mandar datos, se avisa
+    setInterval(() => { if (Date.now() - ultimo > 5000) espera.hidden = false; }, 1000);
+  </script>
+</body>
+</html>

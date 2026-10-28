@@ -17,6 +17,17 @@
 </head>
 <body>
   <div id="escena" aria-label="Visor 3D"></div>
+  <div id="etiquetas" aria-label="Piezas rotuladas" hidden></div>
+
+  <nav id="barra" aria-label="Vista">
+    <button type="button" data-barra="holograma" aria-pressed="true" title="Holograma sobre la cámara (H)">Holograma</button>
+    <button type="button" data-barra="etiquetas" aria-pressed="true" title="Nombres de las piezas con líneas guía">Etiquetas</button>
+    <button type="button" data-barra="despiece" title="Abrir o cerrar el despiece (también la victoria sin pieza elegida)">Despiece</button>
+    <button type="button" data-barra="paneles" aria-pressed="false" title="Mostrar el panel de piezas sobre la cámara">Paneles</button>
+    <button type="button" data-barra="actividad" aria-pressed="false" title="Actividad de la red neuronal y del LLM en vivo (L)">Actividad IA</button>
+  </nav>
+
+  <section id="actividad" aria-label="Actividad de la IA" hidden></section>
 
   <header id="titulo">
     <h1>Visor 3D por gestos</h1>
@@ -122,6 +133,8 @@
       <dt>A</dt><dd>Armar todo</dd>
       <dt>I · Esc</dt><dd>Analizar la pieza elegida · volver al conjunto</dd>
       <dt>V</dt><dd>Pedir por voz (también el botón del micrófono)</dd>
+      <dt>H</dt><dd>Holograma sobre la cámara o vista de estudio</dd>
+      <dt>L</dt><dd>Actividad de la red neuronal y del LLM en vivo</dd>
       <dt>D</dt><dd>Métricas de depuración</dd>
     </dl>
     <h2>Privacidad</h2>

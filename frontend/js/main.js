@@ -2,9 +2,13 @@
 import { iniciarManos } from './hands.js';
 import { crearOverlay } from './overlay.js';
 import { iniciarSimulacion } from './simulador.js';
-import { crearClasificador } from './gestures.js';
-import { crearControles } from './controles.js';
+import { crearClasificador, UMBRALES } from './gestures.js';
+import { aVista, crearControles } from './controles.js';
 import { crearVisor } from './viewer.js';
+import { crearEtiquetas } from './etiquetas.js';
+import { camaraAPantalla } from './holograma.js';
+import { crearActividad } from './actividad.js';
+import { crearPanelActividad } from './panel_actividad.js';
 import { cargarCatalogo, buscarLocal } from './catalogo.js';
 import { interpretarPedido, pedirObjeto } from './api.js';
 import * as ui from './ui.js';
@@ -16,6 +20,26 @@ const UMBRAL_CONFIANZA = 0.8;      // sección 7.3, flujo 1
 const PASO_ROTACION = Math.PI / 12;
 const PASO_ESCALA = 1.15;
 
+// Preferencias de la vista que se recuerdan en este navegador (si hay almacenamiento)
+const preferencia = (clave, porDefecto) => {
+  try { return localStorage.getItem(clave) ?? porDefecto; } catch { return porDefecto; }
+};
+const recordar = (clave, valor) => {
+  try { localStorage.setItem(clave, valor); } catch { /* sin almacenamiento: no se recuerda */ }
+};
+
+// Modo holograma: piezas de colores con aristas y puntos, etiquetas con líneas guía y, con la cámara
+// encendida, el video de fondo a pantalla completa con las manos dibujadas encima (como realidad aumentada).
+let modoHolograma = preferencia('holograma', 'si') === 'si';
+let conEtiquetas = preferencia('etiquetas', 'si') === 'si';
+const etiquetas = crearEtiquetas(document.getElementById('etiquetas'), {
+  alElegir: (id) => {
+    visor.seleccionar(id);
+    const info = visor.infoPieza(id);
+    if (info) ui.mostrarEstado(`elegida: ${info.nombre}`);
+  },
+});
+
 const visor = crearVisor(document.getElementById('escena'), {
   alCambiarPiezas: (lista) => {
     ui.mostrarPiezas(lista, (id) => visor.seleccionar(id));
@@ -24,7 +48,24 @@ const visor = crearVisor(document.getElementById('escena'), {
     if (aislada) ui.mostrarAnalisis(visor.infoPieza(aislada.id));
     else ui.ocultarAnalisis();
   },
+  alCuadro: ({ piezas }) => etiquetas.actualizar(piezas),
+  estilo: modoHolograma ? 'holograma' : 'solido',
 });
+
+// Actividad de la IA en tiempo real: panel del visor y ventana aparte (actividad.html)
+const actividad = crearActividad();
+const raizActividad = document.getElementById('actividad');
+const botonActividad = document.querySelector('[data-barra="actividad"]');
+function alternarActividad(mostrar = raizActividad.hidden) {
+  raizActividad.hidden = !mostrar;
+  botonActividad.setAttribute('aria-pressed', String(mostrar));
+}
+const panelActividad = crearPanelActividad(raizActividad, {
+  alAbrirVentana: () => window.open('actividad.html', 'actividad-ia', 'width=460,height=820'),
+  alCerrar: () => alternarActividad(false),
+});
+actividad.escuchar(panelActividad.recibir);
+const publicarPedido = (id, fase, datos = {}) => actividad.publicar({ tipo: 'pedido', id, fase, t: Date.now(), ...datos });
 
 // Abre o cierra el despiece (gesto de victoria sin una pieza elegida)
 function alternarDespiece() {
@@ -45,12 +86,20 @@ const EVENTOS_GESTO = {
   confirmar: () => { if (!ui.confirmarPendiente()) ui.mostrarEstado('no hay nada para confirmar'); },
   deshacer: (hecho) => ui.mostrarEstado(hecho ? 'cambio deshecho' : 'no hay nada para deshacer'),
 };
-const controles = crearControles(visor, { alEvento: (tipo, datos) => EVENTOS_GESTO[tipo]?.(datos) });
+// Con el video a pantalla completa, el cursor va exactamente donde se ve la punta del dedo
+function aPantalla(p) {
+  if (!document.body.classList.contains('holograma-ar')) return aVista(p);
+  return camaraAPantalla(p, {
+    anchoVideo: lienzo.width, altoVideo: lienzo.height, anchoPantalla: innerWidth, altoPantalla: innerHeight,
+  });
+}
+const controles = crearControles(visor, { alEvento: (tipo, datos) => EVENTOS_GESTO[tipo]?.(datos), aPantalla });
 
 // Clasificador de gestos: reglas o red neuronal (sección 5.2). Se recuerda la elección en este navegador.
 let clasificar = crearClasificador();
 const clasificarSimulacion = crearClasificador(); // siempre reglas: ver simulador.js
 let mlp = null;
+let metodoGestos = 'reglas';
 const selectorClasificador = document.getElementById('clasificador');
 
 async function elegirClasificador(metodo) {
@@ -64,6 +113,7 @@ async function elegirClasificador(metodo) {
     }
   }
   selectorClasificador.value = metodo;
+  metodoGestos = metodo;
   clasificar = crearClasificador({ mlp: metodo === 'mlp' ? mlp : null });
   try { localStorage.setItem('clasificador', metodo); } catch { /* sin almacenamiento: no se recuerda */ }
 }
@@ -107,7 +157,9 @@ async function cargarObjeto(objeto, id) {
       const s = Math.round((performance.now() - inicio) / 1000);
       if (s >= 2 && id === pedidoActual) ui.mostrarEstado(`generando con IA… ${s} s`);
     }, 1000);
+    publicarPedido(id, 'objeto', { consulta: objeto });
     const r = await pedirObjeto(objeto).finally(() => clearInterval(reloj));
+    publicarPedido(id, 'objeto_listo', { respuesta: r });
     if (id !== pedidoActual) return false;
     // Un modelo recién generado se suma a la lista del catálogo
     if (r.origen === 'generado') await refrescarCatalogo().catch(console.error);
@@ -116,6 +168,7 @@ async function cargarObjeto(objeto, id) {
   } catch (err) {
     if (id !== pedidoActual) return false;
     if (err.estado === 404) {
+      publicarPedido(id, 'error', { mensaje: err.message });
       ui.mostrarEstado(err.message, 'error');
       return false;
     }
@@ -183,19 +236,34 @@ async function ejecutar({ accion, objeto, parametros }, id) {
   ui.mostrarEstado('listo');
 }
 
+// Para el panel de actividad: cómo terminó el pedido, según el último estado que se mostró
+function publicarFin(id) {
+  const estado = document.getElementById('estado');
+  publicarPedido(id, estado.classList.contains('error') ? 'error' : 'ejecutado',
+    { resumen: estado.textContent, mensaje: estado.textContent });
+}
+
 async function atenderPedido(frase, { porVoz = false } = {}) {
   const id = ++pedidoActual;
   ui.mostrarEstado('interpretando…');
+  const t0 = performance.now();
+  publicarPedido(id, 'enviado', { frase, porVoz });
   let intencion;
   try {
     intencion = await interpretarPedido(frase);
   } catch (err) {
     if (id !== pedidoActual) return;
-    if (err.estado !== undefined) throw err; // el backend respondió con un error (429, 422…)
+    if (err.estado !== undefined) {
+      publicarPedido(id, 'error', { mensaje: err.message });
+      throw err; // el backend respondió con un error (429, 422…)
+    }
     console.info('Backend no disponible, se usa el catálogo local:', err.message);
-    return atenderSinBackend(frase);
+    publicarPedido(id, 'sin_backend');
+    await atenderSinBackend(frase);
+    return publicarFin(id);
   }
 
+  publicarPedido(id, 'intencion', { intencion, msTotal: performance.now() - t0 });
   if (id !== pedidoActual) return;
   ui.mostrarInterpretacion(intencion);
   // Si se pidió hablando, la respuesta también se escucha (sin el porcentaje ni el motor)
@@ -205,15 +273,20 @@ async function atenderPedido(frase, { porVoz = false } = {}) {
   }
   if (intencion.accion === 'desconocido') {
     const motivo = intencion.motivo ? ` (${intencion.motivo})` : '';
-    return ui.mostrarEstado(`No entendí el pedido${motivo}. Probá con "mostrame un engranaje".`, 'error');
+    ui.mostrarEstado(`No entendí el pedido${motivo}. Probá con "mostrame un engranaje".`, 'error');
+    return publicarFin(id);
   }
   // Sección 16.3: si la confianza es baja, se muestra lo interpretado y se pide confirmación
   if (intencion.requiere_confirmacion) {
     ui.mostrarEstado('esperando confirmación');
-    if (!(await ui.pedirConfirmacion())) return ui.mostrarEstado('pedido cancelado');
+    if (!(await ui.pedirConfirmacion())) {
+      ui.mostrarEstado('pedido cancelado');
+      return publicarPedido(id, 'error', { mensaje: 'cancelado por el usuario' });
+    }
     if (id !== pedidoActual) return;
   }
   await ejecutar(intencion, id);
+  if (id === pedidoActual) publicarFin(id);
 }
 
 // --- pedidos por texto y catálogo
@@ -235,6 +308,7 @@ document.getElementById('pedido').addEventListener('submit', (e) => {
   }).catch((err) => {
     console.error(err);
     ui.mostrarEstado(err.estado ? err.message : 'No pude cargar el modelo, ¿probás de nuevo?', 'error');
+    publicarFin(pedidoActual);
   });
   campo.select();
 });
@@ -250,13 +324,19 @@ async function prepararVoz() {
   const campo = document.getElementById('frase');
   voz = crearVoz({
     local,
-    alParcial: (texto) => { campo.value = texto; },
+    alParcial: (texto) => {
+      campo.value = texto;
+      actividad.publicar({ tipo: 'voz', estado: 'escuchando', texto });
+    },
     alFinal: (texto) => {
       campo.value = texto;
+      actividad.publicar({ tipo: 'voz', estado: 'final', texto });
       pedidoPorVoz = true;
       document.getElementById('pedido').requestSubmit();
     },
     alEstado: (estado, detalle) => {
+      // Lo reconocido queda en el pedido (con la marca "voz"); acá solo se muestra mientras se escucha
+      actividad.publicar({ tipo: 'voz', estado: estado === 'escuchando' ? 'escuchando' : 'inactivo', texto: '' });
       botonMicrofono.classList.toggle('escuchando', estado === 'escuchando');
       botonMicrofono.setAttribute('aria-pressed', String(estado === 'escuchando'));
       if (estado === 'escuchando') ui.mostrarEstado('escuchando…');
@@ -395,12 +475,23 @@ function alDetectar(manos, info) {
   const r = (info.simulacion ? clasificarSimulacion : clasificar)(manos, info.aspecto);
   // Por debajo del umbral el gesto se muestra pero no se aplica
   const aplicado = r.confianza >= UMBRAL_CONFIANZA ? r.gesto : 'ninguno';
-  overlay.dibujar(manos, info.lados ?? [], r, aplicado, { simulacion: info.simulacion });
+  overlay.dibujar(manos, info.lados ?? [], r, aplicado, {
+    simulacion: info.simulacion, holograma: document.body.classList.contains('holograma-ar'), zoom: visor.escala(),
+  });
   ui.mostrarGesto(r.gesto, r.confianza, UMBRAL_CONFIANZA);
   controles(aplicado, manos);
   // Procesamiento del fotograma: detección de MediaPipe + clasificación + dibujo + controles
-  metricas.registrar(info.simulacion ? 'fotograma_simulado' : 'fotograma',
-    performance.now() - t0 + (info.msProcesamiento ?? 0));
+  const msCuadro = performance.now() - t0 + (info.msProcesamiento ?? 0);
+  metricas.registrar(info.simulacion ? 'fotograma_simulado' : 'fotograma', msCuadro);
+  // Panel de actividad: qué vio el clasificador en este cuadro (con el MLP, también sus activaciones)
+  const red = r.red?.[0];
+  actividad.publicar({
+    tipo: 'cuadro', metodo: info.simulacion ? 'reglas' : metodoGestos, simulacion: Boolean(info.simulacion),
+    gesto: r.gesto, confianza: r.confianza, aplicado, umbral: UMBRAL_CONFIANZA, porMano: r.porMano ?? [],
+    manos: manos.length, ms: msCuadro, fps, metricas: r.metricas?.[0] ?? null, umbralesReglas: UMBRALES,
+    clasesRed: mlp?.clases,
+    red: red ? { clases: mlp.clases, umbral: mlp.umbral, probabilidades: red.probabilidades, activaciones: red.activaciones } : null,
+  });
   ui.mostrarDepuracion(r, info, metricas.lineasResumen());
 
   const ahora = performance.now();
@@ -415,9 +506,8 @@ async function encenderCamara() {
   overlay.limpiar();
   ui.mostrarCamara('iniciando');
   try {
-    const { ancho, alto } = await iniciarManos(video, alDetectar);
-    lienzo.width = ancho;
-    lienzo.height = alto;
+    tamanoVideo = await iniciarManos(video, alDetectar);
+    actualizarModo();
     ui.mostrarCamara('activa');
   } catch (err) {
     console.error(err);
@@ -429,8 +519,8 @@ async function encenderCamara() {
 }
 
 function simular() {
-  lienzo.width = 640;
-  lienzo.height = 480;
+  tamanoVideo = { ancho: 640, alto: 480 };
+  actualizarModo();
   ui.mostrarCamara('simulacion');
   detenerSimulacion = iniciarSimulacion(alDetectar);
 }
@@ -447,4 +537,59 @@ document.getElementById('camara-detener').addEventListener('click', () => {
 });
 document.getElementById('camara-tamano').addEventListener('click', ui.alternarTamanoCamara);
 
+// --- modo holograma: la cámara pasa a ser el fondo de toda la pantalla cuando está activa (o simulada)
+let tamanoVideo = { ancho: 640, alto: 480 };
+const RESOLUCION_HOLOGRAMA = 2; // el lienzo de las manos se agranda para que el trazo no se vea borroso
+
+function actualizarModo() {
+  const estado = document.getElementById('camara').dataset.estado;
+  const ar = modoHolograma && (estado === 'activa' || estado === 'simulacion');
+  document.body.classList.toggle('holograma', modoHolograma);
+  document.body.classList.toggle('holograma-ar', ar);
+  visor.fijarEstilo(modoHolograma ? 'holograma' : 'solido');
+  etiquetas.fijarActivas(modoHolograma && conEtiquetas);
+  const f = ar ? RESOLUCION_HOLOGRAMA : 1;
+  if (lienzo.width !== tamanoVideo.ancho * f || lienzo.height !== tamanoVideo.alto * f) {
+    lienzo.width = tamanoVideo.ancho * f;
+    lienzo.height = tamanoVideo.alto * f;
+  }
+  for (const [clave, activo] of [['holograma', modoHolograma], ['etiquetas', modoHolograma && conEtiquetas]]) {
+    document.querySelector(`[data-barra="${clave}"]`).setAttribute('aria-pressed', String(activo));
+  }
+  document.querySelector('[data-barra="etiquetas"]').disabled = !modoHolograma;
+}
+new MutationObserver(actualizarModo).observe(document.getElementById('camara'), { attributeFilter: ['data-estado'] });
+
+const ACCIONES_BARRA = {
+  holograma: () => {
+    modoHolograma = !modoHolograma;
+    recordar('holograma', modoHolograma ? 'si' : 'no');
+    actualizarModo();
+  },
+  etiquetas: () => {
+    conEtiquetas = !conEtiquetas;
+    recordar('etiquetas', conEtiquetas ? 'si' : 'no');
+    actualizarModo();
+  },
+  despiece: () => {
+    visor.guardarEstado();
+    alternarDespiece();
+  },
+  paneles: () => {
+    const ver = document.body.classList.toggle('ver-paneles');
+    document.querySelector('[data-barra="paneles"]').setAttribute('aria-pressed', String(ver));
+  },
+  actividad: () => alternarActividad(),
+};
+document.getElementById('barra').addEventListener('click', (e) => {
+  const accion = e.target.closest('button')?.dataset.barra;
+  if (accion) ACCIONES_BARRA[accion]();
+});
+addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'h' || e.key === 'H') ACCIONES_BARRA.holograma();
+  if (e.key === 'l' || e.key === 'L') ACCIONES_BARRA.actividad();
+});
+
+actualizarModo();
 encenderCamara();

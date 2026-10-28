@@ -84,7 +84,7 @@ fi
 if [ "${1:-}" = "--tests" ]; then
   echo "== Pruebas automáticas"
   check "frontend (gestos, normalización, búsqueda local, simulación)" "node frontend/tests/gestos.test.mjs"
-  check "frontend (piezas, MLP en el navegador, voz)"     "node frontend/tests/piezas.test.mjs && node frontend/tests/mlp.test.mjs && node frontend/tests/voz.test.mjs"
+  check "frontend (piezas, MLP en el navegador, voz, holograma)" "node frontend/tests/piezas.test.mjs && node frontend/tests/mlp.test.mjs && node frontend/tests/voz.test.mjs && node frontend/tests/holograma.test.mjs"
   check "backend (intención, seguridad, búsqueda, generación, API)" \
     "(cd backend && .venv/Scripts/python -m pytest -q tests 2>/dev/null || .venv/bin/python -m pytest -q tests)"
   if [ -d ml/.venv ]; then
