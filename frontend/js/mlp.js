@@ -8,16 +8,32 @@ import { aVector, normalizar } from './normalize.js';
 
 export const URL_MODELO = 'ml/mlp_gestos.json';
 
+// Los pesos pueden venir como listas (versión 1) o como float32 en base64 (versión 2: la mitad de tamaño).
+// En los dos casos se devuelve una lista de filas, para que la cuenta de abajo sea la misma.
+function matriz(m) {
+  if (Array.isArray(m)) return m;
+  const binario = typeof atob === 'function' ? atob(m.float32) : Buffer.from(m.float32, 'base64').toString('binary');
+  const bytes = new Uint8Array(binario.length);
+  for (let i = 0; i < binario.length; i++) bytes[i] = binario.charCodeAt(i);
+  const datos = new Float32Array(bytes.buffer);
+  const [filas, cols = 0] = m.forma;
+  if (!cols) return datos;
+  return Array.from({ length: filas }, (_, i) => datos.subarray(i * cols, (i + 1) * cols));
+}
+
+const leerCapas = (modelo) => modelo.capas.map(({ W, b }) => ({ W: matriz(W), b: Array.from(matriz(b)) }));
+
 /**
  * Devuelve propagar(vector de 63) → { probabilidades, activaciones }. activaciones tiene una lista por capa
  * (la entrada, cada capa oculta después de la ReLU y la salida antes del softmax): el panel de actividad las dibuja.
  */
 export function crearPropagacion(modelo) {
-  const ultima = modelo.capas.length - 1;
+  const capas = leerCapas(modelo);
+  const ultima = capas.length - 1;
   return function propagar(vector) {
     let a = vector;
     const activaciones = [vector];
-    modelo.capas.forEach(({ W, b }, k) => {
+    capas.forEach(({ W, b }, k) => {
       const salida = b.slice();
       for (let i = 0; i < a.length; i++) {
         const ai = a[i];

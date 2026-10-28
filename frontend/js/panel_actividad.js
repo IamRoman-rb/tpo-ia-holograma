@@ -16,7 +16,6 @@ const COLORES = {
   pulgar_arriba: '#a77bff', pulgar_abajo: '#ff9a3c', victoria: '#ff4fd8', escala_dos_manos: '#4f8bff',
   ninguno: 'rgba(143, 179, 196, 0.25)',
 };
-const CAPAS = ['Entrada (21 puntos × xyz)', 'Oculta 1 · 128', 'Oculta 2 · 64', 'Salida · 8'];
 const LARGO_LINEA = 240;   // cuadros en la línea de tiempo (unos 8 s a 30 fps)
 const MAX_PEDIDOS = 6;
 
@@ -108,38 +107,57 @@ export function crearPanelActividad(raiz, { enVentana = false, alAbrirVentana = 
     });
   }
 
+  // Forma de cada capa en el dibujo: la entrada como 21 puntos × xyz, la salida como una columna de clases y
+  // cada capa oculta como una grilla de hasta 16 filas, con celdas del tamaño que entre (redes de cualquier tamaño).
+  function formas(activaciones, W, H) {
+    const ultima = activaciones.length - 1;
+    const ocultas = activaciones.slice(1, ultima);
+    const fijo = 3 * 7 + 14 + 70;                       // entrada + salida + nombres de las clases
+    const porOculta = (W - fijo - 16 * (ocultas.length + 1)) / Math.max(1, ocultas.length);
+    return activaciones.map((capa, k) => {
+      if (k === 0) return { filas: 21, cols: 3, lado: 7, nombre: 'Entrada' };
+      if (k === ultima) return { filas: capa.length, cols: 1, lado: 14, nombre: 'Salida' };
+      const filas = Math.min(16, capa.length);
+      const cols = Math.ceil(capa.length / filas);
+      const lado = Math.max(2, Math.min(9, (H - 24) / filas, porOculta / cols));
+      return { filas, cols, lado, nombre: `Oculta ${k} · ${capa.length}` };
+    });
+  }
+
   // Cada capa como una grilla de celdas: el brillo es la activación de la neurona (normalizada por capa).
   // Las líneas unen las neuronas más activas de capas vecinas: muestran por dónde "pasa" la señal.
   function dibujarRed(activaciones, probabilidades, clases) {
     const [W, H] = nitido(lienzo, ctx, 380, 176);
     ctx.clearRect(0, 0, W, H);
-    const formas = [[21, 3], [16, 8], [8, 8], [8, 1]];
-    const anchos = [3 * 7, 8 * 9, 8 * 9, 14];
-    const huecos = (W - anchos.reduce((s, a) => s + a, 0) - 70) / 3;
+    const capas = formas(activaciones, W, H);
+    const ultima = capas.length - 1;
+    const anchos = capas.map((c) => c.cols * c.lado);
+    const huecos = (W - anchos.reduce((s, a) => s + a, 0) - 70) / ultima;
     let x = 4;
     const celdas = [];
     activaciones.forEach((capa, k) => {
-      const [filas, cols] = formas[k];
-      const lado = k === 0 ? 7 : k === 3 ? 14 : 9;
+      const { filas, cols, lado, nombre } = capas[k];
       const alto = filas * lado;
       const y0 = 14 + (H - 14 - alto) / 2;
-      const valores = k === 3 ? probabilidades : capa.map(Math.abs);
+      const salida = k === ultima;
+      const valores = salida ? probabilidades : capa.map(Math.abs);
       const maximo = Math.max(1e-6, ...valores);
       const lista = [];
       valores.forEach((v, n) => {
-        const fila = k === 0 ? Math.floor(n / 3) : Math.floor(n / cols);
-        const col = k === 0 ? n % 3 : n % cols;
+        // La entrada va por punto de la mano (una fila por punto, x y z en columnas); el resto, por filas
+        const fila = k === 0 ? Math.floor(n / 3) : n % filas;
+        const col = k === 0 ? n % 3 : Math.floor(n / filas);
         const cx = x + col * lado;
         const cy = y0 + fila * lado;
-        const a = k === 3 ? v : v / maximo;
-        ctx.fillStyle = k === 3 ? (COLORES[clases[n]] ?? '#2bd4ff') : `rgba(43, 212, 255, ${0.08 + 0.92 * a})`;
-        ctx.globalAlpha = k === 3 ? 0.25 + 0.75 * a : 1;
-        if (k === 3) {
+        const a = salida ? v : v / maximo;
+        ctx.fillStyle = salida ? (COLORES[clases[n]] ?? '#2bd4ff') : `rgba(43, 212, 255, ${0.08 + 0.92 * a})`;
+        ctx.globalAlpha = salida ? 0.25 + 0.75 * a : 1;
+        if (salida) {
           ctx.beginPath();
           ctx.arc(cx + lado / 2, cy + lado / 2, lado / 2 - 1.5, 0, 2 * Math.PI);
           ctx.fill();
         } else {
-          ctx.fillRect(cx, cy, lado - 1.5, lado - 1.5);
+          ctx.fillRect(cx, cy, Math.max(1, lado - (lado > 4 ? 1.5 : 0.5)), Math.max(1, lado - (lado > 4 ? 1.5 : 0.5)));
         }
         ctx.globalAlpha = 1;
         lista.push({ a, x: cx + lado / 2, y: cy + lado / 2 });
@@ -148,11 +166,11 @@ export function crearPanelActividad(raiz, { enVentana = false, alAbrirVentana = 
       ctx.fillStyle = 'rgba(143, 179, 196, 0.9)';
       ctx.font = '10px system-ui, sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText(CAPAS[k].split(' · ')[0].split(' (')[0], x, 10);
+      ctx.fillText(nombre, x, 10);
       x += anchos[k] + huecos;
     });
     // Nombres de las clases al lado de la salida
-    const salida = celdas[3];
+    const salida = celdas[ultima];
     ctx.font = '10px system-ui, sans-serif';
     salida.forEach((c, n) => {
       ctx.fillStyle = c.a > 0.5 ? '#e6f6ff' : 'rgba(143, 179, 196, 0.8)';
@@ -163,7 +181,7 @@ export function crearPanelActividad(raiz, { enVentana = false, alAbrirVentana = 
     for (let k = 0; k < celdas.length - 1; k++) {
       const top = (lista, n) => [...lista].sort((p, q) => q.a - p.a).slice(0, n);
       const desde = top(celdas[k], 6);
-      const hasta = top(celdas[k + 1], k + 1 === 3 ? 2 : 6);
+      const hasta = top(celdas[k + 1], k + 1 === ultima ? 2 : 6);
       for (const a of desde) {
         for (const b of hasta) {
           ctx.strokeStyle = `rgba(43, 212, 255, ${0.35 * a.a * b.a})`;
