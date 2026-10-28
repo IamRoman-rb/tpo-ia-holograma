@@ -1,0 +1,55 @@
+{
+  "nombre": "Bomba centrífuga",
+  "descripcion": "Bomba centrífuga de agua con motor eléctrico acoplado y base de montaje.",
+  "piezas": [
+    {"id": "bulones_tapa", "nombre": "Bulones de la tapa", "descripcion": "Seis bulones que cierran la tapa frontal.",
+     "material": "acero", "color": null, "orden_desmontaje": 1, "direccion_desmontaje": [0, 0, 1],
+     "formas": [
+      {"tipo": "cilindro", "medidas": {"radio": 0.5, "radio_superior": null, "radio_interior": null, "radio_tubo": null, "alto": 3, "ancho": null, "profundidad": null, "dientes": null}, "posicion": [9, 0, 5.5], "rotacion": [90, 0, 0]},
+      {"tipo": "cilindro", "medidas": {"radio": 0.5, "radio_superior": null, "radio_interior": null, "radio_tubo": null, "alto": 3, "ancho": null, "profundidad": null, "dientes": null}, "posicion": [-9, 0, 5.5], "rotacion": [90, 0, 0]},
+      {"tipo": "cilindro", "medidas": {"radio": 0.5, "radio_superior": null, "radio_interior": null, "radio_tubo": null, "alto": 3, "ancho": null, "profundidad": null, "dientes": null}, "posicion": [4.5, 7.8, 5.5], "rotacion": [90, 0, 0]},
+      {"tipo": "cilindro", "medidas": {"radio": 0.5, "radio_superior": null, "radio_interior": null, "radio_tubo": null, "alto": 3, "ancho": null, "profundidad": null, "dientes": null}, "posicion": [-4.5, 7.8, 5.5], "rotacion": [90, 0, 0]},
+      {"tipo": "cilindro", "medidas": {"radio": 0.5, "radio_superior": null, "radio_interior": null, "radio_tubo": null, "alto": 3, "ancho": null, "profundidad": null, "dientes": null}, "posicion": [4.5, -7.8, 5.5], "rotacion": [90, 0, 0]},
+      {"tipo": "cilindro", "medidas": {"radio": 0.5, "radio_superior": null, "radio_interior": null, "radio_tubo": null, "alto": 3, "ancho": null, "profundidad": null, "dientes": null}, "posicion": [-4.5, -7.8, 5.5], "rotacion": [90, 0, 0]}
+     ]},
+    {"id": "tapa_frontal", "nombre": "Tapa frontal", "descripcion": "Cierra la voluta y tiene la boca de aspiración.",
+     "material": "hierro", "color": null, "orden_desmontaje": 2, "direccion_desmontaje": [0, 0, 1],
+     "formas": [
+      {"tipo": "cilindro", "medidas": {"radio": 10.5, "radio_superior": null, "radio_interior": null, "radio_tubo": null, "alto": 1.5, "ancho": null, "profundidad": null, "dientes": null}, "posicion": [0, 0, 4.75], "rotacion": [90, 0, 0]},
+      {"tipo": "tubo", "medidas": {"radio": 3, "radio_superior": null, "radio_interior": 2.2, "radio_tubo": null, "alto": 6, "ancho": null, "profundidad": null, "dientes": null}, "posicion": [0, 0, 8.5], "rotacion": [90, 0, 0]}
+     ]},
+    {"id": "tuerca_impulsor", "nombre": "Tuerca del impulsor", "descripcion": "Fija el impulsor al eje.",
+     "material": "laton", "color": null, "orden_desmontaje": 3, "direccion_desmontaje": [0, 0, 1],
+     "formas": [
+      {"tipo": "prisma_hexagonal", "medidas": {"radio": 1, "radio_superior": null, "radio_interior": null, "radio_tubo": null, "alto": 1, "ancho": null, "profundidad": null, "dientes": null}, "posicion": [0, 0, 3.5], "rotacion": [90, 0, 0]}
+     ]},
+    {"id": "impulsor", "nombre": "Impulsor", "descripcion": "Rueda con álabes que impulsa el agua al girar.",
+     "material": "laton", "color": null, "orden_desmontaje": 4, "direccion_desmontaje": [0, 0, 1],
+     "formas": [
+      {"tipo": "engranaje", "medidas": {"radio": 7, "radio_superior": null, "radio_interior": 1, "radio_tubo": null, "alto": 2, "ancho": null, "profundidad": null, "dientes": 8}, "posicion": [0, 0, 2], "rotacion": [90, 0, 0]}
+     ]},
+    {"id": "motor", "nombre": "Motor eléctrico", "descripcion": "Hace girar el eje del impulsor.",
+     "material": "pintado", "color": "#1f5fa8", "orden_desmontaje": 5, "direccion_desmontaje": [0, 0, -1],
+     "formas": [
+      {"tipo": "cilindro", "medidas": {"radio": 9, "radio_superior": null, "radio_interior": null, "radio_tubo": null, "alto": 20, "ancho": null, "profundidad": null, "dientes": null}, "posicion": [0, 0, -16], "rotacion": [90, 0, 0]},
+      {"tipo": "cilindro", "medidas": {"radio": 0.8, "radio_superior": null, "radio_interior": null, "radio_tubo": null, "alto": 10, "ancho": null, "profundidad": null, "dientes": null}, "posicion": [0, 0, -2], "rotacion": [90, 0, 0]}
+     ]},
+    {"id": "base", "nombre": "Base de montaje", "descripcion": "Chapa que sostiene la bomba y el motor.",
+     "material": "hierro", "color": null, "orden_desmontaje": 6, "direccion_desmontaje": [0, -1, 0],
+     "formas": [
+      {"tipo": "caja", "medidas": {"radio": null, "radio_superior": null, "radio_interior": null, "radio_tubo": null, "alto": 2, "ancho": 26, "profundidad": 42, "dientes": null}, "posicion": [0, -12, -8], "rotacion": [0, 0, 0]}
+     ]},
+    {"id": "junta", "nombre": "Junta tórica", "descripcion": "Sella la unión entre la tapa y la voluta.",
+     "material": "goma", "color": null, "orden_desmontaje": 7, "direccion_desmontaje": [0, 0, 1],
+     "formas": [
+      {"tipo": "toroide", "medidas": {"radio": 9.5, "radio_superior": null, "radio_interior": null, "radio_tubo": 0.3, "alto": null, "ancho": null, "profundidad": null, "dientes": null}, "posicion": [0, 0, 4], "rotacion": [90, 0, 0]}
+     ]},
+    {"id": "voluta", "nombre": "Voluta", "descripcion": "Carcasa en espiral que conduce el agua a la salida. Queda fija.",
+     "material": "hierro", "color": null, "orden_desmontaje": null, "direccion_desmontaje": null,
+     "formas": [
+      {"tipo": "tubo", "medidas": {"radio": 10, "radio_superior": null, "radio_interior": 7.5, "radio_tubo": null, "alto": 8, "ancho": null, "profundidad": null, "dientes": null}, "posicion": [0, 0, 0], "rotacion": [90, 0, 0]},
+      {"tipo": "tubo", "medidas": {"radio": 3, "radio_superior": null, "radio_interior": 2.2, "radio_tubo": null, "alto": 8, "ancho": null, "profundidad": null, "dientes": null}, "posicion": [0, 13, 0], "rotacion": [0, 0, 0]},
+      {"tipo": "cono", "medidas": {"radio": 4, "radio_superior": 3, "radio_interior": null, "radio_tubo": null, "alto": 2, "ancho": null, "profundidad": null, "dientes": null}, "posicion": [0, 9, 0], "rotacion": [0, 0, 0]}
+     ]}
+  ]
+}

@@ -36,7 +36,8 @@ case "$salud" in
   *'"busqueda":"palabras"'*) aviso "búsqueda solo por palabras: falta sentence-transformers o el modelo en caché" ;;
 esac
 case "$salud" in
-  *'"generacion":"disponible"'*)
+  *'"generacion":"ensamble"'*) ok "generación 3D por piezas con el LLM" ;;
+  *'"generacion":"remoto"'*)
     url="$(valor_env GEN3D_URL)"
     check "servidor de generación 3D accesible" "curl -fs --max-time 10 ${url%/}/salud" \
       "volver a correr backend/generador_colab/servidor_generacion.ipynb y actualizar .env"

@@ -4,12 +4,13 @@ Si el objeto pedido no está en el catálogo, se genera, se guarda y se agrega a
 el próximo pedido parecido se resuelve al instante por búsqueda (sección 4: "el sistema
 reutiliza modelos generados antes") y conserva la etiqueta de "generado por IA".
 
-El modelo generativo (TripoSR o Shap-E, según eval/generacion3d) necesita GPU, así que corre
-en un servidor aparte: backend/generador_colab/servidor_generacion.ipynb en Google Colab.
-Configuración en .env:
-    GEN3D_MODO=remoto            (por defecto "desactivado")
-    GEN3D_URL=https://....trycloudflare.com
-    GEN3D_TOKEN=...              (la contraseña que imprime el servidor)
+Dos formas de generar (GEN3D_MODO en .env):
+    ensamble   El LLM diseña el objeto POR PIEZAS (backend/ensamble.py): se puede desarmar.
+               Solo necesita la clave del LLM; no usa GPU.
+    remoto     TripoSR o Shap-E en Colab (backend/generador_colab/servidor_generacion.ipynb):
+               una sola malla, que no se puede desarmar. Necesita GEN3D_URL y GEN3D_TOKEN.
+    auto       (por defecto) ensamble si hay clave del LLM; si no, remoto si hay GEN3D_URL.
+    desactivado
 """
 import json
 import logging
@@ -25,6 +26,7 @@ from pathlib import Path
 import anthropic
 import httpx
 
+import ensamble
 from intent import MODELO, MODELOS_CON_FALLBACK
 
 log = logging.getLogger(__name__)
@@ -110,18 +112,21 @@ def _generar_remoto(prompt: str) -> bytes:
 
 # ------------------------------------------------------------------ catálogo
 
-def registrar_en_catalogo(id_: str, descripcion: str, url: str, prompt: str, segundos: float) -> dict:
+def registrar_en_catalogo(id_: str, descripcion: str, url: str, prompt: str, segundos: float,
+                          nombre: str | None = None, metodo: str = "remoto", piezas: int = 1) -> dict:
     items = json.loads(RUTA_CATALOGO.read_text(encoding="utf-8"))
     existente = next((it for it in items if it["id"] == id_), None)
     if existente:
         return existente
     item = {
         "id": id_,
-        "nombre": descripcion[:1].upper() + descripcion[1:],
-        "sinonimos": [descripcion],
+        "nombre": nombre or descripcion[:1].upper() + descripcion[1:],
+        "sinonimos": list(dict.fromkeys([descripcion] + ([nombre.lower()] if nombre else []))),
         "descripcion": f"Modelo generado por IA a partir de «{descripcion}». No apto para fabricación sin revisión.",
         "url": url,
         "origen": "generado",
+        "metodo": metodo,
+        "piezas": piezas,
         "prompt": prompt,
         "segundos_generacion": round(segundos, 1),
         "generado_en": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -133,8 +138,35 @@ def registrar_en_catalogo(id_: str, descripcion: str, url: str, prompt: str, seg
 
 # ------------------------------------------------------------------ punto de entrada
 
+def _hay_credenciales_llm() -> bool:
+    return bool(os.getenv("ANTHROPIC_API_KEY") or os.getenv("ANTHROPIC_AUTH_TOKEN"))
+
+
+def modo() -> str:
+    """Método de generación activo: "ensamble", "remoto" o "desactivado"."""
+    pedido = os.getenv("GEN3D_MODO", "auto")
+    if pedido == "ensamble":
+        return "ensamble" if _hay_credenciales_llm() else "desactivado"
+    if pedido == "remoto":
+        return "remoto" if os.getenv("GEN3D_URL") else "desactivado"
+    if pedido == "auto":
+        if _hay_credenciales_llm():
+            return "ensamble"
+        return "remoto" if os.getenv("GEN3D_URL") else "desactivado"
+    return "desactivado"
+
+
 def disponible() -> bool:
-    return os.getenv("GEN3D_MODO", "desactivado") == "remoto" and bool(os.getenv("GEN3D_URL"))
+    return modo() != "desactivado"
+
+
+def _generar_por_piezas(descripcion: str):
+    try:
+        return ensamble.generar_glb(descripcion)
+    except ensamble.EnsambleInvalido as e:
+        raise GeneracionFallida(str(e)) from e
+    except (anthropic.AnthropicError, TypeError) as e:
+        raise GeneracionFallida(f"el LLM no respondió ({type(e).__name__})") from e
 
 
 def generar(descripcion: str) -> dict:
@@ -144,17 +176,21 @@ def generar(descripcion: str) -> dict:
     url = f"models/generados/{id_}.glb"
     ruta = DIR_GENERADOS / f"{id_}.glb"
     with _candado:
-        segundos, prompt = 0.0, ""
+        segundos, prompt, nombre, metodo, cantidad = 0.0, "", None, modo(), 1
         if not ruta.exists():  # puede haberse generado mientras esperaba el candado
             t0 = time.perf_counter()
-            prompt = prompt_en_ingles(descripcion)
-            datos = _generar_remoto(prompt)
+            if metodo == "ensamble":
+                datos, diseno = _generar_por_piezas(descripcion)
+                nombre, cantidad = diseno.nombre, len(diseno.piezas)
+            else:
+                prompt = prompt_en_ingles(descripcion)
+                datos = _generar_remoto(prompt)
             if not es_glb_valido(datos):
                 raise GeneracionFallida("el archivo generado no es un .glb válido")
             DIR_GENERADOS.mkdir(parents=True, exist_ok=True)
             ruta.write_bytes(datos)
             segundos = time.perf_counter() - t0
             log.info("Generado %s en %.1f s", id_, segundos)
-        item = registrar_en_catalogo(id_, descripcion, url, prompt, segundos)
+        item = registrar_en_catalogo(id_, descripcion, url, prompt, segundos, nombre, metodo, cantidad)
     return {"id": item["id"], "nombre": item["nombre"], "modelo_url": item["url"],
-            "segundos_generacion": item.get("segundos_generacion")}
+            "segundos_generacion": item.get("segundos_generacion"), "piezas": item.get("piezas", 1)}

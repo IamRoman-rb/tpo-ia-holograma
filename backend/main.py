@@ -56,7 +56,7 @@ def _controlar_frecuencia(request: Request):
 @app.get("/health")
 def health():
     return {"estado": "ok", "busqueda": catalogo().metodo, "piezas": len(catalogo().items),
-            "generacion": "disponible" if generate3d.disponible() else "desactivada"}
+            "generacion": generate3d.modo()}
 
 
 @app.post("/intent")
