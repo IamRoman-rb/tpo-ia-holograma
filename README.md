@@ -69,6 +69,19 @@ El guion de los 15 minutos, la demo paso a paso y las respuestas a las preguntas
 
 Los gestos los reconoce una red neuronal (MLP) entrenada con fotos reales de miles de personas, o las reglas geométricas: se elige en el panel de la izquierda (**Clasificador**).
 
+### Holograma sobre la cámara
+
+Con el botón **Holograma** (o la tecla `H`) activado, que es lo que viene por defecto, el video de la cámara ocupa toda la pantalla y el objeto se dibuja encima como un holograma. Cada pieza tiene su color neón y se ve con sus aristas, una nube de puntos y un relleno tenue. A los costados aparecen etiquetas con el nombre y la función de cada pieza, con una línea guía hasta ella; al tocar una etiqueta se elige esa pieza. El esqueleto de la mano se dibuja sobre la mano real, el cursor de señalar queda en la punta del índice, al rotar con la palma aparece un aro y al escalar con las dos manos se ve el zoom. El catálogo pasa a ser una fila de pestañas abajo. **Paneles** muestra el panel de piezas y **Despiece** abre o cierra la vista explotada. Sin cámara, el holograma se ve sobre el fondo oscuro y el recuadro de cámara sigue abajo a la derecha. Apagando **Holograma** se vuelve a la vista de estudio, con los materiales del modelo.
+
+### Actividad de la IA en vivo
+
+**Actividad IA** (o la tecla `L`) abre un panel que muestra qué hace cada modelo mientras se usa el visor:
+
+- **Red neuronal de gestos**: las activaciones de sus cuatro capas, de la entrada (los 21 puntos de la mano) a la salida (las 8 clases), con líneas entre las neuronas más activas. Debajo están la probabilidad de cada clase contra el umbral de 90 % y una línea de tiempo con el gesto aplicado en los últimos segundos. Con las reglas (y en la simulación) se ven las métricas de la mano contra sus umbrales.
+- **LLM**: cada pedido desde que sale hasta que se ejecuta. Se ve qué motor lo interpretó (el modelo de Claude o, si no está disponible, las reglas y por qué), los tokens, el tiempo del LLM y el total, el JSON que devolvió y si los filtros lo cambiaron, si pidió confirmación, y si el objeto salió del catálogo (con su similitud) o se generó.
+
+**↗ Ventana** abre lo mismo en otra ventana ([actividad.html](frontend/actividad.html)), para mostrarlo en otra pantalla durante la demo. Los datos pasan entre las pestañas del mismo navegador y no salen del equipo.
+
 ### Desarmar el objeto
 
 Para **analizar una pieza**: señalala un momento (o tocala en la lista o en el modelo) y hacé la victoria, apretá `I` o el botón **Analizar**. Queda sola, centrada y grande, con un panel que dice qué es, de qué material y cuánto mide; se gira con la palma. El puño, `Esc` o "volvé al conjunto" la devuelven a su lugar. También se puede pedir: "mostrame solo el volante".
@@ -110,6 +123,7 @@ node frontend/tests/gestos.test.mjs      # pruebas de normalización, gestos y b
 node frontend/tests/piezas.test.mjs      # orden y recorrido del desarmado, análisis de una pieza
 node frontend/tests/mlp.test.mjs         # el MLP en JavaScript da lo mismo que en Python
 node frontend/tests/voz.test.mjs         # pedidos por voz (con un reconocimiento falso)
+node frontend/tests/holograma.test.mjs   # nube de puntos, etiquetas a los costados y dedo en la pantalla
 python -m pytest ml                      # la normalización de Python coincide con la del navegador (entorno de ml/)
 cd backend && python -m pytest tests     # pruebas del backend (con el entorno virtual activo)
 python eval/eval_intent.py               # aciertos de intención: reglas vs. LLM (desde la raíz)

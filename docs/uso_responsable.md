@@ -127,6 +127,7 @@ En pantalla, en todo momento:
 - **Qué se entendió del pedido** y si lo interpretó el LLM o las reglas.
 - **Origen del modelo**: "Del catálogo" o "Generado por IA · no apto para fabricación sin revisión".
 - **"Simulación"**, cuando las manos no vienen de una cámara real.
+- **Actividad de la IA** (botón o tecla `L`): qué ve la red neuronal en cada cuadro (activaciones, probabilidades contra el umbral) y qué pasó con cada pedido (si lo interpretó el LLM o las reglas y por qué, qué respondió, qué cambiaron los filtros de seguridad, cuánto tardó y si el objeto salió del catálogo o se generó). Se puede abrir en otra ventana para mostrarlo a la audiencia. Los datos pasan entre pestañas del mismo navegador (BroadcastChannel) y no salen del equipo.
 
 ### Qué hace y qué no hace el sistema
 

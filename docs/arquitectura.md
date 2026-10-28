@@ -87,6 +87,8 @@ flowchart TB
 | [3] LLM | `backend/intent.py`, `backend/prompts/intent_system.txt` · pedidos por voz: `frontend/js/voz.js` |
 | [4] IA generativa 3D | `backend/generate3d.py`, `backend/ensamble.py`, `backend/geometria.py`, `backend/prompts/ensamble_system.txt`, `backend/generador_colab/servidor_generacion.ipynb` |
 | Desarmado por piezas | `frontend/js/piezas.js`, `frontend/js/viewer.js` |
+| Holograma sobre la cámara | `frontend/js/holograma.js`, `frontend/js/etiquetas.js`, `frontend/js/viewer.js`, `frontend/js/overlay.js` |
+| Actividad de la IA en vivo | `frontend/js/actividad.js`, `frontend/js/panel_actividad.js`, `frontend/actividad.html` · traza del LLM en `backend/intent.py` |
 | [5] Embeddings y búsqueda | `backend/retrieval.py` |
 | [6] Reglas de seguridad | `backend/safety.py`, `backend/schemas.py` |
 
