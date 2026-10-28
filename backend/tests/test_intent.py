@@ -20,6 +20,11 @@ from intent import interpretar_llm, interpretar_reglas
     ("una pieza giratoria con esferas de metal", "mostrar", "pieza giratoria con esferas de metal", None, None),
     ("volvé al inicio", "reiniciar", None, None, None),
     ("qué hora es", "desconocido", None, None, None),
+    ("desarmalo", "desmontar", None, None, None),
+    ("sacale una pieza", "desmontar", None, None, None),
+    ("mostrame el despiece", "explotar", None, None, None),
+    ("mostrame la válvula desarmada", "explotar", "valvula", None, None),
+    ("armalo de nuevo", "armar", None, None, None),
 ])
 def test_reglas(frase, accion, objeto, vista, factor):
     r = interpretar_reglas(frase)

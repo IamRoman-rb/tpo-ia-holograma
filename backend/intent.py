@@ -137,11 +137,30 @@ def _objeto(t):
     return resto or None
 
 
+# Desarmado por piezas. El orden importa: "desarmalo" contiene "armalo".
+RE_EXPLOTAR = (r"\bexplot|\bdespiece|\bdesarmad[oa]s?\b|\bdesmontad[oa]s?\b"
+               r"|\b(?:todas las|las) (?:piezas|partes)\b|\bdesarm\w* (?:todo|entero|completo|del todo)")
+RE_DESMONTAR = r"\bdesarm|\bdesmont|\bsac\w* (?:una |la |otra |la siguiente |la proxima )?(?:pieza|parte)|\bsepar"
+RE_ARMAR = (r"\b(?:arma|armalo|armala|armar|armalos|monta|montalo|montala|montar|reensambla\w*|ensambla\w*)\b"
+            r"|\bvolve a armar|\bjunta (?:las )?piezas")
+PALABRAS_DESPIECE = r"\b(?:el |la )?(?:despiece|piezas|partes|desarmad[oa]s?|desmontad[oa]s?|explotad[oa]s?)\b"
+
+
 def interpretar_reglas(frase: str) -> dict:
     t = normalizar(frase)
     objeto, vista, factor = _objeto(t), _vista(t), _factor(t)
 
-    if objeto:
+    if re.search(RE_EXPLOTAR, t):
+        accion = "explotar"
+        # "mostrame la válvula desarmada": el objeto es la válvula, no "válvula desarmada"
+        if objeto:
+            objeto = re.sub(r"^(?:de |del )", "", re.sub(PALABRAS_DESPIECE, " ", objeto).strip()).strip()
+            objeto = re.sub(rf"^{ARTICULOS}\s+", "", objeto).strip() or None
+    elif re.search(RE_DESMONTAR, t):
+        accion, objeto = "desmontar", None
+    elif re.search(RE_ARMAR, t):
+        accion, objeto = "armar", None
+    elif objeto:
         accion = "mostrar"
     elif factor is not None:
         accion = "escalar"
