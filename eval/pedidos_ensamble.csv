@@ -1,0 +1,11 @@
+id,pedido,partes_clave,medida_min_cm,medida_max_cm,en_colab
+valvula,válvula de compuerta con volante,volante;vastago|eje;bonete|tapa;cuerpo;brida,15,150,si
+engranaje,engranaje recto,engranaje|corona|rueda|dientes;cubo|eje|maza,3,100,si
+rodamiento,rodamiento de bolas,exterior;interior;bola|esfera;jaula|separador|reten,1,60,si
+llave_inglesa,llave inglesa,mango|cuerpo;mandibula|boca|quijada;tornillo|sinfin|rueda,10,60,si
+bomba_agua,bomba de agua centrífuga,carcasa|voluta|cuerpo;impulsor|rodete;motor;eje;base|soporte|bancada,20,200,si
+cilindro_hidraulico,cilindro hidráulico,camisa|cilindro|tubo;vastago;piston|embolo;tapa|culata,20,300,no
+reductor,reductor de velocidad de engranajes,carcasa|caja;engranaje|pinon|rueda|corona;eje;tapa,10,150,no
+ventilador,ventilador axial industrial,aspa|pala|helice;motor;rejilla|reja|proteccion|guarda;marco|carcasa|aro|virola,20,200,no
+morsa,morsa de banco,mordaza;tornillo|husillo;manija|palanca|manivela;base|cuerpo,10,80,no
+compresor,compresor de aire de pistón,tanque|deposito|calderin;cilindro|piston|cabezal;motor;polea|correa|volante,30,200,no

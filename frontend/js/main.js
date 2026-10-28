@@ -171,8 +171,19 @@ async function refrescarCatalogo() {
   ui.mostrarCatalogo(catalogo, elegirDelCatalogo);
 }
 
+// ?modelo=models/evaluacion/<id>.glb abre un modelo de eval/eval_ensamble.py para puntuarlo.
+// Solo se aceptan archivos de esa carpeta.
+const modeloEvaluacion = new URLSearchParams(location.search).get('modelo');
+const MODELO_EVALUACION = /^models\/evaluacion\/[\w-]+\.glb$/;
+
 refrescarCatalogo()
-  .then(() => catalogo.length && elegirDelCatalogo(catalogo[0]))
+  .then(() => {
+    if (modeloEvaluacion && MODELO_EVALUACION.test(modeloEvaluacion)) {
+      const id = modeloEvaluacion.split('/').pop().replace('.glb', '');
+      return mostrarModelo(modeloEvaluacion, `Evaluación: ${id}`, 'generado', null);
+    }
+    return catalogo.length && elegirDelCatalogo(catalogo[0]);
+  })
   .catch((err) => {
     console.error(err);
     ui.mostrarEstado('No pude cargar el catálogo', 'error');
