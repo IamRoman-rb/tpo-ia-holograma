@@ -51,6 +51,8 @@ bash scripts/check_all.sh --tests
 
 El script revisa los servicios, el plan B sin internet, el catálogo, la configuración y las pruebas. Las librerías del frontend están en `frontend/vendor/`, así que el visor funciona sin internet. Ver [scripts/demo_offline.md](scripts/demo_offline.md).
 
+El guion de los 15 minutos, la demo paso a paso y las respuestas a las preguntas probables están en [docs/presentacion/guion.md](docs/presentacion/guion.md).
+
 ## Uso
 
 | Gesto | Acción |
