@@ -10,6 +10,7 @@ import { interpretarPedido, pedirObjeto } from './api.js';
 import * as ui from './ui.js';
 import * as metricas from './metricas.js';
 import { cargarMlp } from './mlp.js';
+import { crearVoz, decir, puedeReconocerLocal, reconocimientoDisponible } from './voz.js';
 
 const UMBRAL_CONFIANZA = 0.8;      // sección 7.3, flujo 1
 const PASO_ROTACION = Math.PI / 12;
@@ -182,7 +183,7 @@ async function ejecutar({ accion, objeto, parametros }, id) {
   ui.mostrarEstado('listo');
 }
 
-async function atenderPedido(frase) {
+async function atenderPedido(frase, { porVoz = false } = {}) {
   const id = ++pedidoActual;
   ui.mostrarEstado('interpretando…');
   let intencion;
@@ -197,6 +198,11 @@ async function atenderPedido(frase) {
 
   if (id !== pedidoActual) return;
   ui.mostrarInterpretacion(intencion);
+  // Si se pidió hablando, la respuesta también se escucha (sin el porcentaje ni el motor)
+  if (porVoz) {
+    decir(intencion.accion === 'desconocido' ? 'No entendí el pedido.'
+      : document.getElementById('interpretacion').textContent.split(' — ')[0]);
+  }
   if (intencion.accion === 'desconocido') {
     const motivo = intencion.motivo ? ` (${intencion.motivo})` : '';
     return ui.mostrarEstado(`No entendí el pedido${motivo}. Probá con "mostrame un engranaje".`, 'error');
@@ -211,13 +217,16 @@ async function atenderPedido(frase) {
 }
 
 // --- pedidos por texto y catálogo
+let pedidoPorVoz = false;
 document.getElementById('pedido').addEventListener('submit', (e) => {
   e.preventDefault();
   const campo = document.getElementById('frase');
   const frase = campo.value.trim();
+  const porVoz = pedidoPorVoz;
+  pedidoPorVoz = false;
   if (!frase) return;
   const t0 = performance.now();
-  atenderPedido(frase).then(async () => {
+  atenderPedido(frase, { porVoz }).then(async () => {
     // Latencia de punta a punta: solo cuenta si este pedido terminó mostrando un modelo
     if (ultimoModelo.t < t0) return;
     await metricas.proximoCuadro();
@@ -229,6 +238,44 @@ document.getElementById('pedido').addEventListener('submit', (e) => {
   });
   campo.select();
 });
+
+// --- pedidos por voz: el texto reconocido sigue el mismo camino que uno escrito
+const botonMicrofono = document.getElementById('microfono');
+let voz = null;
+
+async function prepararVoz() {
+  const Reconocimiento = reconocimientoDisponible();
+  if (!Reconocimiento) return; // Firefox: sin reconocimiento de voz, queda el texto
+  const local = await puedeReconocerLocal(Reconocimiento);
+  const campo = document.getElementById('frase');
+  voz = crearVoz({
+    local,
+    alParcial: (texto) => { campo.value = texto; },
+    alFinal: (texto) => {
+      campo.value = texto;
+      pedidoPorVoz = true;
+      document.getElementById('pedido').requestSubmit();
+    },
+    alEstado: (estado, detalle) => {
+      botonMicrofono.classList.toggle('escuchando', estado === 'escuchando');
+      botonMicrofono.setAttribute('aria-pressed', String(estado === 'escuchando'));
+      if (estado === 'escuchando') ui.mostrarEstado('escuchando…');
+      else if (estado === 'error') ui.mostrarEstado(detalle, 'error');
+      else if (detalle) ui.mostrarEstado(detalle);
+    },
+  });
+  botonMicrofono.hidden = false;
+  botonMicrofono.title = local ? 'Pedir por voz (V) · se reconoce en este equipo'
+    : 'Pedir por voz (V) · el audio lo procesa el servicio de voz del navegador';
+}
+
+function alternarVoz() {
+  if (!voz) return ui.mostrarEstado('Este navegador no reconoce la voz: escribí el pedido.', 'error');
+  if (voz.escuchando) voz.detener();
+  else voz.escuchar();
+}
+botonMicrofono.addEventListener('click', alternarVoz);
+prepararVoz().catch(console.error);
 
 const elegirDelCatalogo = (item) => mostrarModelo(item.url, item.nombre, item.origen ?? 'catalogo', item.id);
 
@@ -326,6 +373,7 @@ const TECLAS = {
 addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT') return;
   if (e.key === 'd' || e.key === 'D') return ui.alternarDepuracion();
+  if (e.key === 'v' || e.key === 'V') return alternarVoz();
   if (e.key === '?') return ui.alternarAyuda();
   const accion = TECLAS[e.key];
   if (accion) {

@@ -352,3 +352,10 @@ body:has(#camara.grande) #catalogo { max-height: calc(100vh - min(560px, 46vw) *
 @media (max-width: 760px) {
   #analisis { top: auto; bottom: 108px; left: 8px; right: 8px; width: auto; }
 }
+
+/* Botón del micrófono: late mientras escucha */
+#microfono { display: inline-flex; align-items: center; justify-content: center; padding: 8px 10px; }
+#microfono[hidden] { display: none; }
+#microfono.escuchando { border-color: var(--error); color: var(--error); animation: latido 1s ease-in-out infinite; }
+@keyframes latido { 50% { box-shadow: 0 0 0 6px rgba(255, 107, 107, 0.25); } }
+@media (prefers-reduced-motion: reduce) { #microfono.escuchando { animation: none; } }
