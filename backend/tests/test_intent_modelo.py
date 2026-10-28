@@ -40,9 +40,17 @@ def test_el_objeto_lo_marca_el_etiquetador():
     assert list(traza["probabilidades"]) == ["mostrar", "rotar"]
 
 
-# Con el modelo exportado de verdad (backend/modelos/intencion.json). El etiquetador no necesita embeddings.
+# Con el modelo exportado de verdad (backend/modelos/intencion.json). El etiquetador combinado usa los vectores
+# de palabra del modelo de embeddings: sin él, estos tests se saltean.
 RUTA = intent_modelo.RUTA_MODELO
 con_modelo = pytest.mark.skipif(not RUTA.exists(), reason="falta backend/modelos/intencion.json")
+
+
+def modelo_real():
+    try:
+        return intent_modelo.cargar()
+    except intent_modelo.ModeloNoDisponible as e:
+        pytest.skip(str(e))
 
 
 @con_modelo
@@ -51,18 +59,19 @@ con_modelo = pytest.mark.skipif(not RUTA.exists(), reason="falta backend/modelos
     ("quiero ver un compresor de dos etapas", "mostrar", "compresor de dos etapas"),
     ("analizá solamente el vástago", "aislar", "vástago"),
     ("mostrame el despiece de la caja reductora", "explotar", "caja reductora"),
+    # objetos de cualquier tipo, con lo que los describe y sin lo que no es parte del objeto
+    ("che, mostrame un acordeón antiguo de costado", "mostrar", "acordeón antiguo"),
+    ("necesito un modelo 3d de una lancha a motor", "mostrar", "lancha a motor"),
+    ("quiero ver la hélice de un helicóptero en 3d", "mostrar", "hélice de un helicóptero"),
+    ("mostrame unas botas de lluvia para el cliente", "mostrar", "botas de lluvia"),
 ])
 def test_etiquetador_entrenado(frase, accion, objeto):
-    datos = json.loads(RUTA.read_text(encoding="utf-8"))
-    assert InterpreteEntrenado(datos, codificador=None).objeto(frase, accion) == objeto
+    assert modelo_real().objeto(frase, accion) == objeto
 
 
 @con_modelo
 def test_modelo_completo_si_hay_embeddings():
-    try:
-        m = intent_modelo.cargar()
-    except intent_modelo.ModeloNoDisponible as e:
-        pytest.skip(str(e))
+    m = modelo_real()
     assert interpretar_modelo("dale una vueltita", m)["accion"] == "rotar"
     r = interpretar_modelo("necesito ver una polea de aluminio de costado", m)
     assert r["accion"] == "mostrar" and "polea" in r["objeto"] and r["parametros"]["vista"] == "lateral"

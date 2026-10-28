@@ -1,0 +1,56 @@
+frase,accion,objeto
+mostrame una silla de oficina con ruedas,mostrar,silla de oficina con ruedas
+quiero ver un violín,mostrar,violín
+che traeme una bicicleta de montaña desde atrás,mostrar,bicicleta de montaña
+me podés mostrar el esqueleto de un dinosaurio?,mostrar,esqueleto de un dinosaurio
+necesito un modelo 3d de una cafetera italiana,mostrar,cafetera italiana
+a ver una guitarra eléctrica de costado,mostrar,guitarra eléctrica
+mostrame un corazón humano,mostrar,corazón humano
+cargame la torre eiffel vista desde arriba,mostrar,torre eiffel
+dame un taladro percutor,mostrar,taladro percutor
+hola mostrame un dron con cuatro hélices por favor,mostrar,dron con cuatro hélices
+quisiera ver una lámpara de escritorio,mostrar,lámpara de escritorio
+tenés una mochila?,mostrar,mochila
+buscame un casco de bombero,mostrar,casco de bombero
+generá una tetera de porcelana,mostrar,tetera de porcelana
+poneme un microscopio de frente,mostrar,microscopio
+quiero ver cómo es un reloj de pulsera,mostrar,reloj de pulsera
+mostrá un satélite artificial,mostrar,satélite artificial
+dale mostrame el auto,mostrar,auto
+un sillón de dos cuerpos,mostrar,sillón de dos cuerpos
+podrías mostrarme una impresora 3d?,mostrar,impresora 3d
+traé la escalera plegable,mostrar,escalera plegable
+abrime un tractor rojo,mostrar,tractor rojo
+me gustaría ver un barco a vela,mostrar,barco a vela
+mostrame unas zapatillas deportivas desde el costado,mostrar,zapatillas deportivas
+quiero un molino de viento,mostrar,molino de viento
+enseñame una cámara de fotos antigua,mostrar,cámara de fotos antigua
+mostrame un caballo,mostrar,caballo
+busco un ventilador de techo,mostrar,ventilador de techo
+mostrame una heladera con freezer de frente,mostrar,heladera con freezer
+dibujame una casa de dos pisos,mostrar,casa de dos pisos
+pasame el martillo,mostrar,martillo
+"che, ¿me cargás un avión comercial?",mostrar,avión comercial
+mostrame un teclado mecánico por favor,mostrar,teclado mecánico
+quiero ver una manzana,mostrar,manzana
+mostrame el motor de un avión,mostrar,motor de un avión
+mostrame la licuadora desarmada,explotar,licuadora
+quiero ver el despiece de la bicicleta,explotar,bicicleta
+mostrame las piezas de un reloj,explotar,reloj
+desarmá la cafetera entera,explotar,cafetera
+mostrame cómo está hecha la mochila,explotar,mochila
+explotá el teléfono celular,explotar,teléfono celular
+quiero ver la impresora en vista explotada,explotar,impresora
+despiece de la silla de oficina,explotar,silla de oficina
+abrí el despiece del taladro,explotar,taladro
+mostrame el control remoto desarmado,explotar,control remoto
+mostrame solo la cuerda,aislar,cuerda
+analizá el mango,aislar,mango
+aislá la batería,aislar,batería
+quiero ver la pantalla sola,aislar,pantalla
+dejá solo el respaldo,aislar,respaldo
+enfocate en el cable de alimentación,aislar,cable de alimentación
+mostrame únicamente la suela,aislar,suela
+analizá el filtro de la cafetera,aislar,filtro de la cafetera
+ver solo el manubrio,aislar,manubrio
+quiero estudiar la placa madre,aislar,placa madre

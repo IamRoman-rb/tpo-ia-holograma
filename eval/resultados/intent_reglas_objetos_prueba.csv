@@ -1,0 +1,46 @@
+frase,ok,errores,accion,objeto,vista,factor_escala,confianza,ms
+mostrame un trombón,True,,mostrar,trombon,,,0.7,2
+quiero ver una mesa ratona de vidrio,True,,mostrar,mesa ratona de vidrio,,,0.7,0
+traeme un colectivo de larga distancia,True,,mostrar,colectivo de larga distancia,,,0.7,0
+che me mostrás una jirafa?,False,acción desconocido; objeto None,desconocido,,,,0.0,0
+necesito ver un compresor de aire de frente,True,,mostrar,compresor de aire,frontal,,0.7,0
+dame una lavadora automática,True,,mostrar,lavadora automatica,,,0.7,0
+mostrame un faro de la costa,True,,mostrar,faro de la costa,,,0.7,0
+"hola, quisiera ver un termo de acero",False,acción desconocido; objeto None,desconocido,,,,0.0,0
+cargá una grúa torre desde arriba,True,,mostrar,grua torre,superior,,0.7,0
+podés mostrarme un pulmón?,False,acción desconocido; objeto None,desconocido,,,,0.0,0
+a ver un piano de cola,False,acción desconocido; objeto None,desconocido,,,,0.0,0
+buscame una carpa para cuatro personas,True,,mostrar,carpa para cuatro personas,,,0.7,0
+mostrá un submarino nuclear de costado,True,,mostrar,submarino nuclear,lateral,,0.7,0
+quiero ver la estatua de la libertad,True,,mostrar,estatua de la libertad,,,0.7,0
+generame un robot aspiradora,True,,mostrar,robot aspiradora,,,0.7,0
+mostrame unos auriculares inalámbricos por favor,True,,mostrar,auriculares inalambricos,,,0.7,0
+tenés un horno de barro?,False,acción desconocido; objeto None,desconocido,,,,0.0,0
+poné una pelota de fútbol,True,,mostrar,pelota de futbol,,,0.7,0
+enseñame el cráneo de un tigre,False,acción desconocido; objeto None,desconocido,,,,0.0,0
+haceme un sombrero de copa,True,,mostrar,sombrero de copa,,,0.7,0
+dale mostrame una motosierra,False,acción desconocido; objeto None,desconocido,,,,0.0,0
+me mostrás un escritorio en l?,False,acción desconocido; objeto None,desconocido,,,,0.0,0
+quiero ver un cohete espacial desde abajo,False,objeto 'cohete espacial desde abajo',mostrar,cohete espacial desde abajo,,,0.7,0
+mostrame una banana,True,,mostrar,banana,,,0.7,0
+abrí un tanque de guerra,True,,mostrar,tanque de guerra,,,0.7,0
+traé el monitor curvo,True,,mostrar,monitor curvo,,,0.7,0
+podrías traerme una aspiradora de mano?,False,acción desconocido; objeto None,desconocido,,,,0.0,0
+mostrame un globo terráqueo,True,,mostrar,globo terraqueo,,,0.7,0
+me gustaría ver una ballena azul,False,acción desconocido; objeto None,desconocido,,,,0.0,0
+mostrame una tostadora de dos ranuras de perfil,True,,mostrar,tostadora de dos ranuras,lateral,,0.7,0
+quiero ver el despiece del trombón,True,,explotar,trombon,,,0.7,0
+mostrame la lavadora desarmada,True,,explotar,lavadora,,,0.7,0
+mostrame las piezas de una motosierra,True,,explotar,motosierra,,,0.7,0
+desarmá el robot aspiradora,False,acción desmontar; objeto None,desmontar,,,,0.7,0
+explotá la tostadora,False,objeto None,explotar,,,,0.7,0
+quiero ver cómo está hecho el termo,False,acción mostrar; objeto 'como esta hecho el termo',mostrar,como esta hecho el termo,,,0.7,0
+despiece del compresor de aire,False,objeto None,explotar,,,,0.7,0
+mostrame los auriculares desarmados,True,,explotar,auriculares,,,0.7,0
+aislá la cadena,True,,aislar,cadena,,,0.7,0
+mostrame solo el tambor,True,,aislar,tambor,,,0.7,0
+analizá la boquilla,True,,aislar,boquilla,,,0.7,0
+quiero ver el cable de la tostadora solo,False,acción mostrar; objeto 'cable de la tostadora solo',mostrar,cable de la tostadora solo,,,0.7,0
+dejá sola la espada,False,acción desconocido; objeto None,desconocido,,,,0.0,0
+enfocate en el gatillo,False,acción desconocido; objeto None,desconocido,,,,0.0,0
+mostrame únicamente las teclas,True,,aislar,teclas,,,0.7,0

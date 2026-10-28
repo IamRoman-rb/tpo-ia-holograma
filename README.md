@@ -98,7 +98,7 @@ Qué datos se procesan en el equipo y cuáles salen de él, sesgos y proteccione
 
 ### Pedidos sin LLM
 
-Los pedidos escritos o por voz los interpreta el LLM (Claude). Si no hay clave o no hay internet, los interpreta un **modelo propio entrenado** que corre en el equipo (`backend/intent_modelo.py`): reconoce la acción con embeddings de la frase y una red entrenada con 4.400 frases rioplatenses, y un etiquetador entrenado encuentra el nombre del objeto. En 50 frases nuevas acierta 88 %, contra 68 % de las reglas que usaba antes ([docs/metricas.md](docs/metricas.md#intérprete-de-pedidos-entrenado-respaldo-del-llm)). Si tampoco está ese modelo, quedan las reglas. El visor y el panel de actividad muestran qué motor respondió.
+Los pedidos escritos o por voz los interpreta el LLM (Claude). Si no hay clave o no hay internet, los interpreta un **modelo propio entrenado** que corre en el equipo (`backend/intent_modelo.py`): reconoce la acción con embeddings de la frase y un clasificador entrenado con 18.800 frases rioplatenses, y un etiquetador entrenado encuentra el objeto, de cualquier tipo, con lo que lo describe ("una silla de oficina con ruedas", "el cráneo de un tigre"). Aprendió con casi 10 mil nombres de objetos de WordNet en español. Con 45 pedidos de objetos que nunca vio acierta 91 %, contra 60 % de las reglas que usaba antes ([docs/metricas.md](docs/metricas.md#intérprete-de-pedidos-entrenado-respaldo-del-llm)). Si tampoco está ese modelo, quedan las reglas. El visor y el panel de actividad muestran qué motor respondió.
 
 ### Pedidos por voz
 

@@ -93,7 +93,7 @@ MediaPipe puede rendir peor con ciertos tonos de piel, poca luz, manos con difer
 - El prompt pide interpretar español rioplatense (`backend/prompts/intent_system.txt`).
 - Las 30 frases de prueba (`eval/frases_prueba.csv`) incluyen voseo y formas coloquiales ("me mostrás…?", "girálo", "dale una vuelta").
 - El intérprete por reglas falla justamente con formas naturales: 84 % en las frases de prueba y 68 % en 50 frases nuevas. **Pendiente:** medir el LLM con la misma batería cuando haya clave.
-- El intérprete entrenado (`backend/intent_modelo.py`), que reemplaza a las reglas cuando no hay LLM, aprendió de frases generadas con plantillas escritas por una sola persona en español rioplatense. Puede fallar con otras variantes del español o con formas que las plantillas no cubren. Su confianza es real (la probabilidad de la red): si es baja, el visor pide confirmar antes de ejecutar. Corre en el equipo, sin enviar la frase a ningún servicio.
+- El intérprete entrenado (`backend/intent_modelo.py`), que reemplaza a las reglas cuando no hay LLM, aprendió de frases generadas con plantillas escritas por una sola persona en español rioplatense, con los nombres de objetos de WordNet en español (que traen términos de España y de otros países: "ordenador", "coche"). Puede fallar con otras variantes del español o con formas que las plantillas no cubren. Con objetos de todo tipo que no vio acierta 91 % (objeto exacto); lo que más falla es confundir "mostrar" con "analizar una pieza" cuando el pedido usa "el/la". Su confianza es real (la probabilidad de la red): si es baja, el visor pide confirmar antes de ejecutar. Corre en el equipo, sin enviar la frase a ningún servicio.
 
 ### Generador 3D
 

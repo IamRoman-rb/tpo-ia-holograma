@@ -85,9 +85,11 @@ Correspondencia de clases: palm/stop → palma abierta · fist → puño · one 
 El respaldo del LLM cuando no hay clave o no hay internet (`backend/intent_modelo.py`). Se entrena con el entorno del backend, que ya tiene sentence-transformers y scikit-learn:
 
 ```bash
-backend/.venv/Scripts/python ml/intencion/generar_frases.py      # 4.400 frases de plantilla -> ml/intencion/frases_entrenamiento.csv
-backend/.venv/Scripts/python ml/intencion/entrenar_intencion.py  # elige embeddings y clasificador, exporta backend/modelos/intencion.json
-backend/.venv/Scripts/python eval/eval_intent.py --frases nuevas # de punta a punta, contra las reglas (y el LLM si hay clave)
+backend/.venv/Scripts/python -m pip install nltk                     # solo para rehacer el vocabulario
+backend/.venv/Scripts/python ml/intencion/vocabulario_objetos.py      # ~9.800 objetos de WordNet en español -> ml/intencion/objetos.csv
+backend/.venv/Scripts/python ml/intencion/generar_frases.py           # 18.800 frases de plantilla + 1.400 de validación con objetos reservados
+backend/.venv/Scripts/python ml/intencion/entrenar_intencion.py       # ~6 min en CPU: elige embeddings, clasificador y etiquetador; exporta backend/modelos/intencion.json
+backend/.venv/Scripts/python eval/eval_intent.py --frases objetos_prueba   # de punta a punta, contra las reglas (y el LLM si hay clave)
 ```
 
-Las plantillas no usan los objetos de las frases de prueba y se saltean las frases de prueba y de validación (y sus variantes con muletillas). Resultados y por qué cada set mide algo distinto: [docs/metricas.md](../docs/metricas.md#intérprete-de-pedidos-entrenado-respaldo-del-llm).
+El vocabulario sale del WordNet en español del Open Multilingual Wordnet (Multilingual Central Repository, CC BY 3.0), descargado con nltk; `objetos.csv` se versiona, así que `generar_frases.py` no necesita nltk. Ningún objeto de entrenamiento contiene el núcleo de un objeto de los sets de evaluación (`eval/frases_*.csv`), y se saltean esas frases y sus variantes con muletillas. Resultados y por qué cada set mide algo distinto: [docs/metricas.md](../docs/metricas.md#intérprete-de-pedidos-entrenado-respaldo-del-llm).

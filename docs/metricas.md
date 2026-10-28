@@ -21,7 +21,7 @@ Los detalles por frase y por pedido quedan en `eval/resultados/`.
 | Latencia | Pedido → modelo (catálogo) | < 2 s | **Backend: 14 ms** (mediana; p95 15 ms) · de punta a punta: pendiente | Medido con el **intérprete por reglas**. Con el LLM, la interpretación va a tardar del orden de segundos: hay que medirlo |
 | Latencia | Pedido → modelo (generado) | Reportar | Pendiente | El notebook de Colab mide TripoSR y Shap-E |
 | Generación | Modelos por piezas válidos, partes clave y calidad (10 pedidos) | Reportar | Pendiente | `eval/eval_ensamble.py`; necesita clave de API. Mide también segundos y costo por modelo |
-| LLM | Aciertos de intención (38 frases) | ≥ 85 % | **Modelo entrenado: 84 % · reglas: 84 %** · LLM: pendiente | En 50 frases nuevas, que no vio ninguno de los dos: **modelo 88 %, reglas 68 %**. Ver "Intérprete de pedidos entrenado" abajo. El LLM se evalúa cuando haya una clave de API |
+| LLM | Aciertos de intención (38 frases) | ≥ 85 % | **Modelo entrenado: 87 % · reglas: 84 %** · LLM: pendiente | Con 45 pedidos de objetos de todo tipo que no vio, **modelo 91 %, reglas 60 %** (objeto exacto). Ver "Intérprete de pedidos entrenado" abajo. El LLM se evalúa cuando haya una clave de API |
 | Búsqueda | Recuperación correcta (20 pedidos) | ≥ 80 % | **Híbrido: 90 % en calibración y 90 % en validación** | Ver el detalle abajo |
 | Usabilidad | Éxito de tarea sin ayuda | ≥ 80 % | Pendiente | Protocolo con 5 tareas en `eval/pruebas_usuarios/protocolo.md` |
 
@@ -59,19 +59,38 @@ Con 40 veces más parámetros, la red da lo mismo, y las grandes dejan de mejora
 
 ## Intérprete de pedidos entrenado (respaldo del LLM)
 
-`ml/intencion/generar_frases.py` y `ml/intencion/entrenar_intencion.py`; corre en `backend/intent_modelo.py`. Entrenado con 4.400 frases generadas con plantillas (400 por acción), sin los objetos ni las frases de los sets de medición. Se mide de punta a punta, con los filtros de seguridad: `python eval/eval_intent.py --frases {prueba,validacion,nuevas}`. El detalle por frase queda en `eval/resultados/intent_{reglas,modelo}[_validacion|_nuevas].csv`.
+`ml/intencion/` (vocabulario, frases y entrenamiento); corre en `backend/intent_modelo.py`. Se mide de punta a punta, con los filtros de seguridad: `python eval/eval_intent.py --frases {prueba,validacion,nuevas,objetos_validacion,objetos_prueba}`. El detalle por frase queda en `eval/resultados/intent_{reglas,modelo}[_set].csv`.
 
-| Set | Frases | Quién lo vio antes | Reglas | Modelo entrenado |
-|---|---|---|---|---|
-| Validación (`eval/frases_validacion.csv`) | 59 | El modelo: se usó para elegirlo y para ampliar las plantillas | 66 % | 100 % (optimista) |
-| Prueba (`eval/frases_prueba.csv`) | 38 | Las reglas: se escribieron mirándolo | 84 % | 84 % |
-| **Nuevo (`eval/frases_nuevas.csv`)** | **50** | **Ninguno** | **68 %** | **88 %** |
+**Versión 2 (la actual): reconocer cualquier objeto.** La versión 1 se entrenó con 4.400 frases y unos 80 objetos industriales: con objetos de otro tipo se quedaba con un pedazo del nombre ("teclado mecánico" → "mecánico") o lo cortaba en "de" ("esqueleto de un dinosaurio" → "esqueleto de"). La v2 se entrena con 18.800 frases y **9.828 nombres de objetos** de WordNet en español (artefactos, máquinas, herramientas, muebles, ropa, vehículos, construcciones, animales, partes del cuerpo, frutas), con adjetivos, materiales, medidas, "con …", "para …" y "de un …" dentro del objeto, y la vista, "en 3D" o "para el cliente" afuera. Ningún objeto de entrenamiento contiene el núcleo de un objeto de los sets de medición, y el 10 % de los nombres se reservó para validar.
 
-El número que vale es el del set nuevo, medido antes de cualquier cambio. Después se corrigió "N veces más chico" (daba ×N en vez de ×1/N, en los dos motores), una falla que se encontró justamente con este set: con el arreglo da 90 % y 70 %, pero esos números ya no son a ciegas. En la prueba empatan: las reglas juegan de local (se escribieron con esas frases), y el modelo confunde "traeme el engranaje" y "quiero ver un rulemán" con analizar una pieza.
+| Set | Frases | Quién lo vio antes | Reglas | Modelo v1 | **Modelo v2** |
+|---|---|---|---|---|---|
+| **Objetos, prueba (`frases_objetos_prueba.csv`)** | **45** | **Ninguno** | **60 %** | **56 %** | **91 %** |
+| Objetos, validación (`frases_objetos_validacion.csv`) | 55 | La v2: se usó para elegir | 56 % | 60 % | 95 % |
+| Prueba (`frases_prueba.csv`) | 38 | Las reglas: se escribieron mirándolo | 84 % | 84 % | 87 % |
+| Validación (`frases_validacion.csv`) | 59 | Los dos modelos: se usó para elegirlos | 66 % | 100 % | 97 % |
+| Nuevo (`frases_nuevas.csv`) | 50 | La v1 no; la v2 se armó después de verlo | 70 % | 90 % | 88 % |
 
-**Tamaño del clasificador** (exactitud de la acción en validación): con los embeddings `multilingual-e5-small`, una regresión logística o una capa de 256 dan 98,3 %, y redes de 512-256 y 1024-512-256 bajan a 96,6 % y 94,9 %. Con MiniLM, todas quedan entre 93 % y 97 %. Agrandar el cabezal no ayuda con 4.400 frases de plantilla: lo que más mejoró el resultado fue ampliar el vocabulario de las plantillas. Elegido: e5-small + logística. Detalle en `ml/resultados/intencion_reporte.json`.
+En los sets de objetos un acierto pide la acción y el objeto **exacto**, con todo lo que lo describe ("silla de oficina con ruedas", "cráneo de un tigre"). Si se pide solo que el objeto traiga el núcleo, la v2 da 100 % en la prueba de objetos (reglas 67 %, v1 82 %). Los dos sets de objetos se escribieron a mano antes de entrenar, con objetos de todo tipo; el de prueba se miró por primera vez con el modelo ya elegido (dio 87 %) y una vez más después de cambiar, con la validación, el balanceo de clases del clasificador (91 %). En los sets de siempre, la v2 queda igual que la v1 (una frase más en prueba, una menos en el nuevo).
 
-**Latencia:** 12 ms de mediana por frase en CPU (contra 2 segundos o más del LLM).
+Lo que sigue fallando es casi siempre la **acción**, no el objeto: "traeme el engranaje" o "la estatua de la libertad" como analizar una pieza (el artículo "el/la" + "de la …" se parece a "mostrame el filtro de la cafetera"), "una banana" como pedido desconocido. Del objeto, se queda corto con complementos raros ("colectivo de larga distancia" → "colectivo de larga", "escritorio en l" → "escritorio").
+
+**Etiquetador del objeto** (objeto exacto, con la acción correcta dada; validación con 1.400 frases generadas con objetos reservados y las 55 a mano):
+
+| Etiquetador | Generadas | A mano |
+|---|---|---|
+| Rasgos de la palabra y sus vecinas (regresión logística, el de la v1) | 99,3 % | 96,4 % |
+| Vector de la palabra en contexto (e5) + logística | 85,7 % | 89,1 % |
+| Vector en contexto + red de 256 | 97,1 % | 98,2 % |
+| Vector en contexto + red de 512 | 97,7 % | 98,2 % |
+| **Promedio de rasgos y vector en contexto con red de 256 (elegido)** | **98,9 %** | **98,2 %** |
+| Promedio de rasgos y vector en contexto con red de 512 | 99,0 % | 98,2 % |
+
+El de rasgos es muy preciso con las formas de pedir que vio y el de contexto generaliza mejor a frases escritas por personas: el promedio toma lo mejor de los dos. La red de 512 no mejora a la de 256 (a igual resultado, la más chica).
+
+**Clasificador de la acción** (exactitud en validación, 114 frases a mano): con e5-small, la regresión logística sin balancear las clases da 95,6 %; balanceada, con una capa de 256 o con 512-256, 94,7 %. Con MiniLM, entre 89,5 % y 92,1 %. Sin balancear gana porque "mostrar" tiene más frases y es el pedido más común: balanceada, cada frase de "analizar" pesaba casi tres veces más y empujaba "pasame el martillo" hacia "aislar". Detalle en `ml/resultados/intencion_reporte.json`.
+
+**Tamaño y latencia:** `backend/modelos/intencion.json` pesa 1,1 MB (v1: 120 KB). Se descartaron los rasgos con peso menor a 0,05 (70 mil → 13 mil): no cambia ningún objeto de validación y ahorra 1,6 MB. 13 ms de mediana por frase en CPU (contra 2 segundos o más del LLM): una sola pasada por el modelo de embeddings da el vector de la frase y el de cada palabra.
 
 ## Latencias
 
