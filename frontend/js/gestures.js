@@ -96,9 +96,11 @@ export function crearClasificador({ mlp = null } = {}) {
     const metricas = manos.slice(0, 2).map((puntos) => medir(normalizar(puntos, aspecto)));
     // Con el MLP, un pellizco que ya empezó se mantiene mientras el pulgar y el índice sigan cerca
     // (la misma histéresis de las reglas): así no se suelta la pieza a mitad de un arrastre.
+    // La salida completa de la red (probabilidades y activaciones) queda en "red" para el panel de actividad.
+    const red = mlp ? manos.slice(0, 2).map((puntos) => mlp(puntos, aspecto)) : null;
     const porMano = mlp
-      ? manos.slice(0, 2).map((puntos, i) => (pellizcaban[i] && metricas[i].pulgarIndice < UMBRALES.pellizcoSalir
-        ? 'pellizco' : mlp(puntos, aspecto).gesto))
+      ? red.map((salida, i) => (pellizcaban[i] && metricas[i].pulgarIndice < UMBRALES.pellizcoSalir
+        ? 'pellizco' : salida.gesto))
       : metricas.map((m, i) => clasificarMano(m, pellizcaban[i]));
     pellizcaban = [porMano[0] === 'pellizco', porMano[1] === 'pellizco'];
 
@@ -112,6 +114,6 @@ export function crearClasificador({ mlp = null } = {}) {
     for (const g of historial) votos[g] = (votos[g] ?? 0) + 1;
     const [gesto, n] = Object.entries(votos).sort((a, b) => b[1] - a[1])[0];
 
-    return { gesto, confianza: n / UMBRALES.ventana, crudo, porMano, metricas };
+    return { gesto, confianza: n / UMBRALES.ventana, crudo, porMano, metricas, red };
   };
 }

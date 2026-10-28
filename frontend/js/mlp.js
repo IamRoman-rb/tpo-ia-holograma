@@ -8,11 +8,15 @@ import { aVector, normalizar } from './normalize.js';
 
 export const URL_MODELO = 'ml/mlp_gestos.json';
 
-/** Devuelve predecir(vector de 63) → probabilidades, en el orden de modelo.clases. */
-export function crearPredictor(modelo) {
+/**
+ * Devuelve propagar(vector de 63) → { probabilidades, activaciones }. activaciones tiene una lista por capa
+ * (la entrada, cada capa oculta después de la ReLU y la salida antes del softmax): el panel de actividad las dibuja.
+ */
+export function crearPropagacion(modelo) {
   const ultima = modelo.capas.length - 1;
-  return function predecir(vector) {
+  return function propagar(vector) {
     let a = vector;
+    const activaciones = [vector];
     modelo.capas.forEach(({ W, b }, k) => {
       const salida = b.slice();
       for (let i = 0; i < a.length; i++) {
@@ -22,27 +26,37 @@ export function crearPredictor(modelo) {
         for (let j = 0; j < salida.length; j++) salida[j] += ai * fila[j];
       }
       a = k < ultima ? salida.map((v) => (v > 0 ? v : 0)) : salida;
+      activaciones.push(a);
     });
     const maximo = Math.max(...a);
     const e = a.map((v) => Math.exp(v - maximo));
     const suma = e.reduce((s, v) => s + v, 0);
-    return e.map((v) => v / suma);
+    return { probabilidades: e.map((v) => v / suma), activaciones };
   };
 }
 
+/** Devuelve predecir(vector de 63) → probabilidades, en el orden de modelo.clases. */
+export function crearPredictor(modelo) {
+  const propagar = crearPropagacion(modelo);
+  return (vector) => propagar(vector).probabilidades;
+}
+
 /**
- * Clasificador de una mano con el MLP: { gesto, probabilidad }. Si la probabilidad no llega al umbral
- * elegido con validación, la mano cuenta como "ninguno" (así se evitan acciones no pedidas).
+ * Clasificador de una mano con el MLP: { gesto, probabilidad, probabilidades, activaciones }. Si la probabilidad
+ * no llega al umbral elegido con validación, la mano cuenta como "ninguno" (así se evitan acciones no pedidas).
  */
 export function crearClasificadorMlp(modelo) {
-  const predecir = crearPredictor(modelo);
+  const propagar = crearPropagacion(modelo);
   const umbral = modelo.umbral_confianza ?? 0;
-  return function clasificarMano(puntos, aspecto) {
-    const p = predecir(aVector(normalizar(puntos, aspecto)));
+  function clasificarMano(puntos, aspecto) {
+    const { probabilidades: p, activaciones } = propagar(aVector(normalizar(puntos, aspecto)));
     let k = 0;
     for (let i = 1; i < p.length; i++) if (p[i] > p[k]) k = i;
-    return { gesto: p[k] >= umbral ? modelo.clases[k] : 'ninguno', probabilidad: p[k] };
-  };
+    return { gesto: p[k] >= umbral ? modelo.clases[k] : 'ninguno', probabilidad: p[k], probabilidades: p, activaciones };
+  }
+  clasificarMano.clases = modelo.clases;
+  clasificarMano.umbral = umbral;
+  return clasificarMano;
 }
 
 export async function cargarMlp(url = URL_MODELO) {

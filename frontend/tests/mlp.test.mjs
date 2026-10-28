@@ -26,6 +26,11 @@ const dudoso = { ...modelo, umbral_confianza: 1.01 };
 const mano = Array.from({ length: 21 }, (_, i) => ({ x: 0.5 + 0.01 * i, y: 0.5 - 0.02 * i, z: 0 }));
 ok(crearClasificadorMlp(dudoso)(mano, 1).gesto === 'ninguno', 'si no llega al umbral, devuelve ninguno');
 
+// El panel de actividad dibuja las activaciones de cada capa: entrada 63, ocultas 128 y 64, salida 8
+const salida = crearClasificadorMlp(modelo)(mano, 1);
+ok(JSON.stringify(salida.activaciones.map((a) => a.length)) === '[63,128,64,8]', 'devuelve las activaciones de cada capa');
+ok(Math.abs(salida.probabilidades.reduce((s, v) => s + v, 0) - 1) < 1e-9, 'y las probabilidades de todas las clases (suman 1)');
+
 // El clasificador temporal acepta el MLP en lugar de las reglas
 const fijo = () => ({ gesto: 'victoria', probabilidad: 0.9 });
 const clasificar = crearClasificador({ mlp: fijo });
