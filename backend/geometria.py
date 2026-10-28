@@ -278,8 +278,9 @@ def _unir(partes):
     return P, _normalizar(Nn), _corregir_giro(P, Nn, I)
 
 
-def a_glb(modelo, nombre) -> bytes:
-    """Escribe el modelo como glTF binario: un nodo por pieza, con sus metadatos en extras."""
+def a_glb(modelo, nombre, unidad=None) -> bytes:
+    """Escribe el modelo como glTF binario: un nodo por pieza, con sus metadatos en extras.
+    unidad (por ejemplo "cm") queda en los extras de la escena: el visor la usa para mostrar medidas."""
     binario = bytearray()
     vistas, accesores, materiales, mallas, nodos = [], [], [], [], []
     indice_material = {}
@@ -319,7 +320,7 @@ def a_glb(modelo, nombre) -> bytes:
 
     gltf = {
         "asset": {"version": "2.0", "generator": "tpo-holograma/backend/geometria.py"},
-        "scene": 0, "scenes": [{"name": nombre, "nodes": list(range(len(nodos)))}],
+        "scene": 0, "scenes": [{"name": nombre, "nodes": list(range(len(nodos))), **({"extras": {"unidad": unidad}} if unidad else {})}],
         "nodes": nodos, "meshes": mallas, "materials": materiales, "accessors": accesores,
         "bufferViews": vistas, "buffers": [{"byteLength": len(binario)}],
     }

@@ -28,20 +28,40 @@
     <div class="fila"><span>Confianza</span><strong id="confianza">—</strong></div>
     <div class="barra"><div id="barra-confianza"></div></div>
     <div class="fila"><span>Estado</span><strong id="estado">iniciando…</strong></div>
+    <label class="fila clasificador"><span>Clasificador</span>
+      <select id="clasificador" aria-label="Clasificador de gestos">
+        <option value="reglas">Reglas</option>
+        <option value="mlp">Red neuronal (MLP)</option>
+      </select>
+    </label>
   </section>
 
   <section id="piezas" aria-label="Piezas del objeto" hidden>
     <h2>Piezas <span id="piezas-cuenta"></span></h2>
     <div class="piezas-botones">
-      <button type="button" data-pieza="desmontar" title="Sacar la próxima pieza (X o gesto de señalar)">Desmontar</button>
+      <button type="button" data-pieza="desmontar" title="Sacar la próxima pieza (X)">Desmontar</button>
       <button type="button" data-pieza="montar" title="Volver a poner la última pieza">Montar</button>
       <button type="button" data-pieza="armar" title="Armar todo (A)">Armar todo</button>
+      <button type="button" data-pieza="aislar" title="Ver la pieza elegida sola, para analizarla (I o gesto de victoria)">Analizar</button>
     </div>
     <label class="explosion">Vista explotada
       <input type="range" id="explosion" min="0" max="100" value="0">
     </label>
     <ol id="lista-piezas"></ol>
     <p id="pieza-descripcion">Tocá una pieza en la lista o en el modelo para ver qué es.</p>
+  </section>
+
+  <section id="analisis" aria-label="Análisis de la pieza" aria-live="polite" hidden>
+    <p class="analisis-etiqueta">Analizando una pieza</p>
+    <h2 id="analisis-nombre"></h2>
+    <p id="analisis-descripcion"></p>
+    <dl>
+      <dt>Material</dt><dd id="analisis-material"></dd>
+      <dt>Medidas</dt><dd id="analisis-medidas"></dd>
+      <dt>Desmontaje</dt><dd id="analisis-orden"></dd>
+    </dl>
+    <p class="analisis-ayuda">Girala con la palma abierta. Puño, Esc o el botón para volver.</p>
+    <button type="button" id="analisis-volver">Volver al conjunto</button>
   </section>
 
   <div id="origen" hidden>
@@ -83,11 +103,14 @@
   <section id="ayuda" hidden>
     <h2>Gestos</h2>
     <dl>
-      <dt>Pellizco</dt><dd>Tomar y mover</dd>
+      <dt>Señalar</dt><dd>Mover el cursor; apuntar un momento a una pieza la elige</dd>
+      <dt>Pellizco</dt><dd>Tomar y mover el objeto; sobre la pieza elegida, sacarla sola</dd>
       <dt>Palma abierta</dt><dd>Rotar siguiendo la mano</dd>
       <dt>Pellizco con las dos manos</dt><dd>Separar para agrandar, juntar para achicar</dd>
-      <dt>Puño</dt><dd>Reiniciar la vista</dd>
-      <dt>Señalar</dt><dd>Desmontar la próxima pieza</dd>
+      <dt>Victoria (V)</dt><dd>Analizar la pieza elegida; sin pieza elegida, abrir o cerrar el despiece</dd>
+      <dt>Puño</dt><dd>Salir del análisis o reiniciar la vista</dd>
+      <dt>Pulgar arriba</dt><dd>Confirmar un pedido</dd>
+      <dt>Pulgar abajo</dt><dd>Deshacer el último cambio</dd>
     </dl>
     <h2>Teclado</h2>
     <dl>
@@ -97,6 +120,7 @@
       <dt>Z</dt><dd>Deshacer el último cambio (también si un gesto se detectó mal)</dd>
       <dt>X</dt><dd>Desmontar la próxima pieza</dd>
       <dt>A</dt><dd>Armar todo</dd>
+      <dt>I · Esc</dt><dd>Analizar la pieza elegida · volver al conjunto</dd>
       <dt>D</dt><dd>Métricas de depuración</dd>
     </dl>
     <h2>Privacidad</h2>

@@ -275,4 +275,4 @@ def pedir_ensamble(descripcion: str, cliente=None) -> dict:
 def generar_glb(descripcion: str, cliente=None) -> tuple[bytes, Ensamble]:
     """Descripción → ensamble validado → .glb con una pieza por nodo."""
     ensamble = validar(pedir_ensamble(descripcion, cliente))
-    return g.a_glb(a_modelo(ensamble), ensamble.nombre), ensamble
+    return g.a_glb(a_modelo(ensamble), ensamble.nombre, unidad="cm"), ensamble

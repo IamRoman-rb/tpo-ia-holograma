@@ -1,6 +1,8 @@
 // Modo simulación: genera manos sintéticas en movimiento y las pasa por el mismo camino
 // que la cámara (clasificador → controles → visor). Sirve para probar y mostrar el sistema
 // en equipos sin cámara. Se indica en pantalla que es una simulación.
+// Las manos sintéticas son demasiado ideales para el MLP (aprendió de manos reales): la simulación
+// se clasifica siempre con las reglas.
 import { POSES, aImagen } from './manos_sinteticas.js';
 
 const TAMANO = 0.3;  // alto de la mano en fracción del cuadro
@@ -22,6 +24,19 @@ const GUION = [
     },
   },
   { seg: 1, manos: () => [] },
+  { seg: 1.5, manos: () => [mano('puño', 0.5, 0.8)] },
+  // Piezas: señalar recorriendo el objeto, quedarse sobre el volante (lo elige), pellizcarlo y sacarlo,
+  // analizarlo con la victoria, girarlo con la palma, volver con el puño y reiniciar con otro puño.
+  // Con la válvula del catálogo, el volante queda arriba al centro de la pantalla.
+  { seg: 2, manos: (t) => [mano('señalar', 0.46 + 0.12 * t, 0.88)] },
+  { seg: 1.3, manos: () => [mano('señalar', 0.58, 0.88)] },
+  { seg: 0.6, manos: () => [] },
+  { seg: 2, manos: (t) => [mano('pellizco', 0.58 - 0.12 * t, 0.75 - 0.14 * t)] },
+  { seg: 0.6, manos: () => [] },
+  { seg: 1.5, manos: () => [mano('victoria', 0.5, 0.85)] },
+  { seg: 2.5, manos: (t) => [mano('palma_abierta', 0.5 + 0.15 * Math.sin(t * 2 * Math.PI), 0.85)] },
+  { seg: 1.5, manos: () => [mano('puño', 0.5, 0.8)] },
+  { seg: 0.8, manos: () => [] },
   { seg: 1.5, manos: () => [mano('puño', 0.5, 0.8)] },
 ];
 const DURACION = GUION.reduce((s, g) => s + g.seg, 0);

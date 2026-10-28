@@ -1,6 +1,9 @@
 // Pruebas del desmontaje por piezas (frontend/js/piezas.js).
 // Uso (desde la raíz):  node frontend/tests/piezas.test.mjs
-import { desplazamiento, prepararPiezas, siguienteParaDesmontar, ultimaDesmontada } from '../js/piezas.js';
+import {
+  crearSeleccionPorPermanencia, desplazamiento, encuadreAislada, nombreMaterial, prepararPiezas, siguienteParaDesmontar,
+  textoMedidas, ultimaDesmontada,
+} from '../js/piezas.js';
 
 let fallas = 0;
 const ok = (cond, msg) => { console.log(`${cond ? 'OK   ' : 'FALLA'} ${msg}`); if (!cond) fallas++; };
@@ -51,6 +54,28 @@ const brida = prepararPiezas([
   { id: 'brida', orden: 2, direccion: [-1, 0, 0], centro: [-0.6, 0, 0], volumen: 1 },
 ], [0, 0, 0], 3);
 ok(brida[0].dist > brida[1].dist, `bulones (${brida[0].dist.toFixed(2)}) más afuera que la brida (${brida[1].dist.toFixed(2)})`);
+
+// Aislar una pieza: queda centrada (el contenedor se corre al revés de su centro) y más grande cuanto más chica es
+const chica = encuadreAislada([1, 2, 0], 0.1, 1, 1);
+const grande = encuadreAislada([1, 2, 0], 0.5, 1, 1);
+ok(chica.escala > grande.escala, 'una pieza chica se agranda más que una grande');
+ok(Math.abs(chica.posicion[0] + chica.escala) < 1e-9 && Math.abs(chica.posicion[1] + 2 * chica.escala) < 1e-9,
+  'el centro de la pieza queda en el origen');
+ok(Number.isFinite(encuadreAislada([0, 0, 0], 0, 1, 1).escala), 'una pieza sin tamaño no rompe el encuadre');
+
+ok(nombreMaterial('acero') === 'Acero' && nombreMaterial('laton_c08040') === 'Latón', 'materiales conocidos, con o sin color');
+ok(nombreMaterial('volante') === null, 'un nombre que no es material no se muestra');
+ok(textoMedidas([12.5, 4, 0.5], 'cm') === '13 × 4,0 × 0,5 cm', `medidas con unidad: ${textoMedidas([12.5, 4, 0.5], 'cm')}`);
+ok(textoMedidas([2, 1, 0.5]).startsWith('100 × 50 × 25'), `sin unidad, proporciones: ${textoMedidas([2, 1, 0.5])}`);
+
+// Selección por permanencia: hay que quedarse 800 ms sobre la misma pieza, y elige una sola vez
+const permanencia = crearSeleccionPorPermanencia(800);
+ok(permanencia('volante', 0).elegida === null, 'al empezar a apuntar no elige');
+ok(Math.abs(permanencia('volante', 400).progreso - 0.5) < 1e-9, 'a mitad de tiempo, progreso 0,5');
+ok(permanencia('volante', 800).elegida === 'volante', 'a los 800 ms elige la pieza');
+ok(permanencia('volante', 1200).elegida === null, 'no la vuelve a elegir mientras sigue apuntando');
+ok(permanencia('vastago', 1300).progreso === 0, 'apuntar a otra pieza reinicia la cuenta');
+ok(permanencia(null, 1400).progreso === 0 && permanencia('vastago', 1500).elegida === null, 'apuntar al vacío también');
 
 console.log(fallas ? `\n${fallas} fallas` : '\nTodo OK');
 process.exit(fallas ? 1 : 0);

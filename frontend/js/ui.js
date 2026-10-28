@@ -6,6 +6,9 @@ const NOMBRES_GESTO = {
   palma_abierta: 'Palma abierta',
   'puño': 'Puño',
   'señalar': 'Señalar',
+  pulgar_arriba: 'Pulgar arriba',
+  pulgar_abajo: 'Pulgar abajo',
+  victoria: 'Victoria',
   escala_dos_manos: 'Dos manos',
   ninguno: '—',
 };
@@ -56,7 +59,7 @@ export function alternarTamanoCamara() {
 const NOMBRES_ACCION = {
   mostrar: 'mostrar', rotar: 'rotar', escalar: 'escalar', vista: 'cambiar la vista',
   reiniciar: 'reiniciar', desmontar: 'desmontar una pieza', explotar: 'mostrar el despiece',
-  armar: 'armar todo', desconocido: 'no reconocido',
+  armar: 'armar todo', aislar: 'analizar la pieza', conjunto: 'volver al conjunto', desconocido: 'no reconocido',
 };
 
 // "Entendí: mostrar «motor» · vista trasera · ×0.67 — 93 % (LLM)"
@@ -72,6 +75,13 @@ export function mostrarInterpretacion(i) {
 }
 
 const escapar = (t) => t.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+
+/** Si hay un pedido esperando confirmación, lo confirma (gesto de pulgar arriba). Devuelve si había uno. */
+export function confirmarPendiente() {
+  if ($('confirmacion').hidden) return false;
+  $('confirmar-si').click();
+  return true;
+}
 
 export function pedirConfirmacion() {
   const caja = $('confirmacion');
@@ -172,6 +182,23 @@ export function mostrarPiezas(lista, alElegir) {
   $('pieza-descripcion').textContent = elegida
     ? `${elegida.nombre}: ${elegida.descripcion || 'sin descripción'}`
     : 'Tocá una pieza en la lista o en el modelo para ver qué es.';
+}
+
+// Panel de análisis de una pieza aislada. info: { nombre, descripcion, materiales, medidas, orden, fija }
+export function mostrarAnalisis(info) {
+  if (!info) return ocultarAnalisis();
+  $('analisis').hidden = false;
+  $('analisis-nombre').textContent = info.nombre;
+  $('analisis-descripcion').textContent = info.descripcion || 'Sin descripción.';
+  $('analisis-material').textContent = info.materiales?.length ? info.materiales.join(', ') : 'No informado';
+  $('analisis-medidas').textContent = info.medidas;
+  $('analisis-orden').textContent = info.fija
+    ? 'Pieza fija: las demás se desmontan a su alrededor'
+    : `Sale en el paso ${info.orden} del desmontaje`;
+}
+
+export function ocultarAnalisis() {
+  $('analisis').hidden = true;
 }
 
 export function fijarExplosion(fraccion) {

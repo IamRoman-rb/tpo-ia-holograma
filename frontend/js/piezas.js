@@ -68,3 +68,54 @@ export function ultimaDesmontada(piezas, objetivos) {
 export function desplazamiento(pieza, fraccion) {
   return sumar([0, 0, 0], pieza.dir.map((v) => v * pieza.dist * fraccion));
 }
+
+/**
+ * Encuadre de una pieza aislada para analizarla: escala y posición del contenedor del modelo para
+ * que la pieza quede centrada y ocupe la vista como lo hacía el objeto entero.
+ * centro: centro de la pieza en coordenadas del contenedor; radio: radio de la pieza (mismas unidades).
+ */
+export function encuadreAislada(centro, radio, escalaBase, radioArmado) {
+  const escala = escalaBase * (radioArmado / Math.max(radio, radioArmado * 0.05)) * 0.8;
+  return { escala, posicion: centro.map((v) => -v * escala) };
+}
+
+const MATERIALES = { acero: 'Acero', hierro: 'Hierro', aluminio: 'Aluminio', laton: 'Latón', cobre: 'Cobre',
+  plastico: 'Plástico', goma: 'Goma', pintado: 'Metal pintado' };
+
+/** Nombre legible de un material del .glb ("acero_ff0000" → "Acero"), o null si no es un material conocido. */
+export function nombreMaterial(nombre = '') {
+  return MATERIALES[nombre.split('_')[0]] ?? null;
+}
+
+/** "12,5 × 4 × 4 cm" (con unidad) o proporciones relativas a la mayor medida si el modelo no la declara. */
+export function textoMedidas(tamano, unidad) {
+  const fmt = (v) => (v >= 10 ? v.toFixed(0) : v.toFixed(1)).replace('.', ',');
+  if (unidad) return `${tamano.map(fmt).join(' × ')} ${unidad}`;
+  const mayor = Math.max(...tamano) || 1;
+  return `${tamano.map((v) => fmt((100 * v) / mayor)).join(' × ')} (proporciones; la mayor = 100)`;
+}
+
+/**
+ * Selección por permanencia: apuntar a la misma pieza durante `ms` la selecciona (patrón habitual en
+ * interfaces de gestos, donde no hay clic). actualizar(id, t) devuelve { progreso: 0-1, elegida: id | null };
+ * elegida vale el id solo en el instante en que se completa.
+ */
+export function crearSeleccionPorPermanencia(ms = 800) {
+  let actual = null;
+  let desde = 0;
+  let hecha = false;
+  return function actualizar(id, t) {
+    if (id !== actual) {
+      actual = id;
+      desde = t;
+      hecha = false;
+    }
+    if (!id) return { progreso: 0, elegida: null };
+    const progreso = Math.min(1, (t - desde) / ms);
+    if (progreso >= 1 && !hecha) {
+      hecha = true;
+      return { progreso, elegida: id };
+    }
+    return { progreso, elegida: null };
+  };
+}

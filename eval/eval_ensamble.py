@@ -135,7 +135,7 @@ def evaluar(fila, cliente, carpeta):
         salida.update(ok=False, error=f"validación: {e}")
         return salida
 
-    glb = g.a_glb(ensamble.a_modelo(diseno), diseno.nombre)
+    glb = g.a_glb(ensamble.a_modelo(diseno), diseno.nombre, unidad="cm")
     (carpeta / f"{fila['id']}.glb").write_bytes(glb)
     recibidas = sum(len(p.get("formas", [])) for p in crudo.get("piezas", [])[:ensamble.MAX_PIEZAS])
     formas = sum(len(p.formas) for p in diseno.piezas)

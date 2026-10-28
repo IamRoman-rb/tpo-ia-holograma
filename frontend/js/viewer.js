@@ -1,9 +1,13 @@
 // Escena Three.js: carga de .glb, transformaciones suavizadas del objeto y desmontaje por piezas.
+// Las piezas se pueden apuntar (cursor de la mano), mover de a una y aislar para analizarlas.
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { crearHistorial } from './historial.js';
-import { desplazamiento, prepararPiezas, siguienteParaDesmontar, ultimaDesmontada } from './piezas.js';
+import {
+  desplazamiento, encuadreAislada, nombreMaterial, prepararPiezas, siguienteParaDesmontar, textoMedidas,
+  ultimaDesmontada,
+} from './piezas.js';
 
 export const ESCALA_MIN = 0.2;   // mismos límites que backend/safety.py
 export const ESCALA_MAX = 5;
@@ -11,6 +15,8 @@ const DISTANCIA_CAMARA = 4;
 const RAPIDEZ_SUAVIZADO = 14;   // más alto = sigue a la mano más rápido
 const RAPIDEZ_PIEZAS = 6;       // el desmontaje es más lento, para que se vea el recorrido
 const COLOR_SELECCION = new THREE.Color(0x2bd4ff);
+const NEGRO = new THREE.Color(0x000000);
+const OPACIDAD_ATENUADA = 0.08; // las demás piezas mientras se analiza una
 
 /** alCambiarPiezas(lista) se llama cada vez que cambia el estado de las piezas. */
 export function crearVisor(contenedor, { alCambiarPiezas = () => {} } = {}) {
@@ -24,6 +30,12 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {} } = {}) {
   renderer.setSize(contenedor.clientWidth, contenedor.clientHeight);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   contenedor.appendChild(renderer.domElement);
+
+  // Cursor de la mano: sigue la punta del índice al señalar. El aro muestra el avance de la selección.
+  const cursor = document.createElement('div');
+  cursor.className = 'cursor-mano';
+  cursor.hidden = true;
+  contenedor.appendChild(cursor);
 
   // Iluminación: entorno para los reflejos metálicos + contraluz cian de "holograma"
   const pmrem = new THREE.PMREMGenerator(renderer);
@@ -45,11 +57,15 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {} } = {}) {
   // Estado objetivo: los gestos lo modifican y el pivote lo sigue con suavizado.
   const objetivo = { pos: new THREE.Vector3(), rotX: 0, rotY: 0, escala: 1 };
 
-  // Piezas del modelo actual: { id, nombre, descripcion, fija, dir, dist, obj, base, actual }
+  // Piezas del modelo actual: { id, nombre, descripcion, fija, dir, dist, obj, base, actual, libre, ... }
   let piezas = [];
   let objetivosPiezas = [];      // 0 = montada · 1 = desmontada (puede ser intermedio: vista explotada)
   let seleccionada = null;
+  let apuntada = null;           // pieza bajo el cursor de la mano
+  let aislada = null;            // pieza que se está analizando sola
+  let unidad = null;             // unidad del modelo, si el .glb la declara (los generados: cm)
   // Encuadre: al desarmar, el modelo se achica para que todas las piezas sigan a la vista
+  let modelo = null;
   let contenedorModelo = null;
   let escalaBase = 1;
   let radioArmado = 1;
@@ -60,6 +76,8 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {} } = {}) {
     pos: objetivo.pos.toArray().map((v) => +v.toFixed(4)),
     rotX: +objetivo.rotX.toFixed(4), rotY: +objetivo.rotY.toFixed(4), escala: +objetivo.escala.toFixed(4),
     piezas: objetivosPiezas.map((v) => +v.toFixed(3)),
+    libres: piezas.map((p) => p.libre.toArray().map((v) => +v.toFixed(4))),
+    aislada,
   });
   const loader = new GLTFLoader();
   const reloj = new THREE.Clock();
@@ -70,10 +88,12 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {} } = {}) {
     return { ancho: alto * camara.aspect, alto };
   }
 
+  const estaAfuera = (p, i) => objetivosPiezas[i] > 0 || p.libre.lengthSq() > 1e-8;
+
   function avisarPiezas() {
     alCambiarPiezas(piezas.map((p, i) => ({
       id: p.id, nombre: p.nombre, descripcion: p.descripcion, fija: p.fija,
-      desmontada: objetivosPiezas[i] > 0, seleccionada: p.id === seleccionada,
+      desmontada: estaAfuera(p, i), seleccionada: p.id === seleccionada, aislada: p.id === aislada,
     })));
   }
 
@@ -85,6 +105,12 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {} } = {}) {
     renderer.setSize(w, h);
   }).observe(contenedor);
 
+  // Centro de una pieza en coordenadas del contenedor del modelo, con su desplazamiento actual
+  function centroActual(p) {
+    const d = desplazamiento(p, p.actual);
+    return p.centro.map((v, k) => v + d[k] + p.libreActual.getComponent(k) - centroModelo[k]);
+  }
+
   renderer.setAnimationLoop(() => {
     const dt = reloj.getDelta();
     const a = 1 - Math.exp(-dt * RAPIDEZ_SUAVIZADO);
@@ -94,34 +120,62 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {} } = {}) {
     pivote.scale.setScalar(pivote.scale.x + (objetivo.escala - pivote.scale.x) * a);
 
     const ap = 1 - Math.exp(-dt * RAPIDEZ_PIEZAS);
-    piezas.forEach((p, i) => {
+    for (const p of piezas) {
+      const i = piezas.indexOf(p);
       p.actual += (objetivosPiezas[i] - p.actual) * ap;
-      p.obj.position.copy(p.base).add(new THREE.Vector3(...desplazamiento(p, p.actual)));
-    });
-    if (contenedorModelo) contenedorModelo.scale.setScalar(escalaBase * ajusteEncuadre());
+      p.libreActual.lerp(p.libre, a);
+      p.obj.position.copy(p.base).add(new THREE.Vector3(...desplazamiento(p, p.actual))).add(p.libreActual);
+      const opacidad = aislada && p.id !== aislada ? OPACIDAD_ATENUADA : 1;
+      p.opacidad += (opacidad - p.opacidad) * ap;
+      aplicarOpacidad(p);
+    }
+    if (contenedorModelo) {
+      // Normal: el modelo entero, achicado si las piezas se alejan. Aislada: la pieza centrada y grande.
+      const pieza = aislada && piezas.find((p) => p.id === aislada);
+      const destino = pieza
+        ? encuadreAislada(centroActual(pieza), pieza.radio, escalaBase, radioArmado)
+        : { escala: escalaBase * ajusteEncuadre(), posicion: [0, 0, 0] };
+      contenedorModelo.scale.setScalar(contenedorModelo.scale.x + (destino.escala - contenedorModelo.scale.x) * ap);
+      contenedorModelo.position.lerp(new THREE.Vector3(...destino.posicion), ap);
+    }
     renderer.render(escena, camara);
   });
+
+  function aplicarOpacidad(p) {
+    const transparente = p.opacidad < 0.99;
+    p.obj.traverse((m) => {
+      if (!m.isMesh) return;
+      if (m.material.transparent !== transparente) {
+        m.material.transparent = transparente;
+        m.material.needsUpdate = true; // cambiar la transparencia exige recompilar el material
+      }
+      m.material.opacity = p.opacidad;
+      m.material.depthWrite = p.opacidad > 0.5;
+    });
+  }
 
   // Radio que ocupa el objeto con las piezas en su posición actual, comparado con el objeto armado
   function ajusteEncuadre() {
     let radio = radioArmado;
-    for (const p of piezas) {
-      const d = desplazamiento(p, p.actual);
-      const centro = p.centro.map((v, k) => v + d[k] - centroModelo[k]);
-      radio = Math.max(radio, Math.hypot(...centro) + p.radio);
-    }
+    for (const p of piezas) radio = Math.max(radio, Math.hypot(...centroActual(p)) + p.radio);
     return radioArmado / radio;
   }
 
   // Lee las piezas del .glb: cada hijo de la escena con metadatos (extras → userData) es una pieza
-  function leerPiezas(modelo, caja) {
-    const centroModelo = caja.getCenter(new THREE.Vector3()).toArray();
+  function leerPiezas(raiz, caja) {
+    const centro = caja.getCenter(new THREE.Vector3()).toArray();
     const tamano = caja.getSize(new THREE.Vector3()).length() || 1;
-    const datos = modelo.children.map((obj, i) => {
+    const datos = raiz.children.map((obj, i) => {
       const cajaPieza = new THREE.Box3().setFromObject(obj);
       const t = cajaPieza.getSize(new THREE.Vector3());
       // Cada pieza con materiales propios, para poder resaltarla sin afectar a las demás
-      obj.traverse((m) => { if (m.isMesh) m.material = m.material.clone(); });
+      const materiales = new Set();
+      obj.traverse((m) => {
+        if (!m.isMesh) return;
+        m.material = m.material.clone();
+        const nombre = nombreMaterial(m.material.name);
+        if (nombre) materiales.add(nombre);
+      });
       return {
         obj,
         id: obj.userData.pieza ?? obj.name ?? `pieza_${i + 1}`,
@@ -130,13 +184,18 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {} } = {}) {
         orden: obj.userData.orden,
         direccion: obj.userData.direccion,
         centro: cajaPieza.getCenter(new THREE.Vector3()).toArray(),
+        tamano: t.toArray(),
+        materiales: [...materiales],
         volumen: t.x * t.y * t.z,
         radio: t.length() / 2,
         base: obj.position.clone(),
         actual: 0,
+        libre: new THREE.Vector3(),        // desplazamiento a mano (pieza tomada con un pellizco)
+        libreActual: new THREE.Vector3(),
+        opacidad: 1,
       };
     });
-    return datos.length > 1 ? prepararPiezas(datos, centroModelo, tamano) : [];
+    return datos.length > 1 ? prepararPiezas(datos, centro, tamano) : [];
   }
 
   // Si una pieza sale hacia la cámara (eje Z) y la vista está de frente, el despiece no se ve:
@@ -151,24 +210,40 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {} } = {}) {
 
   function resaltar() {
     for (const p of piezas) {
+      const intensidad = p.id === seleccionada ? 0.35 : p.id === apuntada ? 0.18 : 0;
       p.obj.traverse((m) => {
         if (!m.isMesh || !m.material.emissive) return;
-        m.material.emissive.copy(p.id === seleccionada ? COLOR_SELECCION : new THREE.Color(0x000000));
-        m.material.emissiveIntensity = p.id === seleccionada ? 0.35 : 0;
+        m.material.emissive.copy(intensidad ? COLOR_SELECCION : NEGRO);
+        m.material.emissiveIntensity = intensidad;
       });
     }
+  }
+
+  // Pieza bajo un punto en coordenadas normalizadas de la vista (0,0 arriba a la izquierda), o null.
+  // Mientras se analiza una pieza aislada, las demás (casi invisibles) no se pueden apuntar.
+  function piezaEnVista(u, v) {
+    raycaster.setFromCamera(new THREE.Vector2(u * 2 - 1, -(v * 2 - 1)), camara);
+    const candidatas = piezas.filter((p) => !aislada || p.id === aislada);
+    const [impacto] = raycaster.intersectObjects(candidatas.map((p) => p.obj), true);
+    if (!impacto) return null;
+    return candidatas.find((p) => {
+      let o = impacto.object;
+      while (o && o !== p.obj) o = o.parent;
+      return o === p.obj;
+    })?.id ?? null;
   }
 
   return {
     async cargarModelo(url) {
       const gltf = await loader.loadAsync(url);
-      const modelo = gltf.scene;
+      modelo = gltf.scene;
+      unidad = gltf.scene.userData.unidad ?? null;
       // Centrar y llevar a un tamaño comparable, sin importar las unidades del archivo
       modelo.updateMatrixWorld(true);
       const caja = new THREE.Box3().setFromObject(modelo);
       piezas = leerPiezas(modelo, caja);
       objetivosPiezas = piezas.map(() => 0);
-      seleccionada = null;
+      seleccionada = apuntada = aislada = null;
       const tam = caja.getSize(new THREE.Vector3()).length() || 1;
       modelo.position.sub(caja.getCenter(new THREE.Vector3()));
       contenedorModelo = new THREE.Group();
@@ -195,6 +270,8 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {} } = {}) {
       objetivo.pos.fromArray(anterior.pos);
       ({ rotX: objetivo.rotX, rotY: objetivo.rotY, escala: objetivo.escala } = anterior);
       if (anterior.piezas?.length === objetivosPiezas.length) objetivosPiezas = [...anterior.piezas];
+      if (anterior.libres?.length === piezas.length) piezas.forEach((p, i) => p.libre.fromArray(anterior.libres[i]));
+      aislada = anterior.aislada ?? null;
       avisarPiezas();
       return true;
     },
@@ -236,12 +313,15 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {} } = {}) {
       objetivo.rotX = 0;
       objetivo.rotY = 0;
       objetivo.escala = 1;
+      aislada = null;
       this.armarTodo();
     },
 
     // ---------------------------------------------------------------- piezas
 
     tienePiezas: () => piezas.length > 1,
+
+    hayPiezasAfuera: () => piezas.some(estaAfuera),
 
     /** Saca la próxima pieza en orden de desmontaje. Devuelve su nombre, o null si no queda ninguna. */
     desmontarSiguiente() {
@@ -260,12 +340,14 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {} } = {}) {
       const i = ultimaDesmontada(piezas, objetivosPiezas);
       if (i < 0) return null;
       objetivosPiezas[i] = 0;
+      piezas[i].libre.set(0, 0, 0);
       avisarPiezas();
       return piezas[i].nombre;
     },
 
     armarTodo() {
       objetivosPiezas = piezas.map(() => 0);
+      for (const p of piezas) p.libre.set(0, 0, 0);
       avisarPiezas();
     },
 
@@ -282,18 +364,88 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {} } = {}) {
       avisarPiezas();
     },
 
+    seleccionada: () => seleccionada,
+
+    /** Busca una pieza por nombre o id, sin tildes ni mayúsculas ("el volante" → "volante"). */
+    buscarPieza(texto) {
+      const n = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+      const q = n(texto);
+      return piezas.find((p) => n(p.nombre) === q || n(p.id) === q)?.id
+        ?? piezas.find((p) => q.includes(n(p.nombre)) || n(p.nombre).includes(q))?.id ?? null;
+    },
+
     /** Pieza bajo un punto de la pantalla (para seleccionarla con un clic), o null. */
     piezaEn(xCliente, yCliente) {
       const r = renderer.domElement.getBoundingClientRect();
-      raycaster.setFromCamera(new THREE.Vector2(((xCliente - r.left) / r.width) * 2 - 1,
-        -((yCliente - r.top) / r.height) * 2 + 1), camara);
-      const [impacto] = raycaster.intersectObjects(piezas.map((p) => p.obj), true);
-      if (!impacto) return null;
-      return piezas.find((p) => {
-        let o = impacto.object;
-        while (o && o !== p.obj) o = o.parent;
-        return o === p.obj;
-      })?.id ?? null;
+      return piezaEnVista((xCliente - r.left) / r.width, (yCliente - r.top) / r.height);
+    },
+
+    /**
+     * Cursor de la mano en coordenadas normalizadas de la vista (null = ocultarlo). Resalta la pieza
+     * apuntada y la devuelve. progreso (0-1) dibuja el aro de la selección por permanencia.
+     */
+    apuntar(u, v, progreso = 0) {
+      if (u == null) {
+        cursor.hidden = true;
+        if (apuntada) {
+          apuntada = null;
+          resaltar();
+        }
+        return null;
+      }
+      cursor.hidden = false;
+      cursor.style.left = `${u * 100}%`;
+      cursor.style.top = `${v * 100}%`;
+      cursor.style.setProperty('--progreso', `${Math.round(progreso * 360)}deg`);
+      const id = piezas.length > 1 ? piezaEnVista(u, v) : null;
+      if (id !== apuntada) {
+        apuntada = id;
+        resaltar();
+      }
+      return id;
+    },
+
+    /** Mueve solo una pieza (tomada con un pellizco). dx, dy en fracción de pantalla. */
+    moverPieza(id, dx, dy) {
+      const p = piezas.find((q) => q.id === id);
+      if (!p || !modelo) return;
+      const { ancho, alto } = anchoAltoVista();
+      // El desplazamiento en pantalla se lleva a las coordenadas del modelo (que puede estar girado y escalado)
+      modelo.updateMatrixWorld(true);
+      const origen = modelo.localToWorld(p.obj.position.clone());
+      const destino = origen.clone().add(new THREE.Vector3(dx * ancho, dy * alto, 0));
+      p.libre.add(modelo.worldToLocal(destino).sub(modelo.worldToLocal(origen)));
+      avisarPiezas();
+    },
+
+    /** Deja una pieza sola, centrada y grande, para analizarla. Devuelve su información, o null. */
+    aislar(id) {
+      if (!piezas.some((p) => p.id === id)) return null;
+      aislada = id;
+      seleccionada = id;
+      resaltar();
+      avisarPiezas();
+      return this.infoPieza(id);
+    },
+
+    salirDeAislamiento() {
+      if (!aislada) return false;
+      aislada = null;
+      avisarPiezas();
+      return true;
+    },
+
+    aislada: () => aislada,
+
+    /** Lo que se sabe de una pieza para analizarla: nombre, función, materiales y medidas. */
+    infoPieza(id) {
+      const p = piezas.find((q) => q.id === id);
+      if (!p) return null;
+      return {
+        id: p.id, nombre: p.nombre, descripcion: p.descripcion, fija: p.fija,
+        materiales: p.materiales, medidas: textoMedidas(p.tamano, unidad),
+        orden: p.fija ? null : p.orden,
+      };
     },
 
     elemento: renderer.domElement,

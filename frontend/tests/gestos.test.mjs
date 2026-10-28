@@ -2,7 +2,7 @@
 // Uso (desde la raíz):  node frontend/tests/gestos.test.mjs
 import { readFileSync } from 'node:fs';
 import { normalizar } from '../js/normalize.js';
-import { crearClasificador } from '../js/gestures.js';
+import { clasificarFotograma, crearClasificador } from '../js/gestures.js';
 import { buscarLocal } from '../js/catalogo.js';
 import { ASPECTO, POSES, aImagen } from '../js/manos_sinteticas.js';
 import { manosEn } from '../js/simulador.js';
@@ -72,21 +72,97 @@ for (const [seg, esperado] of [[0.75, 'ninguno'], [3.5, 'palma_abierta'], [7.25,
   ok(h.cantidad === 3, `respeta el máximo (${h.cantidad})`);
 }
 
+// Visor falso: registra las llamadas. piezaBajo es la pieza que "hay" bajo el cursor.
+function visorFalso() {
+  const llamadas = [];
+  const v = {
+    llamadas, piezaBajo: null, elegida: null, enAnalisis: null,
+    guardarEstado: () => llamadas.push('guardar'), reiniciar: () => llamadas.push('reiniciar'),
+    desplazar: () => llamadas.push('desplazar'), rotar: () => {}, escala: () => 1, escalarA: () => {},
+    apuntar: (u) => (u == null ? null : v.piezaBajo), seleccionada: () => v.elegida,
+    seleccionar: (id) => { v.elegida = id; llamadas.push(`seleccionar:${id}`); },
+    infoPieza: (id) => ({ id }), moverPieza: (id) => llamadas.push(`mover:${id}`),
+    tienePiezas: () => true, aislada: () => v.enAnalisis,
+    aislar: (id) => { v.enAnalisis = id; llamadas.push(`aislar:${id}`); return { id }; },
+    salirDeAislamiento: () => { const habia = !!v.enAnalisis; v.enAnalisis = null; return habia; },
+    deshacer: () => { llamadas.push('deshacer'); return true; },
+  };
+  return v;
+}
+
 // 8. Los controles guardan el estado una sola vez al empezar cada gesto
 {
-  const llamadas = [];
-  const visor = {
-    guardarEstado: () => llamadas.push('guardar'), reiniciar: () => llamadas.push('reiniciar'),
-    desplazar: () => {}, rotar: () => {}, escala: () => 1, escalarA: () => {},
-  };
+  const visor = visorFalso();
   const controles = crearControles(visor);
   const mano = aImagen(POSES.pellizco, 0.2, 0.5, 0.8);
   for (let f = 0; f < 5; f++) controles('pellizco', [mano]);
   controles('ninguno', []);
   controles('puño', [mano]);
   controles('puño', [mano]);
-  ok(JSON.stringify(llamadas) === JSON.stringify(['guardar', 'guardar', 'reiniciar']),
-    `guarda al empezar el pellizco y antes del reinicio por puño (${llamadas.join(', ')})`);
+  const sinMover = visor.llamadas.filter((l) => l !== 'desplazar');
+  ok(JSON.stringify(sinMover) === JSON.stringify(['guardar', 'guardar', 'reiniciar']),
+    `guarda al empezar el pellizco y antes del reinicio por puño (${sinMover.join(', ')})`);
+}
+
+// 9. Señalar una pieza 0,8 s la elige; pellizcarla la saca sola; victoria la aísla; puño sale del análisis
+{
+  const visor = visorFalso();
+  const eventos = [];
+  const controles = crearControles(visor, { alEvento: (tipo) => eventos.push(tipo) });
+  const senalar = aImagen(POSES["señalar"], 0.15, 0.5, 0.5);
+  const pellizco = aImagen(POSES.pellizco, 0.15, 0.5, 0.5);
+  visor.piezaBajo = 'volante';
+  controles('señalar', [senalar], 0);
+  controles('señalar', [senalar], 500);
+  ok(visor.elegida === null, 'apuntar medio segundo todavía no elige');
+  controles('señalar', [senalar], 900);
+  ok(visor.elegida === 'volante' && eventos.includes('seleccion'), 'apuntar 0,8 s elige la pieza');
+
+  controles('pellizco', [pellizco], 1000);
+  controles('pellizco', [aImagen(POSES.pellizco, 0.15, 0.3, 0.5)], 1050);
+  ok(visor.llamadas.includes('mover:volante') && !visor.llamadas.includes('desplazar'),
+    'el pellizco sobre la pieza elegida mueve solo esa pieza');
+
+  visor.piezaBajo = null;
+  controles('ninguno', [], 1100);
+  controles('pellizco', [pellizco], 2500); // ya pasó más de 1 s desde que se apuntó la pieza
+  controles('pellizco', [aImagen(POSES.pellizco, 0.15, 0.3, 0.5)], 2550);
+  ok(visor.llamadas.includes('desplazar'), 'un pellizco lejos de la pieza mueve el objeto entero');
+
+  // Del señalar al pellizco hay cuadros sin gesto: la pieza apuntada se recuerda un momento
+  {
+    const v2 = visorFalso();
+    const c2 = crearControles(v2);
+    v2.piezaBajo = 'vastago';
+    for (const t of [0, 400, 850]) c2('señalar', [senalar], t);
+    v2.piezaBajo = null;
+    c2('ninguno', [], 900);
+    c2('pellizco', [pellizco], 1100);
+    c2('pellizco', [aImagen(POSES.pellizco, 0.15, 0.3, 0.5)], 1150);
+    ok(v2.llamadas.includes('mover:vastago'), 'pasar de señalar a pellizcar (con cuadros sin gesto) toma la pieza');
+  }
+
+  controles('victoria', [senalar], 2600);
+  ok(visor.enAnalisis === 'volante' && eventos.includes('aislar'), 'victoria con una pieza elegida la aísla');
+  controles('puño', [senalar], 2700);
+  ok(visor.enAnalisis === null && eventos.includes('salir') && !visor.llamadas.includes('reiniciar'),
+    'el puño sale del análisis sin reiniciar la vista');
+
+  visor.elegida = null;
+  controles('victoria', [senalar], 2800);
+  ok(eventos.at(-1) === 'despiece', 'victoria sin pieza elegida pide el despiece');
+  controles('pulgar_arriba', [senalar], 2900);
+  controles('pulgar_abajo', [senalar], 3000);
+  ok(eventos.slice(-2).join() === 'confirmar,deshacer' && visor.llamadas.at(-1) === 'deshacer',
+    'pulgar arriba confirma y pulgar abajo deshace');
+}
+
+// 10. Gestos nuevos por reglas: pulgar arriba, pulgar abajo y victoria
+{
+  const r = (nombre) => clasificarFotograma(aImagen(POSES[nombre], 0.15, 0.5, 0.5), 1);
+  for (const nombre of ['pulgar_arriba', 'pulgar_abajo', 'victoria']) {
+    if (POSES[nombre]) ok(r(nombre) === nombre, `${nombre}: ${r(nombre)}`);
+  }
 }
 
 console.log(fallas ? `\n${fallas} fallas` : '\nTodo OK');

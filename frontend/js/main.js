@@ -9,16 +9,68 @@ import { cargarCatalogo, buscarLocal } from './catalogo.js';
 import { interpretarPedido, pedirObjeto } from './api.js';
 import * as ui from './ui.js';
 import * as metricas from './metricas.js';
+import { cargarMlp } from './mlp.js';
 
 const UMBRAL_CONFIANZA = 0.8;      // sección 7.3, flujo 1
 const PASO_ROTACION = Math.PI / 12;
 const PASO_ESCALA = 1.15;
 
 const visor = crearVisor(document.getElementById('escena'), {
-  alCambiarPiezas: (lista) => ui.mostrarPiezas(lista, (id) => visor.seleccionar(id)),
+  alCambiarPiezas: (lista) => {
+    ui.mostrarPiezas(lista, (id) => visor.seleccionar(id));
+    // El panel de análisis sigue al visor (también si se deshace o se reinicia)
+    const aislada = lista.find((p) => p.aislada);
+    if (aislada) ui.mostrarAnalisis(visor.infoPieza(aislada.id));
+    else ui.ocultarAnalisis();
+  },
 });
-const controles = crearControles(visor);
-const clasificar = crearClasificador();
+
+// Abre o cierra el despiece (gesto de victoria sin una pieza elegida)
+function alternarDespiece() {
+  if (!visor.tienePiezas()) return ui.mostrarEstado('Este modelo es de una sola pieza: no se puede desarmar.', 'error');
+  const abierto = visor.hayPiezasAfuera();
+  if (abierto) visor.armarTodo();
+  else visor.explotar(1);
+  ui.fijarExplosion(abierto ? 0 : 1);
+  ui.mostrarEstado(abierto ? 'objeto armado' : 'despiece');
+}
+
+// Lo que la interfaz muestra cuando un gesto hace algo (controles.js)
+const EVENTOS_GESTO = {
+  seleccion: (info) => ui.mostrarEstado(`elegida: ${info.nombre}`),
+  aislar: (info) => ui.mostrarEstado(`analizando: ${info.nombre}`),
+  salir: () => ui.mostrarEstado('listo'),
+  despiece: alternarDespiece,
+  confirmar: () => { if (!ui.confirmarPendiente()) ui.mostrarEstado('no hay nada para confirmar'); },
+  deshacer: (hecho) => ui.mostrarEstado(hecho ? 'cambio deshecho' : 'no hay nada para deshacer'),
+};
+const controles = crearControles(visor, { alEvento: (tipo, datos) => EVENTOS_GESTO[tipo]?.(datos) });
+
+// Clasificador de gestos: reglas o red neuronal (sección 5.2). Se recuerda la elección en este navegador.
+let clasificar = crearClasificador();
+const clasificarSimulacion = crearClasificador(); // siempre reglas: ver simulador.js
+let mlp = null;
+const selectorClasificador = document.getElementById('clasificador');
+
+async function elegirClasificador(metodo) {
+  if (metodo === 'mlp') {
+    try {
+      mlp ??= await cargarMlp();
+    } catch (err) {
+      console.error(err);
+      ui.mostrarEstado('No se pudo cargar la red neuronal: se usan las reglas.', 'error');
+      metodo = 'reglas';
+    }
+  }
+  selectorClasificador.value = metodo;
+  clasificar = crearClasificador({ mlp: metodo === 'mlp' ? mlp : null });
+  try { localStorage.setItem('clasificador', metodo); } catch { /* sin almacenamiento: no se recuerda */ }
+}
+
+selectorClasificador.addEventListener('change', () => elegirClasificador(selectorClasificador.value));
+let clasificadorGuardado = null;
+try { clasificadorGuardado = localStorage.getItem('clasificador'); } catch { /* sin almacenamiento */ }
+elegirClasificador(clasificadorGuardado ?? 'mlp');
 let catalogo = [];
 let pedidoActual = 0; // las respuestas de pedidos anteriores se descartan
 
@@ -112,6 +164,20 @@ async function ejecutar({ accion, objeto, parametros }, id) {
       ui.fijarExplosion(accion === 'explotar' ? 1 : 0);
       break;
     }
+    case 'aislar': {
+      // "mostrame solo el volante": la pieza se busca en el modelo que está en pantalla.
+      // Si no es una pieza de este modelo ("mostrame solo un motor"), se busca como objeto.
+      const pieza = objeto ? visor.buscarPieza(objeto) : visor.seleccionada();
+      if (!pieza && objeto) return ejecutar({ accion: 'mostrar', objeto, parametros }, id);
+      if (!visor.tienePiezas()) return ui.mostrarEstado('Este modelo es de una sola pieza.', 'error');
+      if (!pieza) return ui.mostrarEstado('Elegí una pieza primero: tocala, o señalala un momento.', 'error');
+      visor.guardarEstado();
+      visor.aislar(pieza);
+      break;
+    }
+    case 'conjunto':
+      visor.salirDeAislamiento();
+      break;
   }
   ui.mostrarEstado('listo');
 }
@@ -218,7 +284,15 @@ const acciones = {
     ui.mostrarEstado(nombre ? `pieza montada: ${nombre}` : 'el objeto ya está armado');
   }),
   armar: conHistorial(() => { visor.armarTodo(); ui.fijarExplosion(0); }),
+  aislar: () => {
+    const id = visor.seleccionada();
+    if (!id) return ui.mostrarEstado('Elegí una pieza primero: tocala, o señalala un momento.', 'error');
+    visor.guardarEstado();
+    visor.aislar(id);
+  },
+  conjunto: () => visor.salirDeAislamiento(),
 };
+document.getElementById('analisis-volver').addEventListener('click', acciones.conjunto);
 
 // --- panel de piezas: botones, vista explotada y selección con clic sobre el modelo
 document.getElementById('piezas').addEventListener('click', (e) => {
@@ -247,7 +321,7 @@ document.getElementById('boton-ayuda').addEventListener('click', ui.alternarAyud
 const TECLAS = {
   ArrowLeft: 'izquierda', ArrowRight: 'derecha', ArrowUp: 'arriba', ArrowDown: 'abajo',
   '+': 'agrandar', '=': 'agrandar', '-': 'achicar', r: 'reiniciar', R: 'reiniciar', z: 'deshacer', Z: 'deshacer',
-  x: 'desmontar', X: 'desmontar', a: 'armar', A: 'armar',
+  x: 'desmontar', X: 'desmontar', a: 'armar', A: 'armar', i: 'aislar', I: 'aislar', Escape: 'conjunto',
 };
 addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT') return;
@@ -270,7 +344,7 @@ let fps = 0;
 
 function alDetectar(manos, info) {
   const t0 = performance.now();
-  const r = clasificar(manos, info.aspecto);
+  const r = (info.simulacion ? clasificarSimulacion : clasificar)(manos, info.aspecto);
   // Por debajo del umbral el gesto se muestra pero no se aplica
   const aplicado = r.confianza >= UMBRAL_CONFIANZA ? r.gesto : 'ninguno';
   overlay.dibujar(manos, info.lados ?? [], r, aplicado, { simulacion: info.simulacion });
