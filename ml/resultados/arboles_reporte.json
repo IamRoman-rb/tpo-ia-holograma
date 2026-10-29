@@ -1,0 +1,357 @@
+{
+  "fecha": "2026-10-29",
+  "dataset": "HaGRID, CC BY-SA 4.0",
+  "filas": {
+    "entrenamiento": 195699,
+    "validacion": 37663,
+    "prueba": 42875
+  },
+  "rasgos": [
+    "pulgarIndice",
+    "pulgarAfuera",
+    "pulgarVertical",
+    "separacionV",
+    "indice",
+    "medio",
+    "anular",
+    "menique",
+    "curvaPulgar",
+    "curvaIndice",
+    "curvaMedio",
+    "curvaAnular",
+    "curvaMenique",
+    "pulgarMedio",
+    "pulgarAnular",
+    "pulgarMenique",
+    "separacionMedioAnular",
+    "separacionAnularMenique",
+    "indiceVertical"
+  ],
+  "profundidad_validacion": [
+    {
+      "profundidad": 3,
+      "hojas": 8,
+      "profundidad_real": 3,
+      "f1_validacion": 0.4697,
+      "segundos": 2.5
+    },
+    {
+      "profundidad": 4,
+      "hojas": 16,
+      "profundidad_real": 4,
+      "f1_validacion": 0.7306,
+      "segundos": 3.6
+    },
+    {
+      "profundidad": 6,
+      "hojas": 61,
+      "profundidad_real": 6,
+      "f1_validacion": 0.8424,
+      "segundos": 5.3
+    },
+    {
+      "profundidad": 8,
+      "hojas": 210,
+      "profundidad_real": 8,
+      "f1_validacion": 0.8758,
+      "segundos": 6.5
+    },
+    {
+      "profundidad": 10,
+      "hojas": 528,
+      "profundidad_real": 10,
+      "f1_validacion": 0.8895,
+      "segundos": 8.2
+    },
+    {
+      "profundidad": 12,
+      "hojas": 1033,
+      "profundidad_real": 12,
+      "f1_validacion": 0.9078,
+      "segundos": 9.0
+    },
+    {
+      "profundidad": 15,
+      "hojas": 1788,
+      "profundidad_real": 15,
+      "f1_validacion": 0.9184,
+      "segundos": 10.1
+    },
+    {
+      "profundidad": 18,
+      "hojas": 2289,
+      "profundidad_real": 18,
+      "f1_validacion": 0.9193,
+      "segundos": 11.7
+    },
+    {
+      "profundidad": 22,
+      "hojas": 2729,
+      "profundidad_real": 22,
+      "f1_validacion": 0.9194,
+      "segundos": 12.6
+    },
+    {
+      "profundidad": "sin límite",
+      "hojas": 3558,
+      "profundidad_real": 49,
+      "f1_validacion": 0.9196,
+      "segundos": 15.0
+    }
+  ],
+  "poda_validacion": [
+    {
+      "ccp_alpha": 0.0,
+      "hojas": 3558,
+      "f1_validacion": 0.9196
+    },
+    {
+      "ccp_alpha": 1e-06,
+      "hojas": 2554,
+      "f1_validacion": 0.9196
+    },
+    {
+      "ccp_alpha": 1e-05,
+      "hojas": 1596,
+      "f1_validacion": 0.9161
+    },
+    {
+      "ccp_alpha": 3e-05,
+      "hojas": 558,
+      "f1_validacion": 0.9062
+    },
+    {
+      "ccp_alpha": 0.0001,
+      "hojas": 154,
+      "f1_validacion": 0.8938
+    },
+    {
+      "ccp_alpha": 0.0003,
+      "hojas": 66,
+      "f1_validacion": 0.8858
+    }
+  ],
+  "arbol_elegido": {
+    "profundidad": 49,
+    "hojas": 3558,
+    "ccp_alpha": 0.0,
+    "f1_validacion": 0.9196,
+    "umbral_confianza": 0.95
+  },
+  "ensambles": {
+    "bosque aleatorio (300 árboles)": {
+      "umbral": 0.45,
+      "segundos_entrenamiento": 42
+    },
+    "gradient boosting (61 rondas)": {
+      "umbral": 0.9,
+      "segundos_entrenamiento": 18
+    },
+    "bosque sobre las 63 coordenadas": {
+      "umbral": 0.3,
+      "segundos_entrenamiento": 73
+    }
+  },
+  "comparacion_prueba": [
+    {
+      "metodo": "reglas",
+      "exactitud": 0.6243,
+      "f1_macro": 0.6949,
+      "recall_gestos": 0.926,
+      "falsas_alarmas_ninguno": 0.5531,
+      "exactitud_ic95": [
+        0.6201,
+        0.629
+      ]
+    },
+    {
+      "metodo": "árbol de decisión (prof. 49)",
+      "exactitud": 0.9548,
+      "f1_macro": 0.9372,
+      "recall_gestos": 0.9183,
+      "falsas_alarmas_ninguno": 0.0241,
+      "exactitud_ic95": [
+        0.953,
+        0.9568
+      ]
+    },
+    {
+      "metodo": "bosque aleatorio (300 árboles)",
+      "exactitud": 0.9725,
+      "f1_macro": 0.9614,
+      "recall_gestos": 0.9511,
+      "falsas_alarmas_ninguno": 0.0162,
+      "exactitud_ic95": [
+        0.971,
+        0.974
+      ]
+    },
+    {
+      "metodo": "gradient boosting (61 rondas)",
+      "exactitud": 0.9733,
+      "f1_macro": 0.9629,
+      "recall_gestos": 0.9454,
+      "falsas_alarmas_ninguno": 0.0115,
+      "exactitud_ic95": [
+        0.9718,
+        0.9748
+      ]
+    },
+    {
+      "metodo": "bosque sobre las 63 coordenadas",
+      "exactitud": 0.9793,
+      "f1_macro": 0.9686,
+      "recall_gestos": 0.9588,
+      "falsas_alarmas_ninguno": 0.0108,
+      "exactitud_ic95": [
+        0.978,
+        0.9807
+      ]
+    },
+    {
+      "metodo": "red neuronal v2 (visor)",
+      "exactitud": 0.9793,
+      "f1_macro": 0.9689,
+      "recall_gestos": 0.963,
+      "falsas_alarmas_ninguno": 0.013,
+      "exactitud_ic95": [
+        0.9779,
+        0.9806
+      ]
+    }
+  ],
+  "mcnemar_prueba": [
+    {
+      "a": "árbol de decisión (prof. 49)",
+      "b": "reglas",
+      "solo_a": 15061,
+      "solo_b": 891,
+      "p": 0.0
+    },
+    {
+      "a": "árbol de decisión (prof. 49)",
+      "b": "bosque aleatorio (300 árboles)",
+      "solo_a": 269,
+      "solo_b": 1027,
+      "p": 1.527338063725819e-104
+    },
+    {
+      "a": "árbol de decisión (prof. 49)",
+      "b": "gradient boosting (61 rondas)",
+      "solo_a": 280,
+      "solo_b": 1072,
+      "p": 2.3690497380726736e-109
+    },
+    {
+      "a": "árbol de decisión (prof. 49)",
+      "b": "bosque sobre las 63 coordenadas",
+      "solo_a": 317,
+      "solo_b": 1367,
+      "p": 4.028331013341452e-155
+    },
+    {
+      "a": "árbol de decisión (prof. 49)",
+      "b": "red neuronal v2 (visor)",
+      "solo_a": 297,
+      "solo_b": 1345,
+      "p": 4.2482861291644423e-159
+    }
+  ],
+  "arbol_profundidad_4": {
+    "f1_prueba": 0.7294,
+    "reglas": "ml/resultados/arbol_reglas.txt"
+  },
+  "importancia_rasgos_bosque": {
+    "pulgarVertical": 0.103,
+    "medio": 0.0829,
+    "anular": 0.0771,
+    "indice": 0.0745,
+    "curvaIndice": 0.0655,
+    "separacionV": 0.065,
+    "indiceVertical": 0.0644,
+    "menique": 0.0513,
+    "pulgarAnular": 0.0502,
+    "pulgarMedio": 0.0495,
+    "pulgarMenique": 0.0477,
+    "pulgarIndice": 0.0444,
+    "curvaMenique": 0.044,
+    "curvaMedio": 0.0437,
+    "curvaAnular": 0.0425,
+    "pulgarAfuera": 0.0343,
+    "separacionMedioAnular": 0.0258,
+    "separacionAnularMenique": 0.0199,
+    "curvaPulgar": 0.0144
+  },
+  "sesgos_prueba_arbol": {
+    "recall_por_mano": {
+      "derecha": 0.9163,
+      "izquierda": 0.9193
+    },
+    "personas_con_3_gestos": 790,
+    "mediana_por_persona": 1.0,
+    "personas_bajo_80": 101
+  },
+  "por_clase_arbol": {
+    "ninguno": {
+      "precision": 0.9576871874212931,
+      "recall": 0.9759111241475398,
+      "f1-score": 0.9667132765540161,
+      "support": 27274.0
+    },
+    "palma_abierta": {
+      "precision": 0.9548022598870056,
+      "recall": 0.9148622047244095,
+      "f1-score": 0.9344056295551646,
+      "support": 4064.0
+    },
+    "pellizco": {
+      "precision": 0.9824473420260782,
+      "recall": 0.9650246305418719,
+      "f1-score": 0.9736580516898609,
+      "support": 2030.0
+    },
+    "pulgar_abajo": {
+      "precision": 0.9462943071965628,
+      "recall": 0.936735778841042,
+      "f1-score": 0.9414907827945498,
+      "support": 1881.0
+    },
+    "pulgar_arriba": {
+      "precision": 0.9504950495049505,
+      "recall": 0.9330453563714903,
+      "f1-score": 0.9416893732970028,
+      "support": 1852.0
+    },
+    "puño": {
+      "precision": 0.9716466739367503,
+      "recall": 0.9320083682008368,
+      "f1-score": 0.9514148424986653,
+      "support": 1912.0
+    },
+    "señalar": {
+      "precision": 0.9132075471698113,
+      "recall": 0.8736462093862816,
+      "f1-score": 0.8929889298892989,
+      "support": 1939.0
+    },
+    "victoria": {
+      "precision": 0.9194520547945205,
+      "recall": 0.8725949037961519,
+      "f1-score": 0.8954108858057631,
+      "support": 1923.0
+    },
+    "accuracy": 0.9548221574344024,
+    "macro avg": {
+      "precision": 0.9495040527421215,
+      "recall": 0.925478572001203,
+      "f1-score": 0.9372214715105402,
+      "support": 42875.0
+    },
+    "weighted avg": {
+      "precision": 0.9546716137059167,
+      "recall": 0.9548221574344024,
+      "f1-score": 0.9545778882163665,
+      "support": 42875.0
+    }
+  }
+}

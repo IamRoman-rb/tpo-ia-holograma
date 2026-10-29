@@ -1,56 +1,56 @@
 frase,ok,errores,accion,objeto,vista,factor_escala,confianza,ms
-mostrame una silla de oficina con ruedas,True,,mostrar,silla de oficina con ruedas,,,0.996,10303
-quiero ver un violín,True,,mostrar,violín,,,0.943,12
-che traeme una bicicleta de montaña desde atrás,True,,mostrar,bicicleta de montaña,trasera,,0.989,14
-me podés mostrar el esqueleto de un dinosaurio?,True,,mostrar,esqueleto de un dinosaurio,,,0.799,15
-necesito un modelo 3d de una cafetera italiana,True,,mostrar,cafetera italiana,,,0.999,14
-a ver una guitarra eléctrica de costado,True,,mostrar,guitarra eléctrica,lateral,,0.996,15
-mostrame un corazón humano,True,,mostrar,corazón humano,,,0.837,12
-cargame la torre eiffel vista desde arriba,True,,mostrar,torre eiffel,superior,,0.936,13
-dame un taladro percutor,True,,mostrar,taladro percutor,,,0.969,13
-hola mostrame un dron con cuatro hélices por favor,True,,mostrar,dron con cuatro hélices,,,0.992,15
-quisiera ver una lámpara de escritorio,True,,mostrar,lámpara de escritorio,,,0.92,14
-tenés una mochila?,True,,mostrar,mochila,,,0.964,12
-buscame un casco de bombero,True,,mostrar,casco de bombero,,,0.996,13
-generá una tetera de porcelana,True,,mostrar,tetera de porcelana,,,0.991,13
-poneme un microscopio de frente,True,,mostrar,microscopio,frontal,,0.993,13
-quiero ver cómo es un reloj de pulsera,True,,mostrar,reloj de pulsera,,,0.817,14
-mostrá un satélite artificial,True,,mostrar,satélite artificial,,,0.933,14
-dale mostrame el auto,False,acción conjunto; objeto None,conjunto,,,,0.264,14
-un sillón de dos cuerpos,True,,mostrar,sillón de dos cuerpos,,,0.964,15
-podrías mostrarme una impresora 3d?,False,objeto 'impresora',mostrar,impresora,,,0.998,13
-traé la escalera plegable,True,,mostrar,escalera plegable,,,0.753,12
-abrime un tractor rojo,True,,mostrar,tractor rojo,,,0.969,12
-me gustaría ver un barco a vela,True,,mostrar,barco a vela,,,0.988,13
-mostrame unas zapatillas deportivas desde el costado,True,,mostrar,zapatillas deportivas,lateral,,0.983,13
-quiero un molino de viento,True,,mostrar,molino de viento,,,0.994,14
-enseñame una cámara de fotos antigua,True,,mostrar,cámara de fotos antigua,,,0.968,14
-mostrame un caballo,True,,mostrar,caballo,,,0.943,12
-busco un ventilador de techo,True,,mostrar,ventilador de techo,,,0.999,13
-mostrame una heladera con freezer de frente,True,,mostrar,heladera con freezer,frontal,,0.999,14
-dibujame una casa de dos pisos,True,,mostrar,casa de dos pisos,,,0.718,13
-pasame el martillo,True,,mostrar,martillo,,,0.493,13
-"che, ¿me cargás un avión comercial?",True,,mostrar,avión comercial,,,0.785,13
-mostrame un teclado mecánico por favor,True,,mostrar,teclado mecánico,,,0.994,15
-quiero ver una manzana,True,,mostrar,manzana,,,0.712,14
-mostrame el motor de un avión,False,acción aislar,aislar,motor de un avión,,,0.61,14
-mostrame la licuadora desarmada,True,,explotar,licuadora,,,0.982,13
-quiero ver el despiece de la bicicleta,True,,explotar,bicicleta,,,1.0,13
-mostrame las piezas de un reloj,True,,explotar,reloj,,,0.975,13
-desarmá la cafetera entera,True,,explotar,cafetera,,,0.984,13
-mostrame cómo está hecha la mochila,True,,explotar,mochila,,,0.992,14
-explotá el teléfono celular,True,,explotar,teléfono celular,,,0.961,12
-quiero ver la impresora en vista explotada,True,,explotar,impresora,,,0.99,13
-despiece de la silla de oficina,True,,explotar,silla de oficina,,,0.993,12
-abrí el despiece del taladro,True,,explotar,taladro,,,0.994,13
-mostrame el control remoto desarmado,True,,explotar,control remoto,,,0.973,13
+mostrame una silla de oficina con ruedas,True,,mostrar,silla de oficina con ruedas,,,1.0,10746
+quiero ver un violín,True,,mostrar,violín,,,0.999,15
+che traeme una bicicleta de montaña desde atrás,True,,mostrar,bicicleta de montaña,trasera,,1.0,16
+me podés mostrar el esqueleto de un dinosaurio?,True,,mostrar,esqueleto de un dinosaurio,,,0.937,20
+necesito un modelo 3d de una cafetera italiana,True,,mostrar,cafetera italiana,,,1.0,19
+a ver una guitarra eléctrica de costado,True,,mostrar,guitarra eléctrica,lateral,,1.0,21
+mostrame un corazón humano,True,,mostrar,corazón humano,,,0.993,19
+cargame la torre eiffel vista desde arriba,True,,mostrar,torre eiffel,superior,,0.999,19
+dame un taladro percutor,True,,mostrar,taladro percutor,,,1.0,17
+hola mostrame un dron con cuatro hélices por favor,True,,mostrar,dron con cuatro hélices,,,1.0,22
+quisiera ver una lámpara de escritorio,True,,mostrar,lámpara de escritorio,,,0.942,20
+tenés una mochila?,True,,mostrar,mochila,,,0.999,15
+buscame un casco de bombero,True,,mostrar,casco de bombero,,,1.0,20
+generá una tetera de porcelana,True,,mostrar,tetera de porcelana,,,1.0,22
+poneme un microscopio de frente,True,,mostrar,microscopio,frontal,,1.0,19
+quiero ver cómo es un reloj de pulsera,True,,mostrar,reloj de pulsera,,,0.971,21
+mostrá un satélite artificial,True,,mostrar,satélite artificial,,,0.998,14
+dale mostrame el auto,False,acción conjunto; objeto None,conjunto,,,,0.661,14
+un sillón de dos cuerpos,True,,mostrar,sillón de dos cuerpos,,,0.998,15
+podrías mostrarme una impresora 3d?,False,objeto 'impresora',mostrar,impresora,,,1.0,21
+traé la escalera plegable,True,,mostrar,escalera plegable,,,0.922,16
+abrime un tractor rojo,True,,mostrar,tractor rojo,,,0.999,15
+me gustaría ver un barco a vela,True,,mostrar,barco a vela,,,1.0,19
+mostrame unas zapatillas deportivas desde el costado,True,,mostrar,zapatillas deportivas,lateral,,1.0,20
+quiero un molino de viento,True,,mostrar,molino de viento,,,1.0,20
+enseñame una cámara de fotos antigua,True,,mostrar,cámara de fotos antigua,,,0.996,18
+mostrame un caballo,True,,mostrar,caballo,,,0.999,15
+busco un ventilador de techo,True,,mostrar,ventilador de techo,,,1.0,21
+mostrame una heladera con freezer de frente,True,,mostrar,heladera con freezer,frontal,,1.0,20
+dibujame una casa de dos pisos,True,,mostrar,casa de dos pisos,,,0.978,20
+pasame el martillo,True,,mostrar,martillo,,,0.985,14
+"che, ¿me cargás un avión comercial?",True,,mostrar,avión comercial,,,0.898,19
+mostrame un teclado mecánico por favor,True,,mostrar,teclado mecánico,,,1.0,21
+quiero ver una manzana,True,,mostrar,manzana,,,0.948,14
+mostrame el motor de un avión,False,acción aislar,aislar,motor de un avión,,,0.767,17
+mostrame la licuadora desarmada,True,,explotar,licuadora,,,0.999,16
+quiero ver el despiece de la bicicleta,True,,explotar,bicicleta,,,1.0,22
+mostrame las piezas de un reloj,True,,explotar,reloj,,,1.0,19
+desarmá la cafetera entera,True,,explotar,cafetera,,,1.0,20
+mostrame cómo está hecha la mochila,True,,explotar,mochila,,,1.0,20
+explotá el teléfono celular,True,,explotar,teléfono celular,,,1.0,14
+quiero ver la impresora en vista explotada,True,,explotar,impresora,,,1.0,18
+despiece de la silla de oficina,True,,explotar,silla de oficina,,,1.0,20
+abrí el despiece del taladro,True,,explotar,taladro,,,1.0,18
+mostrame el control remoto desarmado,True,,explotar,control remoto,,,1.0,19
 mostrame solo la cuerda,True,,aislar,cuerda,,,1.0,14
-analizá el mango,True,,aislar,mango,,,0.998,13
-aislá la batería,True,,aislar,batería,,,0.999,13
-quiero ver la pantalla sola,True,,aislar,pantalla,,,0.921,13
-dejá solo el respaldo,True,,aislar,respaldo,,,0.868,15
-enfocate en el cable de alimentación,True,,aislar,cable de alimentación,,,0.983,16
-mostrame únicamente la suela,True,,aislar,suela,,,1.0,14
-analizá el filtro de la cafetera,True,,aislar,filtro de la cafetera,,,0.994,13
-ver solo el manubrio,True,,aislar,manubrio,,,0.999,15
-quiero estudiar la placa madre,True,,aislar,placa madre,,,0.95,13
+analizá el mango,True,,aislar,mango,,,1.0,14
+aislá la batería,True,,aislar,batería,,,1.0,14
+quiero ver la pantalla sola,True,,aislar,pantalla,,,0.973,18
+dejá solo el respaldo,True,,aislar,respaldo,,,0.999,14
+enfocate en el cable de alimentación,True,,aislar,cable de alimentación,,,1.0,19
+mostrame únicamente la suela,True,,aislar,suela,,,1.0,15
+analizá el filtro de la cafetera,True,,aislar,filtro de la cafetera,,,1.0,18
+ver solo el manubrio,True,,aislar,manubrio,,,1.0,14
+quiero estudiar la placa madre,True,,aislar,placa madre,,,0.994,16

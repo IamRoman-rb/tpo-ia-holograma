@@ -3,7 +3,8 @@
 Ver el plan completo en la sección 15 de [propuesta.md](propuesta.md). Para reproducir los números (desde la raíz):
 
 ```bash
-python eval/eval_intent.py                                  # intención: reglas, modelo entrenado y LLM (el LLM necesita ANTHROPIC_API_KEY)
+python eval/eval_intent.py --motor todos --frases prueba    # intención: todos los motores, con intervalos y McNemar (Claude necesita ANTHROPIC_API_KEY)
+python eval/eval_voz.py                                     # voz: Whisper con voces sintéticas y ruido (~5 h en el procesador)
 python eval/eval_busqueda.py                                # búsqueda: comparación de métodos y barrido de umbral
 python eval/eval_busqueda.py --set validacion --solo-producto   # búsqueda en el set que no se usó para calibrar
 python eval/medir_latencias.py                              # latencias del backend (con LIMITE_PEDIDOS_MINUTO=1000)
@@ -21,7 +22,8 @@ Los detalles por frase y por pedido quedan en `eval/resultados/`.
 | Latencia | Pedido → modelo (catálogo) | < 2 s | **Backend: 14 ms** (mediana; p95 15 ms) · de punta a punta: pendiente | Medido con el **intérprete por reglas**. Con el LLM, la interpretación va a tardar del orden de segundos: hay que medirlo |
 | Latencia | Pedido → modelo (generado) | Reportar | Pendiente | El notebook de Colab mide TripoSR y Shap-E |
 | Generación | Modelos por piezas válidos, partes clave y calidad (10 pedidos) | Reportar | Pendiente | `eval/eval_ensamble.py`; necesita clave de API. Mide también segundos y costo por modelo |
-| LLM | Aciertos de intención (38 frases) | ≥ 85 % | **Modelo entrenado: 87 % · reglas: 84 %** · LLM: pendiente | Con 45 pedidos de objetos de todo tipo que no vio, **modelo 91 %, reglas 60 %** (objeto exacto). Ver "Intérprete de pedidos entrenado" abajo. El LLM se evalúa cuando haya una clave de API |
+| LLM | Aciertos de intención (38 frases) | ≥ 85 % | **Consenso: 97 %** · LLM propio 1.5B: 97 % · transformer: 97 % · embeddings: 87 % · reglas: 84 % · Claude: sin medir (no hay crédito) | Con 45 pedidos de objetos de todo tipo que no vio, **consenso, LLM propio y transformer: 98 %; reglas: 60 %** (objeto exacto). Todos los motores y sets en [tecnicas_ia.md](tecnicas_ia.md#pedidos-lenguaje) |
+| Voz | Acción correcta por voz (Whisper large-v3, 126 frases × 3 voces sintéticas × 3 niveles de ruido) | Reportar | **82–90 %** (escrita: 98 %) · WER 6–22 % · activación 100 %, sin falsas | ~8 s por frase en el procesador. Detalle en [tecnicas_ia.md](tecnicas_ia.md#voz) |
 | Búsqueda | Recuperación correcta (20 pedidos) | ≥ 80 % | **Híbrido: 90 % en calibración y 90 % en validación** | Ver el detalle abajo |
 | Usabilidad | Éxito de tarea sin ayuda | ≥ 80 % | Pendiente | Protocolo con 5 tareas en `eval/pruebas_usuarios/protocolo.md` |
 

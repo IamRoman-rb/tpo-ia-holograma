@@ -5,6 +5,12 @@ python-dotenv
 numpy
 sentence-transformers
 anthropic
+# voz local (Whisper); PyAV 16+ ya no acepta una opción que usa faster-whisper 1.2
+faster-whisper
+av<16
+# búsqueda difusa (frecuencias del español) y optimización del consenso
+wordfreq
+scipy
 # pruebas
 pytest
 httpx

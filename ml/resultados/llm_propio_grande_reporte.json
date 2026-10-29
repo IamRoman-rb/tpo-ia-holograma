@@ -1,0 +1,42 @@
+{
+  "fecha": "2026-10-29",
+  "tamano": "grande",
+  "base": "Qwen/Qwen2.5-1.5B-Instruct",
+  "lora": {
+    "r": 16,
+    "alpha": 32,
+    "capas": "todas las lineales"
+  },
+  "parametros_entrenables": 18464768,
+  "parametros_totales": 1562179072,
+  "frases_entrenamiento": 8900,
+  "pasos": 557,
+  "lote": 16,
+  "tasa": 0.0002,
+  "minutos_entrenamiento": 162.3,
+  "perdida_final": 0.0056,
+  "validacion": {
+    "validacion": {
+      "frases": 59,
+      "accion": 0.9661,
+      "accion_y_objeto_exacto": null
+    },
+    "objetos_validacion": {
+      "frases": 55,
+      "accion": 1.0,
+      "accion_y_objeto_exacto": 0.9818
+    },
+    "comandos_validacion": {
+      "frases": 24,
+      "accion": 1.0,
+      "accion_y_objeto_exacto": null
+    },
+    "generadas_objetos_reservados": {
+      "frases": 200,
+      "accion": 1.0,
+      "accion_y_objeto_exacto": 0.97
+    }
+  },
+  "ms_por_frase": 2722,
+  "tamano_mb": 2955
+}

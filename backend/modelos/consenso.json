@@ -1,0 +1,28 @@
+{
+  "metodo": "log-lineal, máxima verosimilitud (L-BFGS-B)",
+  "pesos": {
+    "llm_propio": 0.3067,
+    "transformer": 0.473,
+    "modelo": 0.0,
+    "bayes": 0.1905,
+    "reglas": 0.0
+  },
+  "sesgos": {
+    "mostrar": -0.2165,
+    "rotar": -0.011,
+    "escalar": 0.0274,
+    "vista": -0.0223,
+    "reiniciar": -0.0157,
+    "desmontar": 0.0196,
+    "explotar": -0.0448,
+    "armar": -0.0104,
+    "aislar": -0.0231,
+    "conjunto": -0.0183,
+    "usar_motor": 0.0567,
+    "consultar": 0.0436,
+    "desconocido": 0.2147
+  },
+  "lambda": 0.01,
+  "frases": 138,
+  "fecha": "2026-10-29"
+}

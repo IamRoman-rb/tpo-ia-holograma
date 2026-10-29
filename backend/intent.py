@@ -45,24 +45,68 @@ def _cliente_llm() -> anthropic.Anthropic:
     return _cliente
 
 
-def interpretar(frase: str) -> dict:
-    """Devuelve la intención (sin validar) e indica qué motor la produjo en "motor":
-    el LLM; si no está disponible, el intérprete entrenado (intent_modelo.py); y si tampoco, las reglas.
+# Si Claude falla por algo que no se arregla solo (sin crédito, clave inválida), no se lo vuelve a llamar por un
+# rato: cada intento fallido le suma ~1 s a cada pedido
+PAUSA_CLAUDE_S = 600
+_claude_pausado_hasta = 0.0
+
+
+def _motor_suelto(nombre):
+    """Función de cada motor propio, importada recién cuando se usa (cada uno carga su modelo)."""
+    if nombre == "consenso":
+        import consenso
+        return lambda f, traza: consenso.interpretar_consenso(f, traza=traza)
+    if nombre == "llm_propio":
+        import llm_propio
+        return lambda f, traza: llm_propio.interpretar_llm_propio(f, traza=traza)
+    if nombre == "transformer":
+        import intent_transformer
+        return lambda f, traza: intent_transformer.interpretar_transformer(f, traza=traza)
+    if nombre == "bayes":
+        import intent_bayes
+        return lambda f, traza: intent_bayes.interpretar_bayes(f, traza=traza)
+    if nombre == "modelo":
+        return lambda f, traza: intent_modelo.interpretar_modelo(f, traza=traza)
+    return lambda f, traza: interpretar_reglas(f)
+
+
+# Sin Claude: primero el consenso de todos; si no puede (ningún modelo instalado), los motores de a uno
+CADENA_PROPIA = ["consenso", "modelo", "reglas"]
+
+
+def interpretar(frase: str, motor: str | None = None) -> dict:
+    """Devuelve la intención (sin validar) e indica qué motor la produjo en "motor".
+    Sin motor (o "automatico"): Claude si está disponible; si no, el consenso de los motores propios
+    (consenso.py); si no hay ninguno instalado, el intérprete entrenado y al final las reglas.
+    Con motor (elegido por voz: "usá Naive Bayes"), ese motor; si falla, las reglas.
     En "traza" queda lo que pasó (modelo, tokens, tiempo o el error): lo muestra el panel de actividad."""
+    global _claude_pausado_hasta
     traza = {"modelo": MODELO}
-    try:
-        return {**interpretar_llm(frase, traza=traza), "motor": "llm", "traza": traza}
-    except (anthropic.AnthropicError, RespuestaInvalida, TypeError) as e:
-        # TypeError: el SDK no encontró credenciales.
-        log.warning("LLM no disponible (%s: %s); se usa el intérprete entrenado", type(e).__name__, e)
-        traza["error"] = f"{type(e).__name__}: {e}"[:160]
-    try:
-        traza_modelo = {}
-        r = intent_modelo.interpretar_modelo(frase, traza=traza_modelo)
-        return {**r, "motor": "modelo", "traza": {**traza, **traza_modelo}}
-    except intent_modelo.ModeloNoDisponible as e:
-        log.warning("Intérprete entrenado no disponible (%s); se usan las reglas", e)
-        return {**interpretar_reglas(frase), "motor": "reglas", "traza": traza}
+    if motor in (None, "automatico", "claude"):
+        if time.monotonic() < _claude_pausado_hasta:
+            traza["error"] = "Claude en pausa por un error anterior (sin crédito o sin clave)"
+        else:
+            try:
+                return {**interpretar_llm(frase, traza=traza), "motor": "llm", "traza": traza}
+            except (anthropic.AnthropicError, RespuestaInvalida, TypeError) as e:
+                # TypeError: el SDK no encontró credenciales.
+                log.warning("LLM no disponible (%s: %s); se usan los motores propios", type(e).__name__, e)
+                traza["error"] = f"{type(e).__name__}: {e}"[:160]
+                if isinstance(e, (TypeError, anthropic.AuthenticationError, anthropic.PermissionDeniedError,
+                                  anthropic.BadRequestError)):
+                    _claude_pausado_hasta = time.monotonic() + PAUSA_CLAUDE_S
+        cadena = CADENA_PROPIA
+    else:
+        cadena = [motor, "reglas"]
+    for nombre in cadena:
+        try:
+            traza_motor = {}
+            r = _motor_suelto(nombre)(frase, traza_motor)
+            return {**r, "motor": nombre, "traza": {**traza, **traza_motor}}
+        except Exception as e:   # sin pesos, sin la librería o una respuesta inválida: el siguiente
+            log.warning("Motor %s no disponible (%s: %s)", nombre, type(e).__name__, e)
+            traza.setdefault("fallas", []).append(f"{nombre}: {type(e).__name__}")
+    return {**interpretar_reglas(frase), "motor": "reglas", "traza": traza}
 
 
 # ------------------------------------------------------------------- motor LLM
@@ -165,6 +209,62 @@ def _objeto(t):
     return resto or None
 
 
+# Comandos para manejar los modelos ("usá el árbol para los gestos", "¿qué modelo respondió?").
+# Cada motor, con las formas de nombrarlo; el orden importa ("la red transformer" es el transformer).
+MOTORES = [
+    ("transformer", r"\btransformer\b|\broberta\b|\bbert\b|\bdeep learning\b|\baprendizaje profundo\b|\bmodelo profundo\b"),
+    ("llm_propio", r"\bllm (?:propio|local|nuestro)\b|\b(?:tu|nuestro|el) (?:propio )?llm\b|\bqwen\b"
+                   r"|\bmodelo de lenguaje (?:propio|local)\b"),
+    ("claude", r"\bclaude\b|\banthropic\b|\bhaiku\b"),
+    ("consenso", r"\bconsenso\b|\bvotacion\b|\bensamble\b|\btodos los (?:modelos|motores)\b|\bcomite\b"),
+    ("bayes", r"\bbayes\w*\b|\bmodelo estadistico\b|\bestadistic\w*\b"),
+    ("arbol", r"\barbol\w*\b|\brandom forest\b|\bbosque\b"),
+    ("modelo", r"\binterprete entrenado\b|\bembeddings?\b|\be5\b|\bclasificador entrenado\b"),
+    ("red", r"\bred(?:es)? neuronal\w*\b|\bla red\b|\bmlp\b|\bred profunda\b|\bperceptron\b"),
+    ("reglas", r"\breglas\b|\bmotor de reglas\b"),
+    ("automatico", r"\bautomatic\w*\b|\bpor defecto\b"),
+]
+RE_USAR_MOTOR = (r"\b(?:usa|usar|use|usemos|cambia|cambiar|pasa|pasate|activa|activar|elegi|elegir|selecciona|"
+                 r"proba|probar|anda|volve|trabaja|interpreta|reconoce|quiero (?:usar|que)|pone|que (?:responda|decida|interprete))\b")
+RE_GESTOS = r"\bgest\w*\b|\bmanos?\b|\bdedos?\b"
+PREGUNTAS = [
+    ("confianza", r"\bque tan segur\w*|\bcuan segur\w*|\bconfianza\b|\bseguridad\b|\bprobabilidad\w*\b|\bsegur\w* estas\b"),
+    ("que_motor", r"\b(?:que|cual|quien)\b.*\b(?:modelo|motor|ia|red|interprete|algoritmo)\b"
+                  r"|\bquien (?:respondio|contesto|interpreto|lo decidio|decidio)\b|\bcon que (?:lo )?(?:interpret|respond|decid)"),
+    ("explicar", r"\bpor que\b|"
+                 r"\bexplica\w* (?:por que|como|la (?:decision|respuesta)|el razonamiento|que paso)\b|\bcomo (?:lo )?(?:decidiste|supiste|elegiste|entendiste|interpretaste)\b"
+                 r"|\bjustifica\w*\b|\bcomo llegaste\b"),
+]
+RE_CONSULTAR = (r"\b(?:respondio|contesto|interpreto|decidiste|decidio|entendiste|elegiste|supiste|hiciste|"
+                r"segur\w*|confianza|probabilidad|justifica\w*)\b"
+                r"|\bexplica\w* (?:por que|como|la (?:decision|respuesta)|el razonamiento|que paso)\b")
+
+
+def _motor(t):
+    return next((nombre for nombre, patron in MOTORES if re.search(patron, t)), None)
+
+
+def _ambito(t, motor):
+    """Para qué se usa el motor: los gestos o los pedidos. El árbol y la red solo existen para los gestos."""
+    if motor in ("arbol", "red") or re.search(RE_GESTOS, t):
+        return "gestos"
+    return "pedidos"
+
+
+def _pregunta(t):
+    return next((nombre for nombre, patron in PREGUNTAS if re.search(patron, t)), None)
+
+
+def parametros_de_comando(t, accion):
+    """Parámetros de usar_motor y consultar (conjuntos cerrados, como la vista): los usan todos los motores."""
+    if accion == "usar_motor":
+        motor = _motor(t)
+        return {"motor": motor, "ambito": _ambito(t, motor) if motor else None}
+    if accion == "consultar":
+        return {"pregunta": _pregunta(t) or "explicar"}
+    return {}
+
+
 # Desarmado por piezas. El orden importa: "desarmalo" contiene "armalo".
 RE_EXPLOTAR = (r"\bexplot|\bdespiece|\bdesarmad[oa]s?\b|\bdesmontad[oa]s?\b"
                r"|\b(?:todas las|las) (?:piezas|partes)\b|\bdesarm\w* (?:todo|entero|completo|del todo)")
@@ -193,6 +293,14 @@ def interpretar_reglas(frase: str) -> dict:
     t = normalizar(frase)
     objeto, vista, factor = _objeto(t), _vista(t), _factor(t)
 
+    if _motor(t) and re.search(RE_USAR_MOTOR, t) and not re.search(RE_CONSULTAR, t):
+        return {"accion": "usar_motor", "objeto": None,
+                "parametros": {"vista": None, "factor_escala": None, **parametros_de_comando(t, "usar_motor")},
+                "confianza": 0.7}
+    if re.search(RE_CONSULTAR, t) and _pregunta(t):
+        return {"accion": "consultar", "objeto": None,
+                "parametros": {"vista": None, "factor_escala": None, **parametros_de_comando(t, "consultar")},
+                "confianza": 0.7}
     if re.search(RE_CONJUNTO, t):
         accion, objeto = "conjunto", None
     elif re.search(RE_AISLAR, t):

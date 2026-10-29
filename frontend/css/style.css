@@ -354,15 +354,18 @@ body:has(#camara.grande) #catalogo { max-height: calc(100vh - min(560px, 46vw) *
 }
 
 /* Botón del micrófono: late mientras escucha */
-#microfono { display: inline-flex; align-items: center; justify-content: center; padding: 8px 10px; }
-#microfono[hidden] { display: none; }
+#microfono, #manos-libres { display: inline-flex; align-items: center; justify-content: center; padding: 8px 10px; }
+#microfono[hidden], #manos-libres[hidden] { display: none; }
 #microfono.escuchando { border-color: var(--error); color: var(--error); animation: latido 1s ease-in-out infinite; }
+#manos-libres.escuchando { border-color: var(--acento); color: var(--acento); }
 @keyframes latido { 50% { box-shadow: 0 0 0 6px rgba(255, 107, 107, 0.25); } }
 @media (prefers-reduced-motion: reduce) { #microfono.escuchando { animation: none; } }
 
 /* ------------------------------------------------------------------ Barra de vista (arriba a la derecha) */
 #barra { position: fixed; top: 16px; right: 16px; display: flex; gap: 6px; z-index: 4; }
-#barra button { padding: 6px 10px; font-size: 12px; }
+#barra button, #barra .vista-aparte { padding: 6px 10px; font-size: 12px; }
+#barra .vista-aparte { display: inline-flex; align-items: center; border-radius: 8px; text-decoration: none; color: var(--acento-2, #3dffb0); background: rgba(61, 255, 176, 0.08); border: 1px solid rgba(61, 255, 176, 0.35); white-space: nowrap; }
+#barra .vista-aparte:hover, #barra .vista-aparte:focus-visible { border-color: #3dffb0; outline: none; background: rgba(61, 255, 176, 0.16); }
 #barra button[aria-pressed="true"] { border-color: var(--acento); color: var(--acento); background: rgba(43, 212, 255, 0.12); }
 #barra button:disabled { opacity: 0.4; cursor: default; }
 #catalogo { top: 60px; max-height: calc(100vh - 424px); }
@@ -439,7 +442,7 @@ body.holograma-ar #controles { left: 50%; transform: translateX(-50%); width: au
 body.holograma-ar #pedido input { width: min(360px, 60vw); flex: none; }
 
 @media (max-width: 1100px) {
-  #barra button { padding: 5px 7px; font-size: 11px; }
+  #barra button, #barra .vista-aparte { padding: 5px 7px; font-size: 11px; }
   body.holograma #hud { max-width: calc(100vw - 500px); } /* deja lugar a los seis botones de la barra */
 }
 /* Teléfono: el modelo ocupa todo el ancho, así que las etiquetas lo taparían (la pieza elegida se describe en
@@ -447,7 +450,7 @@ body.holograma-ar #pedido input { width: min(360px, 60vw); flex: none; }
 @media (max-width: 760px) {
   #etiquetas { display: none; }
   #barra { top: auto; bottom: 150px; left: 8px; right: 8px; overflow-x: auto; }
-  #barra button { flex: none; }
+  #barra button, #barra .vista-aparte { flex: none; }
   body.holograma #hud { max-width: calc(100vw - 176px); top: 8px; left: 8px; }
   body.holograma-ar #hud { max-width: calc(100vw - 16px); }
   body.holograma #catalogo, body.holograma:not(.holograma-ar) #catalogo {
@@ -476,7 +479,8 @@ body.holograma-ar #pedido input { width: min(360px, 60vw); flex: none; }
 .act-seccion h3 { margin: 0; display: flex; justify-content: space-between; gap: 8px; font-size: 12px; font-weight: 600; }
 .act-estado, .act-modelo { color: var(--tenue); font-weight: 400; font-variant-numeric: tabular-nums; }
 .act-capas, .act-linea { display: block; width: 100%; height: auto; }
-.act-capas[hidden], .act-reglas[hidden], .act-probs[hidden] { display: none; }
+.act-capas[hidden], .act-reglas[hidden], .act-probs[hidden], .act-camino[hidden] { display: none; }
+.act-camino { margin: 0; font-size: 11.5px; line-height: 1.45; color: var(--texto); font-family: ui-monospace, Consolas, monospace; overflow-wrap: anywhere; }
 .act-probs, .act-reglas { display: grid; gap: 3px; }
 .act-prob { display: grid; grid-template-columns: 110px 1fr 42px; align-items: center; gap: 8px; color: var(--tenue); }
 .act-prob.ganadora { color: var(--texto); font-weight: 600; }

@@ -1,5 +1,5 @@
 frase,ok,errores,accion,objeto,vista,factor_escala,confianza,ms
-mostrame la válvula esférica,True,,mostrar,valvula esferica,,,0.7,2
+mostrame la válvula esférica,True,,mostrar,valvula esferica,,,0.7,3
 quiero ver una caja de engranajes,True,,mostrar,caja de engranajes,,,0.7,0
 traeme un motor diésel visto de costado,True,,mostrar,motor diesel,lateral,,0.7,0
 podés buscar un ventilador centrífugo?,False,acción reiniciar; objeto None,reiniciar,,,,0.7,0

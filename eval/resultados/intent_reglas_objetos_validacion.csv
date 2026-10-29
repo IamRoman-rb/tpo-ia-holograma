@@ -1,5 +1,5 @@
 frase,ok,errores,accion,objeto,vista,factor_escala,confianza,ms
-mostrame una silla de oficina con ruedas,True,,mostrar,silla de oficina con ruedas,,,0.7,2
+mostrame una silla de oficina con ruedas,True,,mostrar,silla de oficina con ruedas,,,0.7,3
 quiero ver un violín,True,,mostrar,violin,,,0.7,0
 che traeme una bicicleta de montaña desde atrás,False,acción vista; objeto None,vista,,trasera,,0.7,0
 me podés mostrar el esqueleto de un dinosaurio?,False,acción desconocido; objeto None,desconocido,,,,0.0,0

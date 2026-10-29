@@ -1,5 +1,5 @@
 frase,ok,errores,accion,objeto,vista,factor_escala,confianza,ms
-mostrame un trombón,True,,mostrar,trombon,,,0.7,2
+mostrame un trombón,True,,mostrar,trombon,,,0.7,3
 quiero ver una mesa ratona de vidrio,True,,mostrar,mesa ratona de vidrio,,,0.7,0
 traeme un colectivo de larga distancia,True,,mostrar,colectivo de larga distancia,,,0.7,0
 che me mostrás una jirafa?,False,acción desconocido; objeto None,desconocido,,,,0.0,0

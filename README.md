@@ -15,11 +15,28 @@ Arquitectura (entregable 4): [docs/arquitectura.md](docs/arquitectura.md), con e
 | `backend/` | API FastAPI: intención (LLM), búsqueda por similitud, generación 3D, seguridad |
 | `ml/` | Captura del dataset de gestos y entrenamiento del MLP |
 | `eval/` | Frases de prueba del LLM y resultados de pruebas con usuarios |
-| `scripts/` | Verificación pre-defensa y modo offline |
+| `scripts/` | Arranque con un solo comando, verificación pre-defensa y modo offline |
 
 ## Levantar el proyecto
 
 Requisitos: Python 3.10+, Chrome o Edge actualizado, cámara web.
+
+### Con un solo comando
+
+Desde la raíz del repositorio:
+
+```bash
+python scripts/levantar.py
+```
+
+Levanta el backend (puerto 8000) y el frontend (puerto 5500) en la misma terminal y abre el visor en el navegador. La primera vez crea `backend/.venv` e instala las dependencias. Después solo las vuelve a instalar si cambia `backend/requirements.txt`. Ctrl+C apaga los dos.
+
+Opciones:
+- `--sin-voz`: no carga Whisper. Arranca más rápido y usa unos 3 GB menos de memoria.
+- `--sin-navegador`: no abre el visor.
+- `--recargar`: reinicia el backend al guardar cambios en el código.
+
+Para levantarlos por separado, siguen los pasos de abajo.
 
 ### Backend
 
@@ -96,13 +113,45 @@ Sin cámara se puede usar el teclado (flechas para rotar, `+` y `−` para escal
 
 Qué datos se procesan en el equipo y cuáles salen de él, sesgos y protecciones: [docs/uso_responsable.md](docs/uso_responsable.md). Con la tecla `D` se abre el panel de depuración, que muestra las métricas de la mano en vivo y sirve para calibrar los umbrales de `frontend/js/gestures.js`.
 
+### Vistas aparte: la red neuronal y el LLM
+
+Dos páginas para ver cómo funcionan los modelos. Se abren con los botones **Red neuronal ↗** y **LLM ↗** de la barra, en otra pestaña o en otra pantalla. Reciben los datos del visor abierto en el mismo navegador.
+
+- **[red.html](frontend/red.html)**: la mano que ve la cámara entra a la red y se ve cada capa:
+  - las neuronas activas y las conexiones que más aportan;
+  - la salida softmax contra el umbral, y las probabilidades en el tiempo;
+  - la misma mano en la red, el árbol de decisión (con el camino de preguntas que siguió) y las reglas;
+  - la arquitectura, los pasos explicados y la curva del algoritmo genético que la diseñó.
+
+  Sin el visor abierto, recorre manos reales de HaGRID que la red no vio.
+- **[llm.html](frontend/llm.html)**: el recorrido de cada pedido:
+  - entrada, por texto o por voz con Whisper;
+  - lo que respondió cada motor, con su distribución y su explicación (lo que escribió el LLM, las etiquetas BIO del transformer, las palabras que más pesaron en Naive Bayes);
+  - el consenso con su fórmula y la decisión bayesiana de ejecutar o preguntar;
+  - los filtros de seguridad y la ejecución.
+
+  El **laboratorio** prueba una frase con el motor que se elija sin tocar el visor (también `llm.html?frase=…`).
+
+Todas las técnicas, con sus resultados: [docs/tecnicas_ia.md](docs/tecnicas_ia.md).
+
 ### Pedidos sin LLM
 
-Los pedidos escritos o por voz los interpreta el LLM (Claude). Si no hay clave o no hay internet, los interpreta un **modelo propio entrenado** que corre en el equipo (`backend/intent_modelo.py`): reconoce la acción con embeddings de la frase y un clasificador entrenado con 18.800 frases rioplatenses, y un etiquetador entrenado encuentra el objeto, de cualquier tipo, con lo que lo describe ("una silla de oficina con ruedas", "el cráneo de un tigre"). Aprendió con casi 10 mil nombres de objetos de WordNet en español. Con 45 pedidos de objetos que nunca vio acierta 91 %, contra 60 % de las reglas que usaba antes ([docs/metricas.md](docs/metricas.md#intérprete-de-pedidos-entrenado-respaldo-del-llm)). Si tampoco está ese modelo, quedan las reglas. El visor y el panel de actividad muestran qué motor respondió.
+Los pedidos escritos o por voz los interpreta el LLM (Claude). Sin Claude, los interpreta el **consenso de los motores propios** (`backend/consenso.py`): el transformer BETO ajustado, el LLM propio (Qwen ajustado), el intérprete con embeddings, Naive Bayes y las reglas votan, y la mejor respuesta sale de una combinación con pesos ajustados por máxima verosimilitud. El consenso acierta 305 de 309 frases en los siete sets de evaluación (97 % en la prueba, 98 % con objetos que nunca vio), pero tarda unos 5 s por pedido en el procesador. El motor solo más rápido y casi tan preciso es el transformer (300 de 309, 33 ms): se elige diciendo «usá el transformer». Uno de esos motores es un **modelo propio entrenado** que corre en el equipo (`backend/intent_modelo.py`): reconoce la acción con embeddings de la frase y un clasificador entrenado con 18.800 frases rioplatenses, y un etiquetador entrenado encuentra el objeto, de cualquier tipo, con lo que lo describe ("una silla de oficina con ruedas", "el cráneo de un tigre"). Aprendió con casi 10 mil nombres de objetos de WordNet en español. Con 45 pedidos de objetos que nunca vio acierta 91 %, contra 60 % de las reglas que usaba antes ([docs/metricas.md](docs/metricas.md#intérprete-de-pedidos-entrenado-respaldo-del-llm)). Si tampoco está ese modelo, quedan las reglas. El visor y el panel de actividad muestran qué motor respondió.
 
-### Pedidos por voz
+### Pedidos y comandos por voz
 
-El botón del micrófono (o la tecla `V`) escucha un pedido en español y lo trata igual que uno escrito. Si el pedido vino por voz, la respuesta también se escucha. Funciona en Chrome y Edge; en Firefox queda solo el texto. En esos navegadores el audio lo procesa su servicio de voz, salvo que puedan reconocerlo en el equipo (ver [docs/uso_responsable.md](docs/uso_responsable.md)).
+Con el backend levantado, la voz la reconoce **Whisper large-v3 en este equipo** (`backend/voz.py`): el audio no sale de la computadora.
+
+- **Pedir por voz:** el botón del micrófono (o `V`) escucha un pedido y corta solo cuando dejás de hablar.
+- **Manos libres:** el botón de los auriculares (o `M`) escucha sin parar y atiende lo que empieza con «holograma», por ejemplo «holograma, mostrame un engranaje». Con «holograma» solo, contesta «¿sí?» y espera el pedido.
+- **Respuestas habladas:** el sistema contesta en voz alta qué hizo; `J` las apaga o las prende.
+
+Por voz también se manejan los modelos:
+
+- **Elegir motor:** «usá el árbol de decisión para los gestos», «pasá a la red neuronal», «usá Naive Bayes», «que responda el transformer», «volvé al modo automático».
+- **Consultar:** «¿qué modelo respondió?», «¿qué tan seguro estás?», «¿por qué hiciste eso?».
+
+Sin el backend, el micrófono usa el reconocimiento del navegador (Chrome y Edge, que mandan el audio a su servicio). Ver [docs/uso_responsable.md](docs/uso_responsable.md).
 
 ## Dataset de gestos y MLP
 

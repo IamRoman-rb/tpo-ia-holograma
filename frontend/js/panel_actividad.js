@@ -6,6 +6,8 @@
 //    la respuesta tal como vino y lo que quedó después de los filtros de seguridad, y la búsqueda del objeto.
 // Se usa dentro del visor (index.html) y en la ventana aparte (actividad.html). Recibe los mensajes de actividad.js.
 
+import { nombreMotor } from './motores.js';
+
 const NOMBRES = {
   pellizco: 'Pellizco', palma_abierta: 'Palma abierta', 'puño': 'Puño', 'señalar': 'Señalar',
   pulgar_arriba: 'Pulgar arriba', pulgar_abajo: 'Pulgar abajo', victoria: 'Victoria',
@@ -57,6 +59,7 @@ export function crearPanelActividad(raiz, { enVentana = false, alAbrirVentana = 
       <h3><span class="act-metodo">Gestos</span><span class="act-estado"></span></h3>
       <canvas class="act-capas" width="380" height="176" aria-label="Activaciones de la red neuronal"></canvas>
       <div class="act-reglas" hidden></div>
+      <p class="act-camino" hidden></p>
       <div class="act-probs" role="list"></div>
       <canvas class="act-linea" width="380" height="18" aria-label="Gesto aplicado en los últimos segundos"></canvas>
       <p class="act-nota">Esperando la cámara (o la simulación de manos)…</p>
@@ -221,14 +224,21 @@ export function crearPanelActividad(raiz, { enVentana = false, alAbrirVentana = 
 
   function dibujarCuadro(m) {
     const conRed = m.metodo === 'mlp' && !m.simulacion;
-    $('.act-metodo').textContent = m.metodo === 'mlp' && !m.simulacion
-      ? 'Gestos · red neuronal (MLP)' : `Gestos · reglas${m.simulacion ? ' (simulación)' : ''}`;
+    const conArbol = m.metodo === 'arbol' && !m.simulacion;
+    $('.act-metodo').textContent = conRed ? 'Gestos · red neuronal (MLP)'
+      : conArbol ? `Gestos · árbol de decisión${m.arbol ? ` (profundidad ${m.arbol.profundidad})` : ''}`
+        : `Gestos · reglas${m.simulacion ? ' (simulación)' : ''}`;
     $('.act-estado').textContent = `${m.manos} ${m.manos === 1 ? 'mano' : 'manos'} · ${Math.round(m.fps ?? 0)} fps · ${ms(m.ms)}`;
     lienzo.hidden = !conRed;
-    $('.act-reglas').hidden = conRed;
-    $('.act-probs').hidden = !conRed; // las reglas no dan probabilidades: se ven sus métricas
+    $('.act-reglas').hidden = conRed || conArbol;
+    $('.act-camino').hidden = !conArbol;
+    $('.act-probs').hidden = !(conRed || conArbol); // las reglas no dan probabilidades: se ven sus métricas
 
-    if (conRed && m.red) {
+    if (conArbol) {
+      // El árbol no tiene activaciones: se muestra la cadena de preguntas que llevó a la hoja
+      $('.act-camino').textContent = m.arbol ? `Camino: ${m.arbol.texto}` : 'Sin manos a la vista.';
+      probs(m.clasesRed ?? [], m.arbol?.probabilidades ?? null, m.arbol?.umbral ?? null, m.porMano?.[0] ?? null);
+    } else if (conRed && m.red) {
       dibujarRed(m.red.activaciones, m.red.probabilidades, m.red.clases);
       probs(m.red.clases, m.red.probabilidades, m.red.umbral, m.porMano?.[0]);
     } else if (conRed) {
@@ -288,15 +298,19 @@ export function crearPanelActividad(raiz, { enVentana = false, alAbrirVentana = 
         p.espera?.remove();
         const i = m.intencion;
         const t = i.traza ?? {};
-        const sinLlm = t.error ? `<span class="act-tenue">LLM no disponible: ${escapar(t.error)}</span>` : '';
+        const sinLlm = t.error ? `<span class="act-tenue">Claude no disponible: ${escapar(t.error)}</span>` : '';
+        const clase = { llm: 'llm', reglas: 'reglas' }[i.motor] ?? 'modelo';
         const motor = i.motor === 'llm'
           ? `<span class="act-chip llm">LLM</span> ${escapar(t.modelo ?? '')}`
-          : i.motor === 'modelo'
-            ? `<span class="act-chip modelo">modelo propio</span> ${sinLlm}`
-            : `<span class="act-chip reglas">reglas</span> ${sinLlm}`;
+          : `<span class="act-chip ${clase}">${escapar(nombreMotor(i.motor))}</span> ${sinLlm}`;
         const tokens = t.tokens_entrada != null ? ` · ${t.tokens_entrada} → ${t.tokens_salida} tokens` : '';
-        paso(p, '', `${motor}<br><span class="act-tenue">LLM ${ms(t.ms_llm)} · backend ${ms(i.tiempo_ms)} · total ${ms(m.msTotal)}${tokens}</span>`);
-        // El modelo propio da la probabilidad de cada acción: se ven las tres más altas
+        paso(p, '', `${motor}<br><span class="act-tenue">${t.ms_llm != null ? `LLM ${ms(t.ms_llm)} · ` : ''}backend ${ms(i.tiempo_ms)} · total ${ms(m.msTotal)}${tokens}</span>`);
+        // El consenso: qué votó cada motor (el detalle completo está en llm.html)
+        if (t.votos?.length) {
+          const votos = t.votos.map((v) => `${escapar(nombreMotor(v.motor))} → ${escapar(v.accion)} ${Math.round(v.confianza * 100)} %`).join(' · ');
+          paso(p, '', `<span class="act-tenue">Votos: ${votos}</span>`);
+        }
+        // Los modelos propios dan la probabilidad de cada acción: se ven las tres más altas
         if (t.probabilidades) {
           const lista = Object.entries(t.probabilidades)
             .map(([a, v]) => `${escapar(a)} ${Math.round(v * 100)} %`).join(' · ');

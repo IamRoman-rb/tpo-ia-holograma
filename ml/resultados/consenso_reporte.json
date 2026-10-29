@@ -1,0 +1,123 @@
+{
+  "fecha": "2026-10-29",
+  "frases_validacion": 138,
+  "motores": [
+    "llm_propio",
+    "transformer",
+    "modelo",
+    "bayes",
+    "reglas"
+  ],
+  "comparacion": [
+    {
+      "metodo": "solo llm_propio",
+      "exactitud": 0.8261,
+      "ic95": [
+        0.7609,
+        0.8913
+      ],
+      "ece": 0.1169
+    },
+    {
+      "metodo": "solo transformer",
+      "exactitud": 0.9855,
+      "ic95": [
+        0.9638,
+        1.0
+      ],
+      "ece": 0.0095
+    },
+    {
+      "metodo": "solo modelo",
+      "exactitud": 0.942,
+      "ic95": [
+        0.8986,
+        0.9783
+      ],
+      "ece": 0.0404
+    },
+    {
+      "metodo": "solo bayes",
+      "exactitud": 0.8913,
+      "ic95": [
+        0.8333,
+        0.935
+      ],
+      "ece": 0.0467
+    },
+    {
+      "metodo": "solo reglas",
+      "exactitud": 0.7101,
+      "ic95": [
+        0.6377,
+        0.7826
+      ],
+      "ece": 0.0101
+    },
+    {
+      "metodo": "voto simple",
+      "exactitud": 0.9783,
+      "ic95": [
+        0.9493,
+        1.0
+      ]
+    },
+    {
+      "metodo": "promedio de probabilidades",
+      "exactitud": 0.9783,
+      "ic95": [
+        0.9493,
+        1.0
+      ],
+      "ece": 0.162
+    },
+    {
+      "metodo": "log-lineal, L-BFGS (validación cruzada)",
+      "exactitud": 0.9855,
+      "ic95": [
+        0.9638,
+        1.0
+      ],
+      "ece": 0.0084
+    },
+    {
+      "metodo": "log-lineal, algoritmo genético (validación cruzada)",
+      "exactitud": 0.9855,
+      "ic95": [
+        0.9638,
+        1.0
+      ],
+      "ece": 0.0046
+    }
+  ],
+  "pesos_lbfgs": {
+    "llm_propio": 0.3067,
+    "transformer": 0.473,
+    "modelo": 0.0,
+    "bayes": 0.1905,
+    "reglas": 0.0
+  },
+  "sesgos_lbfgs": {
+    "mostrar": -0.2165,
+    "rotar": -0.011,
+    "escalar": 0.0274,
+    "vista": -0.0223,
+    "reiniciar": -0.0157,
+    "desmontar": 0.0196,
+    "explotar": -0.0448,
+    "armar": -0.0104,
+    "aislar": -0.0231,
+    "conjunto": -0.0183,
+    "usar_motor": 0.0567,
+    "consultar": 0.0436,
+    "desconocido": 0.2147
+  },
+  "pesos_genetico": {
+    "llm_propio": 0.2783,
+    "transformer": 0.4999,
+    "modelo": 0.0,
+    "bayes": 0.1832,
+    "reglas": 0.0
+  },
+  "ms_por_frase": 5146
+}

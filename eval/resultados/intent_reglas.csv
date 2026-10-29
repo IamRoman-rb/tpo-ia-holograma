@@ -1,5 +1,5 @@
 frase,ok,errores,accion,objeto,vista,factor_escala,confianza,ms
-mostrame una válvula de acero,True,,mostrar,valvula de acero,,,0.7,2
+mostrame una válvula de acero,True,,mostrar,valvula de acero,,,0.7,3
 mostrame un motor de cuatro cilindros desde atrás,True,,mostrar,motor de cuatro cilindros,trasera,,0.7,0
 quiero ver un rulemán,True,,mostrar,ruleman,,,0.7,0
 traeme el engranaje,True,,mostrar,engranaje,,,0.7,0

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LLM en vivo</title>
+  <link rel="stylesheet" href="css/vistas.css">
+</head>
+<body class="vista">
+  <!-- Muestra el recorrido completo de cada pedido del visor abierto en otra pestaña (voz, motores, consenso,
+       validación y ejecución). Los pedidos llegan por un BroadcastChannel del navegador; el laboratorio consulta
+       al backend directamente y no cambia nada en el visor. -->
+  <header class="vista-cabecera">
+    <div class="vista-marca">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.6" d="M12 2 3 7v10l9 5 9-5V7l-9-5Zm0 0v20M3 7l9 5 9-5"/></svg>
+      Holograma IA
+    </div>
+    <nav class="vista-nav" aria-label="Vistas">
+      <a href="index.html">Visor</a>
+      <a href="red.html">Red neuronal</a>
+      <a href="llm.html" aria-current="page">LLM</a>
+      <a href="actividad.html">Actividad</a>
+    </nav>
+    <div class="vista-conexion" id="conexion"><i></i><span>Esperando al visor…</span></div>
+  </header>
+
+  <main class="vista-contenido vista-llm">
+    <aside style="display:grid;gap:16px">
+      <section class="tarjeta">
+        <h2>Pedidos <small class="tenue" id="cantidad"></small></h2>
+        <p class="tenue" id="escuchando" hidden></p>
+        <ul class="historial" id="historial"><li class="vacio">Todavía no hubo pedidos. Pedí algo en el visor (escrito o por voz) o probá una frase en el laboratorio.</li></ul>
+      </section>
+      <section class="tarjeta">
+        <h2>Motores</h2>
+        <div class="datos" id="estado-motores"></div>
+      </section>
+    </aside>
+
+    <div style="display:grid;gap:16px;min-width:0">
+      <section class="tarjeta">
+        <h2>Laboratorio <small class="tenue">analiza una frase sin tocar el visor</small></h2>
+        <form class="laboratorio" id="laboratorio">
+          <input id="lab-frase" type="text" placeholder="Ej.: che, mostrame una silla de oficina con ruedas desde atrás" autocomplete="off" aria-label="Frase para analizar" required maxlength="300">
+          <select id="lab-motor" aria-label="Motor">
+            <option value="consenso">Consenso de todos</option>
+            <option value="">Automático (Claude si hay)</option>
+            <option value="llm_propio">LLM propio</option>
+            <option value="transformer">Transformer</option>
+            <option value="modelo">Modelo con embeddings</option>
+            <option value="bayes">Naive Bayes</option>
+            <option value="reglas">Reglas</option>
+          </select>
+          <button type="submit">Analizar</button>
+        </form>
+      </section>
+      <section class="tarjeta">
+        <h2>Recorrido del pedido <small class="tenue" id="recorrido-resumen"></small></h2>
+        <div class="recorrido" id="recorrido"><p class="vacio">Elegí un pedido o analizá una frase para ver cómo lo entiende cada modelo.</p></div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="js/vista_llm.js"></script>
+</body>
+</html>

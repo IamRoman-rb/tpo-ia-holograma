@@ -1,0 +1,48 @@
+Árbol de profundidad 4 entrenado con HaGRID (F1 macro en prueba 0.729).
+
+|--- indice <= 1.19
+|   |--- anular <= 1.21
+|   |   |--- pulgarVertical <= -0.30
+|   |   |   |--- pulgarMedio <= 0.87
+|   |   |   |   |--- class: puño
+|   |   |   |--- pulgarMedio >  0.87
+|   |   |   |   |--- class: pulgar_arriba
+|   |   |--- pulgarVertical >  -0.30
+|   |   |   |--- pulgarMedio <= 0.62
+|   |   |   |   |--- class: ninguno
+|   |   |   |--- pulgarMedio >  0.62
+|   |   |   |   |--- class: pulgar_abajo
+|   |--- anular >  1.21
+|   |   |--- pulgarIndice <= 0.94
+|   |   |   |--- separacionV <= 0.41
+|   |   |   |   |--- class: pellizco
+|   |   |   |--- separacionV >  0.41
+|   |   |   |   |--- class: pellizco
+|   |   |--- pulgarIndice >  0.94
+|   |   |   |--- pulgarAfuera <= 0.84
+|   |   |   |   |--- class: pulgar_arriba
+|   |   |   |--- pulgarAfuera >  0.84
+|   |   |   |   |--- class: pulgar_arriba
+|--- indice >  1.19
+|   |--- medio <= 0.99
+|   |   |--- menique <= 0.86
+|   |   |   |--- pulgarAfuera <= 0.64
+|   |   |   |   |--- class: señalar
+|   |   |   |--- pulgarAfuera >  0.64
+|   |   |   |   |--- class: ninguno
+|   |   |--- menique >  0.86
+|   |   |   |--- menique <= 1.22
+|   |   |   |   |--- class: ninguno
+|   |   |   |--- menique >  1.22
+|   |   |   |   |--- class: ninguno
+|   |--- medio >  0.99
+|   |   |--- curvaMenique <= 18.94
+|   |   |   |--- indiceVertical <= -0.67
+|   |   |   |   |--- class: palma_abierta
+|   |   |   |--- indiceVertical >  -0.67
+|   |   |   |   |--- class: ninguno
+|   |   |--- curvaMenique >  18.94
+|   |   |   |--- separacionV <= 0.39
+|   |   |   |   |--- class: ninguno
+|   |   |   |--- separacionV >  0.39
+|   |   |   |   |--- class: victoria

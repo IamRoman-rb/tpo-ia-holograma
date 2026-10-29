@@ -31,7 +31,7 @@ CATEGORIAS = [
     ("body_part.n.01", "cuerpo"), ("edible_fruit.n.01", "fruta"), ("vegetable.n.01", "verdura"),
 ]
 SETS_EVAL = ["frases_prueba.csv", "frases_validacion.csv", "frases_nuevas.csv", "frases_objetos_validacion.csv",
-            "frases_objetos_prueba.csv"]
+            "frases_objetos_prueba.csv", "frases_comandos_validacion.csv", "frases_comandos_prueba.csv"]
 
 # Sustantivos en -a que son masculinos y en -o que son femeninos (los comunes)
 MASCULINOS_EN_A = {"dia", "mapa", "sistema", "problema", "programa", "tema", "planeta", "cometa", "clima",

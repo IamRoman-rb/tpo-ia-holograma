@@ -1,0 +1,731 @@
+{
+  "fecha": "2026-10-29",
+  "dataset": "HaGRID, CC BY-SA 4.0",
+  "configuracion": {
+    "poblacion": 14,
+    "generaciones": 10,
+    "torneo": 3,
+    "elitismo": 2,
+    "prob_mutacion": 0.25,
+    "manos_aptitud": 50000,
+    "epocas_aptitud": 6,
+    "espacio": {
+      "profundidad": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        8
+      ],
+      "ancho": [
+        64,
+        128,
+        192,
+        256,
+        384,
+        512,
+        768,
+        1024
+      ],
+      "residual": [
+        false,
+        true
+      ],
+      "normalizacion": [
+        false,
+        true
+      ],
+      "activacion": [
+        "relu",
+        "gelu",
+        "silu"
+      ],
+      "dropout": [
+        0.0,
+        0.05,
+        0.1,
+        0.2,
+        0.3
+      ],
+      "tasa": [
+        0.0003,
+        0.0006,
+        0.001,
+        0.002,
+        0.004,
+        0.008
+      ],
+      "weight_decay": [
+        0.0,
+        1e-06,
+        1e-05,
+        0.0001,
+        0.001
+      ],
+      "lote": [
+        256,
+        512,
+        1024,
+        2048
+      ],
+      "aumento": [
+        0.0,
+        0.5,
+        1.0,
+        1.5
+      ]
+    }
+  },
+  "genetico": {
+    "redes_entrenadas": 119,
+    "mejor_f1_validacion_corta": 0.9596,
+    "minutos": 69,
+    "curva": [
+      {
+        "generacion": 1,
+        "mejor": 0.9482,
+        "media": 0.8316,
+        "evaluadas": 14
+      },
+      {
+        "generacion": 2,
+        "mejor": 0.9499,
+        "media": 0.9339,
+        "evaluadas": 25
+      },
+      {
+        "generacion": 3,
+        "mejor": 0.952,
+        "media": 0.9238,
+        "evaluadas": 36
+      },
+      {
+        "generacion": 4,
+        "mejor": 0.9528,
+        "media": 0.9378,
+        "evaluadas": 47
+      },
+      {
+        "generacion": 5,
+        "mejor": 0.9557,
+        "media": 0.9423,
+        "evaluadas": 59
+      },
+      {
+        "generacion": 6,
+        "mejor": 0.9575,
+        "media": 0.95,
+        "evaluadas": 71
+      },
+      {
+        "generacion": 7,
+        "mejor": 0.9588,
+        "media": 0.9491,
+        "evaluadas": 83
+      },
+      {
+        "generacion": 8,
+        "mejor": 0.9588,
+        "media": 0.9324,
+        "evaluadas": 95
+      },
+      {
+        "generacion": 9,
+        "mejor": 0.9588,
+        "media": 0.9438,
+        "evaluadas": 107
+      },
+      {
+        "generacion": 10,
+        "mejor": 0.9596,
+        "media": 0.9453,
+        "evaluadas": 119
+      }
+    ]
+  },
+  "al_azar": {
+    "redes_entrenadas": 119,
+    "mejor_f1_validacion_corta": 0.9581,
+    "curva": [
+      {
+        "evaluadas": 1,
+        "mejor": 0.769
+      },
+      {
+        "evaluadas": 2,
+        "mejor": 0.769
+      },
+      {
+        "evaluadas": 3,
+        "mejor": 0.769
+      },
+      {
+        "evaluadas": 4,
+        "mejor": 0.769
+      },
+      {
+        "evaluadas": 5,
+        "mejor": 0.8453
+      },
+      {
+        "evaluadas": 6,
+        "mejor": 0.9497
+      },
+      {
+        "evaluadas": 7,
+        "mejor": 0.9497
+      },
+      {
+        "evaluadas": 8,
+        "mejor": 0.9497
+      },
+      {
+        "evaluadas": 9,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 10,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 11,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 12,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 13,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 14,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 15,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 16,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 17,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 18,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 19,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 20,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 21,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 22,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 23,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 24,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 25,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 26,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 27,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 28,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 29,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 30,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 31,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 32,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 33,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 34,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 35,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 36,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 37,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 38,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 39,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 40,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 41,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 42,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 43,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 44,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 45,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 46,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 47,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 48,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 49,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 50,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 51,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 52,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 53,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 54,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 55,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 56,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 57,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 58,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 59,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 60,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 61,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 62,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 63,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 64,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 65,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 66,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 67,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 68,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 69,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 70,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 71,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 72,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 73,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 74,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 75,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 76,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 77,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 78,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 79,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 80,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 81,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 82,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 83,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 84,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 85,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 86,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 87,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 88,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 89,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 90,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 91,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 92,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 93,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 94,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 95,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 96,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 97,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 98,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 99,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 100,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 101,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 102,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 103,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 104,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 105,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 106,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 107,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 108,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 109,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 110,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 111,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 112,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 113,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 114,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 115,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 116,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 117,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 118,
+        "mejor": 0.9581
+      },
+      {
+        "evaluadas": 119,
+        "mejor": 0.9581
+      }
+    ]
+  },
+  "finalistas": [
+    {
+      "genoma": {
+        "profundidad": 5,
+        "ancho": 512,
+        "residual": false,
+        "normalizacion": true,
+        "activacion": "relu",
+        "dropout": 0.0,
+        "tasa": 0.0003,
+        "weight_decay": 0.001,
+        "lote": 256,
+        "aumento": 0.0
+      },
+      "f1_validacion": 0.9571,
+      "epocas": 12,
+      "minutos": 1.8
+    },
+    {
+      "genoma": {
+        "profundidad": 5,
+        "ancho": 512,
+        "residual": true,
+        "normalizacion": true,
+        "activacion": "relu",
+        "dropout": 0.0,
+        "tasa": 0.0006,
+        "weight_decay": 0.001,
+        "lote": 256,
+        "aumento": 0.0
+      },
+      "f1_validacion": 0.9562,
+      "epocas": 12,
+      "minutos": 1.8
+    },
+    {
+      "genoma": {
+        "profundidad": 6,
+        "ancho": 768,
+        "residual": true,
+        "normalizacion": true,
+        "activacion": "gelu",
+        "dropout": 0.0,
+        "tasa": 0.0003,
+        "weight_decay": 0.001,
+        "lote": 256,
+        "aumento": 0.0
+      },
+      "f1_validacion": 0.9575,
+      "epocas": 13,
+      "minutos": 5.0
+    }
+  ],
+  "elegida": {
+    "genoma": {
+      "profundidad": 6,
+      "ancho": 768,
+      "residual": true,
+      "normalizacion": true,
+      "activacion": "gelu",
+      "dropout": 0.0,
+      "tasa": 0.0003,
+      "weight_decay": 0.001,
+      "lote": 256,
+      "aumento": 0.0
+    },
+    "parametros": 3017480,
+    "f1_validacion": 0.9575,
+    "umbral_confianza": 0.85
+  },
+  "red_v2_f1_validacion": 0.9598,
+  "comparacion_prueba": [
+    {
+      "metodo": "evolucionada 6×768 gelu res LN drop 0.0 lr 0.0003 lote 256 aum 0.0",
+      "exactitud": 0.9801,
+      "f1_macro": 0.9714,
+      "recall_gestos": 0.9634,
+      "falsas_alarmas_ninguno": 0.0116,
+      "exactitud_ic95": [
+        0.9788,
+        0.9815
+      ]
+    },
+    {
+      "metodo": "red v2 [128, 64]",
+      "exactitud": 0.9793,
+      "f1_macro": 0.9689,
+      "recall_gestos": 0.963,
+      "falsas_alarmas_ninguno": 0.013,
+      "exactitud_ic95": [
+        0.9779,
+        0.9806
+      ]
+    }
+  ],
+  "mcnemar_prueba": {
+    "solo_evolucionada": 298,
+    "solo_v2": 261,
+    "p": 0.1277744642973647
+  },
+  "exportada": false
+}

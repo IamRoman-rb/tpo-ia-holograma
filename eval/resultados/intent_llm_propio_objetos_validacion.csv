@@ -1,0 +1,56 @@
+frase,ok,errores,accion,objeto,vista,factor_escala,confianza,ms
+mostrame una silla de oficina con ruedas,True,,mostrar,silla de oficina con ruedas,,,1.0,6316
+quiero ver un violín,True,,mostrar,violín,,,1.0,1623
+che traeme una bicicleta de montaña desde atrás,True,,mostrar,bicicleta de montaña,trasera,,1.0,2859
+me podés mostrar el esqueleto de un dinosaurio?,True,,mostrar,esqueleto de un dinosaurio,,,0.992,3229
+necesito un modelo 3d de una cafetera italiana,True,,mostrar,cafetera italiana,,,1.0,2326
+a ver una guitarra eléctrica de costado,True,,mostrar,guitarra eléctrica,lateral,,1.0,2758
+mostrame un corazón humano,True,,mostrar,corazón humano,,,1.0,2232
+cargame la torre eiffel vista desde arriba,True,,mostrar,torre eiffel,superior,,1.0,2532
+dame un taladro percutor,True,,mostrar,taladro percutor,,,1.0,2180
+hola mostrame un dron con cuatro hélices por favor,True,,mostrar,drón con cuatro hélices,,,1.0,2772
+quisiera ver una lámpara de escritorio,True,,mostrar,lámpara de escritorio,,,1.0,2986
+tenés una mochila?,True,,mostrar,mochila,,,0.74,1729
+buscame un casco de bombero,True,,mostrar,casco de bombero,,,1.0,2449
+generá una tetera de porcelana,True,,mostrar,tetera de porcelana,,,1.0,2921
+poneme un microscopio de frente,True,,mostrar,microscopio,frontal,,0.999,2196
+quiero ver cómo es un reloj de pulsera,True,,mostrar,reloj de pulsera,,,1.0,3001
+mostrá un satélite artificial,True,,mostrar,satélite artificial,,,1.0,2290
+dale mostrame el auto,True,,mostrar,auto,,,1.0,1509
+un sillón de dos cuerpos,True,,mostrar,sillón de dos cuerpos,,,1.0,2915
+podrías mostrarme una impresora 3d?,False,objeto 'impresora',mostrar,impresora,,,1.0,1952
+traé la escalera plegable,True,,mostrar,escalera plegable,,,0.999,2514
+abrime un tractor rojo,True,,mostrar,tractor rojo,,,1.0,1993
+me gustaría ver un barco a vela,True,,mostrar,barco a vela,,,1.0,2486
+mostrame unas zapatillas deportivas desde el costado,True,,mostrar,zapatillas deportivas,lateral,,1.0,2502
+quiero un molino de viento,True,,mostrar,molino de viento,,,0.981,2511
+enseñame una cámara de fotos antigua,True,,mostrar,cámara de fotos antigua,,,1.0,2713
+mostrame un caballo,True,,mostrar,caballo,,,1.0,1740
+busco un ventilador de techo,True,,mostrar,ventilador de techo,,,1.0,2701
+mostrame una heladera con freezer de frente,True,,mostrar,heladera con freezer,frontal,,0.998,2336
+dibujame una casa de dos pisos,True,,mostrar,casa de dos pisos,,,1.0,2769
+pasame el martillo,True,,mostrar,martillo,,,0.773,1776
+"che, ¿me cargás un avión comercial?",True,,mostrar,avión comercial,,,1.0,2024
+mostrame un teclado mecánico por favor,True,,mostrar,teclado mecánico,,,1.0,2499
+quiero ver una manzana,True,,mostrar,manzana,,,0.987,2014
+mostrame el motor de un avión,True,,mostrar,motor de un avión,,,0.996,2528
+mostrame la licuadora desarmada,True,,explotar,licuadora,,,1.0,2563
+quiero ver el despiece de la bicicleta,True,,explotar,bicicleta,,,1.0,2475
+mostrame las piezas de un reloj,True,,explotar,reloj,,,1.0,2487
+desarmá la cafetera entera,True,,explotar,cafetera,,,1.0,2547
+mostrame cómo está hecha la mochila,True,,explotar,mochila,,,0.838,2185
+explotá el teléfono celular,True,,explotar,teléfono celular,,,1.0,2440
+quiero ver la impresora en vista explotada,True,,explotar,impresora,,,1.0,2567
+despiece de la silla de oficina,True,,explotar,silla de oficina,,,1.0,2963
+abrí el despiece del taladro,True,,explotar,taladro,,,1.0,2206
+mostrame el control remoto desarmado,True,,explotar,control remoto,,,1.0,2458
+mostrame solo la cuerda,True,,aislar,cuerda,,,1.0,2193
+analizá el mango,True,,aislar,mango,,,0.904,1685
+aislá la batería,True,,aislar,batería,,,0.996,2245
+quiero ver la pantalla sola,True,,aislar,pantalla,,,0.999,2220
+dejá solo el respaldo,True,,aislar,respaldo,,,1.0,1968
+enfocate en el cable de alimentación,True,,aislar,cable de alimentación,,,1.0,2742
+mostrame únicamente la suela,True,,aislar,suela,,,1.0,1952
+analizá el filtro de la cafetera,True,,aislar,filtro de la cafetera,,,1.0,3023
+ver solo el manubrio,True,,aislar,manubrio,,,1.0,2191
+quiero estudiar la placa madre,True,,aislar,placa madre,,,1.0,2221

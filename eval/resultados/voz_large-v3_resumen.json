@@ -1,0 +1,128 @@
+{
+  "modelo": "large-v3",
+  "motor": "consenso",
+  "frases": 126,
+  "por_condicion": [
+    {
+      "voz": "es_AR-daniela-high",
+      "ruido_db": null,
+      "wer": 0.1636,
+      "frase_exacta": 0.5635,
+      "accion_igual_que_escrita": 0.881,
+      "accion_correcta": [
+        0.8571,
+        0.7937,
+        0.9127
+      ],
+      "ms_mediana": 8414.5
+    },
+    {
+      "voz": "es_AR-daniela-high",
+      "ruido_db": 20,
+      "wer": 0.1564,
+      "frase_exacta": 0.5794,
+      "accion_igual_que_escrita": 0.8968,
+      "accion_correcta": [
+        0.8889,
+        0.8333,
+        0.9444
+      ],
+      "ms_mediana": 8431.5
+    },
+    {
+      "voz": "es_AR-daniela-high",
+      "ruido_db": 10,
+      "wer": 0.1836,
+      "frase_exacta": 0.5952,
+      "accion_igual_que_escrita": 0.873,
+      "accion_correcta": [
+        0.8651,
+        0.8016,
+        0.9206
+      ],
+      "ms_mediana": 8395.5
+    },
+    {
+      "voz": "es_ES-davefx-medium",
+      "ruido_db": null,
+      "wer": 0.0727,
+      "frase_exacta": 0.7381,
+      "accion_igual_que_escrita": 0.9206,
+      "accion_correcta": [
+        0.8968,
+        0.8413,
+        0.9444
+      ],
+      "ms_mediana": 8219.5
+    },
+    {
+      "voz": "es_ES-davefx-medium",
+      "ruido_db": 20,
+      "wer": 0.0691,
+      "frase_exacta": 0.754,
+      "accion_igual_que_escrita": 0.9206,
+      "accion_correcta": [
+        0.8968,
+        0.8413,
+        0.9444
+      ],
+      "ms_mediana": 8226.5
+    },
+    {
+      "voz": "es_ES-davefx-medium",
+      "ruido_db": 10,
+      "wer": 0.0636,
+      "frase_exacta": 0.7619,
+      "accion_igual_que_escrita": 0.9206,
+      "accion_correcta": [
+        0.8968,
+        0.8413,
+        0.9444
+      ],
+      "ms_mediana": 8220.0
+    },
+    {
+      "voz": "es_MX-ald-medium",
+      "ruido_db": null,
+      "wer": 0.1727,
+      "frase_exacta": 0.5556,
+      "accion_igual_que_escrita": 0.8889,
+      "accion_correcta": [
+        0.8651,
+        0.8016,
+        0.9206
+      ],
+      "ms_mediana": 8091.5
+    },
+    {
+      "voz": "es_MX-ald-medium",
+      "ruido_db": 20,
+      "wer": 0.1691,
+      "frase_exacta": 0.5794,
+      "accion_igual_que_escrita": 0.9206,
+      "accion_correcta": [
+        0.8968,
+        0.8413,
+        0.9444
+      ],
+      "ms_mediana": 8079.5
+    },
+    {
+      "voz": "es_MX-ald-medium",
+      "ruido_db": 10,
+      "wer": 0.2145,
+      "frase_exacta": 0.5476,
+      "accion_igual_que_escrita": 0.8413,
+      "accion_correcta": [
+        0.8175,
+        0.746,
+        0.881
+      ],
+      "ms_mediana": 8053.5
+    }
+  ],
+  "activacion": {
+    "detectadas": 1.0,
+    "falsas_activaciones": 0.0
+  }
+}

@@ -211,7 +211,6 @@ def cargar(ruta=RUTA_MODELO):
 
 def interpretar_modelo(frase, modelo=None, traza=None):
     """Misma salida que intent.interpretar_llm. traza (opcional) recibe la probabilidad de cada acción."""
-    import intent  # aquí y no arriba: intent.py importa este módulo
     m = modelo or cargar()
     probs, vectores = m.analizar(frase)
     k = int(np.argmax(probs))
@@ -219,11 +218,24 @@ def interpretar_modelo(frase, modelo=None, traza=None):
     if traza is not None:
         orden = np.argsort(probs)[::-1][:3]
         traza["probabilidades"] = {m.acciones[i]: round(float(probs[i]), 3) for i in orden}
+        traza["distribucion"] = {a: float(v) for a, v in zip(m.acciones, probs)}
+    objeto = m.objeto(frase, accion, vectores) if accion in ACCIONES_CON_OBJETO else None
+    if traza is not None and accion in ACCIONES_CON_OBJETO:
+        traza["palabras_objeto"] = [{"palabra": p, "p": round(float(v), 3)} for p, v in
+                                    zip(palabras_originales(frase), m.probabilidades_palabras(frase, accion, vectores))]
+    return completar(frase, accion, objeto, confianza)
+
+
+def completar(frase, accion, objeto, confianza):
+    """Arma la intención a partir de la acción y el objeto que dio un modelo: la vista y el factor de escala
+    los sacan las reglas. La usan el intérprete entrenado y el LLM propio (llm_propio.py)."""
+    import intent  # aquí y no arriba: intent.py importa este módulo
     if accion == "desconocido":
         return {**intent.DESCONOCIDO, "confianza": confianza}
 
     t = intent.normalizar(frase)
-    objeto = m.objeto(frase, accion, vectores) if accion in ACCIONES_CON_OBJETO else None
+    if accion not in ACCIONES_CON_OBJETO:
+        objeto = None
     if accion == "mostrar" and not objeto:
         objeto = intent._objeto(t)   # respaldo: lo que esté después del verbo
     # La vista y la escala se buscan fuera del nombre del objeto ("caja reductora" no es "reducí")
@@ -235,6 +247,7 @@ def interpretar_modelo(frase, modelo=None, traza=None):
         "parametros": {
             "vista": intent._vista(t) if accion in ("mostrar", "vista", "explotar") else None,
             "factor_escala": intent._factor(t) if accion in ("escalar", "mostrar") else None,
+            **intent.parametros_de_comando(t, accion),
         },
         "confianza": confianza,
     }

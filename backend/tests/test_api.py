@@ -8,8 +8,9 @@ import retrieval
 
 @pytest.fixture
 def cliente(monkeypatch, tmp_path):
-    # Sin red: intención por reglas y búsqueda por palabras
-    monkeypatch.setattr(main, "interpretar", lambda f: {**intent.interpretar_reglas(f), "motor": "reglas"})
+    # Sin red: intención por reglas, búsqueda por palabras y sin generación 3D (aunque el .env tenga una clave)
+    monkeypatch.setattr(main, "interpretar", lambda f, motor=None: {**intent.interpretar_reglas(f), "motor": "reglas"})
+    monkeypatch.setenv("GEN3D_MODO", "desactivado")
     cat = retrieval.Catalogo(ruta_indice=tmp_path / "index.json", usar_embeddings=False)
     monkeypatch.setattr(retrieval, "_catalogo", cat)
     main.limite._pedidos.clear()

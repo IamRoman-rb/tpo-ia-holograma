@@ -1,5 +1,6 @@
 import logging
 import os
+import threading
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -18,6 +19,7 @@ from intent import interpretar  # noqa: E402
 from retrieval import buscar_similar, catalogo, listar_catalogo, recargar  # noqa: E402
 from safety import LimiteFrecuencia, fuera_de_dominio, validar_intencion  # noqa: E402
 from schemas import Pedido  # noqa: E402
+import voz  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 
@@ -30,7 +32,17 @@ async def lifespan(app):
         intent_modelo.cargar()
     except intent_modelo.ModeloNoDisponible as e:
         logging.getLogger(__name__).warning("Intérprete entrenado no disponible: %s", e)
+    # Whisper tarda en cargar (y ocupa ~2 GB): se carga aparte para no demorar el arranque
+    if voz.disponible():
+        threading.Thread(target=_precargar_voz, daemon=True).start()
     yield
+
+
+def _precargar_voz():
+    try:
+        voz.cargar()
+    except voz.VozNoDisponible as e:
+        logging.getLogger(__name__).warning("Voz local no disponible: %s", e)
 
 
 app = FastAPI(title="TPO Holograma IA", lifespan=lifespan)
@@ -61,18 +73,62 @@ def _controlar_frecuencia(request: Request):
 @app.get("/health")
 def health():
     return {"estado": "ok", "busqueda": catalogo().metodo, "piezas": len(catalogo().items),
-            "generacion": generate3d.modo()}
+            "generacion": generate3d.modo(), "voz": f"whisper {voz.MODELO}" if voz.disponible() else None,
+            "motores": motores_instalados()}
+
+
+def motores_instalados():
+    """Qué motores propios tienen sus pesos (sin cargarlos): lo muestra la vista del LLM."""
+    import consenso
+    import intent_bayes
+    import intent_transformer
+    import llm_propio
+    ruta_llm = llm_propio.RUTA_MODELO
+    return {
+        "llm_propio": ("Qwen 1.5B" if ruta_llm.name.endswith("grande") else "Qwen 0.5B")
+        if (ruta_llm / "config.json").exists() else None,
+        "transformer": (intent_transformer.RUTA_MODELO / "interprete.json").exists(),
+        "modelo": intent_modelo.RUTA_MODELO.exists(),
+        "bayes": intent_bayes.RUTA_MODELO.exists(),
+        "consenso": "pesos ajustados" if consenso.RUTA_PESOS.exists() else "pesos iguales",
+    }
 
 
 @app.post("/intent")
 def intent(p: Pedido, request: Request):
     _controlar_frecuencia(request)
     t0 = time.perf_counter()
-    crudo = interpretar(p.frase)          # LLM (o reglas si no hay LLM), devuelve dict
+    crudo = interpretar(p.frase, p.motor)  # Claude, el consenso o el motor elegido por voz; devuelve dict
     # La traza (y la respuesta antes de validar) es para el panel de actividad del visor
     traza = {**(crudo.pop("traza", None) or {}), "crudo": {k: v for k, v in crudo.items() if k != "motor"}}
     resultado = validar_intencion(crudo)  # esquema + filtros + límites
     return {**resultado, "traza": traza, "tiempo_ms": round((time.perf_counter() - t0) * 1000)}
+
+
+MAXIMO_AUDIO = 5 * 1024 * 1024   # ~30 s de opus: alcanza para un pedido
+
+
+@app.post("/voz")
+async def reconocer_voz(request: Request, activacion: bool = False):
+    """Audio del micrófono (el cuerpo, tal como lo graba MediaRecorder) -> texto, con Whisper en el equipo.
+    Con activacion=true (modo manos libres) se informa si empezó con "holograma" y se devuelve el resto."""
+    _controlar_frecuencia(request)
+    if not voz.disponible():
+        raise HTTPException(503, "El reconocimiento de voz local no está instalado (faster-whisper).")
+    audio = await request.body()
+    if not audio:
+        raise HTTPException(422, "No llegó audio.")
+    if len(audio) > MAXIMO_AUDIO:
+        raise HTTPException(413, "El audio es demasiado largo.")
+    try:
+        r = voz.transcribir(audio)
+    except voz.VozNoDisponible as e:
+        raise HTTPException(503, f"Voz local no disponible: {e}")
+    except Exception as e:  # audio que no se puede decodificar
+        raise HTTPException(422, f"No se pudo leer el audio ({type(e).__name__}).")
+    if activacion:
+        r["activado"], r["texto"] = voz.quitar_activacion(r["texto"])
+    return r
 
 
 @app.post("/object")

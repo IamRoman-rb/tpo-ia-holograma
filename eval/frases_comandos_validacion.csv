@@ -1,0 +1,25 @@
+frase,accion,motor,ambito,pregunta
+usá el árbol para los gestos,usar_motor,arbol,gestos,
+cambiá a naive bayes,usar_motor,bayes,pedidos,
+pasá al transformer,usar_motor,transformer,pedidos,
+que los gestos los reconozca la red neuronal,usar_motor,red,gestos,
+volvé al modo automático,usar_motor,automatico,pedidos,
+usá el llm propio para interpretar,usar_motor,llm_propio,pedidos,
+activá el consenso,usar_motor,consenso,pedidos,
+probá con las reglas para las manos,usar_motor,reglas,gestos,
+quiero usar claude,usar_motor,claude,pedidos,
+elegí el modelo de embeddings,usar_motor,modelo,pedidos,
+usá todos los modelos juntos,usar_motor,consenso,pedidos,
+qué modelo respondió?,consultar,,,que_motor
+quién interpretó lo último?,consultar,,,que_motor
+qué tan seguro estás?,consultar,,,confianza
+cuánta confianza tenías?,consultar,,,confianza
+explicame por qué hiciste eso,consultar,,,explicar
+por qué elegiste esa acción?,consultar,,,explicar
+cómo lo decidiste?,consultar,,,explicar
+qué motor estás usando?,consultar,,,que_motor
+mostrame un engranaje,mostrar,,,
+giralo un poco,rotar,,,
+qué hora es,desconocido,,,
+mostrame un árbol de transmisión,mostrar,,,
+desarmalo,desmontar,,,

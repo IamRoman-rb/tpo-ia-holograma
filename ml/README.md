@@ -93,3 +93,19 @@ backend/.venv/Scripts/python eval/eval_intent.py --frases objetos_prueba   # de 
 ```
 
 El vocabulario sale del WordNet en español del Open Multilingual Wordnet (Multilingual Central Repository, CC BY 3.0), descargado con nltk; `objetos.csv` se versiona, así que `generar_frases.py` no necesita nltk. Ningún objeto de entrenamiento contiene el núcleo de un objeto de los sets de evaluación (`eval/frases_*.csv`), y se saltean esas frases y sus variantes con muletillas. Resultados y por qué cada set mide algo distinto: [docs/metricas.md](../docs/metricas.md#intérprete-de-pedidos-entrenado-respaldo-del-llm).
+
+## Las demás técnicas (todas con el entorno del backend)
+
+```bash
+backend/.venv/Scripts/python ml/intencion/entrenar_bayes.py                        # Naive Bayes + temperatura (1 min)
+backend/.venv/Scripts/python ml/intencion_transformer/entrenar_transformer.py --candidatos beto   # transformer (~2 h en CPU)
+backend/.venv/Scripts/python ml/intencion_transformer/entrenar_transformer.py --candidatos xlmr --epocas 1   # compite con el instalado
+backend/.venv/Scripts/python ml/llm_propio/entrenar_llm.py --tamano chico          # Qwen2.5-0.5B + LoRA (~80 min)
+backend/.venv/Scripts/python ml/llm_propio/entrenar_llm.py --tamano grande         # Qwen2.5-1.5B + LoRA (~4 h)
+backend/.venv/Scripts/python ml/consenso/ajustar_consenso.py                       # pesos del consenso (L-BFGS) vs. genético y voto
+backend/.venv/Scripts/python ml/arboles/entrenar_arboles.py                        # árbol, bosque y boosting de gestos (~5 min)
+backend/.venv/Scripts/python ml/evolucion/neuroevolucion.py                        # algoritmo genético para la red de gestos (~2-3 h)
+backend/.venv/Scripts/python eval/eval_voz.py                                      # Whisper con voces Piper y ruido (~1 h)
+```
+
+Los modelos grandes (`backend/modelos/llm_propio*`, `backend/modelos/transformer`) no se versionan. Cada script deja su reporte en `ml/resultados/`; el resumen de todas las técnicas está en [docs/tecnicas_ia.md](../docs/tecnicas_ia.md).

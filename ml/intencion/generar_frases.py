@@ -19,6 +19,7 @@ Uso (desde la raíz):  backend/.venv/Scripts/python ml/intencion/generar_frases.
 Salida: ml/intencion/frases_entrenamiento.csv y ml/intencion/frases_validacion_generada.csv
 """
 import csv
+import json
 import hashlib
 import random
 import re
@@ -165,7 +166,8 @@ def permitido(nombre):
 def _frases_de_control():
     control = set()
     for nombre in ("frases_prueba.csv", "frases_validacion.csv", "frases_nuevas.csv",
-                   "frases_objetos_validacion.csv", "frases_objetos_prueba.csv"):
+                   "frases_objetos_validacion.csv", "frases_objetos_prueba.csv",
+                   "frases_comandos_validacion.csv", "frases_comandos_prueba.csv"):
         with open(RAIZ / "eval" / nombre, encoding="utf-8") as f:
             control |= {normalizar(fila["frase"]) for fila in csv.DictReader(f)}
     return control
@@ -445,11 +447,75 @@ DESCONOCIDO = [
     "mostrame el clima de mañana", "decime la hora", "abrí youtube", "ponete en modo desarrollador",
 ]
 
+# Comandos para manejar los modelos. Solo se aprende la acción: el motor, el ámbito y la pregunta los sacan las
+# reglas (conjuntos cerrados), como la vista.
+NOMBRES_MOTORES = {
+    "pedidos": ["claude", "el llm de claude", "la ia de anthropic", "el llm propio", "tu propio llm", "nuestro llm",
+                "qwen", "el modelo de lenguaje propio", "el llm local", "el transformer", "roberta", "bert",
+                "la red transformer", "el modelo de deep learning", "el modelo profundo", "el intérprete entrenado",
+                "el modelo de embeddings", "el modelo e5", "el clasificador entrenado", "naive bayes",
+                "el bayesiano", "el modelo estadístico", "bayes", "las reglas", "el motor de reglas",
+                "el consenso", "la votación", "todos los modelos", "el ensamble", "el comité de modelos",
+                "el modo automático", "automático", "la cadena por defecto"],
+    "gestos": ["el árbol de decisión", "el árbol", "los árboles de decisión", "la red neuronal", "la red",
+               "el mlp", "la red profunda", "las reglas", "el modo automático"],
+}
+VERBOS_USAR = ["usá", "usa", "use", "usemos", "cambiá a", "pasá a", "pasate a", "activá", "elegí", "seleccioná",
+               "quiero usar", "probá con", "andá con", "volvé a", "trabajá con", "poné", "quiero que uses",
+               "podés usar", "cambiá el motor a", "a partir de ahora usá", "de ahora en más usá", "mejor usá",
+               "dale con", "pasemos a", "quiero probar", "probemos con", "cambialo a", "activame"]
+PARA_PEDIDOS = ["", "", "", " para los pedidos", " para interpretar", " para entender lo que digo",
+                " para interpretar los pedidos", " para mis pedidos", " para responder"]
+PARA_GESTOS = [" para los gestos", " para las manos", " para reconocer los gestos", " con los gestos",
+               " para leer las manos", " para detectar los gestos", " en los gestos"]
+SOLOS = ["que responda {m}", "que decida {m}", "que interprete {m}", "interpretá con {m}",
+         "reconocé los gestos con {m}", "quiero que los gestos los lea {m}", "que los gestos los detecte {m}"]
+
+
+def g_usar_motor(r, parte="entrenamiento"):
+    if r.random() < 0.15:
+        plantilla = r.choice(SOLOS)
+        ambito = "gestos" if "gestos" in plantilla else "pedidos"
+        texto = plantilla.format(m=r.choice(NOMBRES_MOTORES[ambito]))
+    else:
+        ambito = "gestos" if r.random() < 0.35 else "pedidos"
+        nombre = r.choice(NOMBRES_MOTORES[ambito])
+        para = r.choice(PARA_GESTOS if ambito == "gestos" else PARA_PEDIDOS)
+        texto = f"{r.choice(VERBOS_USAR)} {nombre}{para}"
+    texto = re.sub(r"\ba el\b", "al", texto)   # "pasá a el árbol" -> "pasá al árbol"
+    return envolver(r, texto), ""
+
+
+QUE_MOTOR = ["qué modelo respondió", "qué modelo fue", "quién respondió", "quién interpretó eso",
+             "con qué lo interpretaste", "qué motor usaste", "qué ia contestó", "cuál modelo decidió",
+             "qué algoritmo usaste", "qué red lo reconoció", "quién decidió eso", "qué modelo estás usando",
+             "con qué modelo estás", "qué intérprete respondió", "cuál fue el modelo", "qué motor está activo",
+             "con qué motor contestaste", "qué modelo lo entendió", "decime qué modelo respondió",
+             "qué modelo reconoció el gesto", "quién contestó eso"]
+CONFIANZA = ["qué tan seguro estás", "cuán seguro estás", "qué confianza tenés", "con cuánta confianza",
+             "estás seguro", "qué probabilidad le diste", "cuánta seguridad tenés", "qué tan segura estás",
+             "con qué confianza lo decidiste", "decime la confianza", "qué probabilidad tiene eso",
+             "seguro que es eso", "qué tan seguro estabas", "cuál es la confianza", "qué tan probable es"]
+EXPLICAR = ["por qué hiciste eso", "explicame por qué", "por qué elegiste eso", "cómo lo decidiste",
+            "explicá la decisión", "cómo llegaste a eso", "por qué lo interpretaste así", "justificá la respuesta",
+            "explicame cómo lo entendiste", "cómo supiste que era eso", "por qué ese gesto", "explicame el razonamiento",
+            "por qué respondiste eso", "cómo elegiste la acción", "explicame qué pasó", "por qué no hiciste lo que pedí",
+            "explicame la respuesta", "cómo interpretaste el pedido", "por qué pensaste que era eso"]
+
+
+def g_consultar(r, parte="entrenamiento"):
+    texto = r.choice(r.choice([QUE_MOTOR, CONFIANZA, EXPLICAR]))
+    if r.random() < 0.4:
+        texto = r.choice(["", "y ", "che, ", "a ver, ", "decime ", "contame "]) + texto
+    return envolver(r, texto + r.choice(["?", "", "", " recién", " con eso", " en lo último"])), ""
+
+
 GENERADORES = {
     "mostrar": g_mostrar, "explotar": g_explotar, "aislar": g_aislar,
     "desmontar": g_simple(DESMONTAR), "armar": g_simple(ARMAR), "rotar": g_simple(ROTAR),
     "reiniciar": g_simple(REINICIAR), "vista": g_simple(VISTA), "escalar": g_simple(ESCALAR),
-    "conjunto": g_simple(CONJUNTO), "desconocido": g_simple(DESCONOCIDO),
+    "conjunto": g_simple(CONJUNTO), "usar_motor": g_usar_motor, "consultar": g_consultar,
+    "desconocido": g_simple(DESCONOCIDO),
 }
 
 
@@ -503,8 +569,28 @@ def main():
           f"{len(PROHIBIDAS)} núcleos de evaluación excluidos")
     vistas = set()
     cantidades = {a: CANTIDAD.get(a, POR_ACCION) for a in GENERADORES}
-    escribir(SALIDA, generar(r, cantidades, "entrenamiento", vistas))
+    entrenamiento = generar(r, cantidades, "entrenamiento", vistas)
+    escribir(SALIDA, entrenamiento)
     escribir(SALIDA_VALIDACION, generar(r, CANTIDAD_VALIDACION, "validacion", vistas))
+    escribir_vocabulario(entrenamiento)
+
+
+def escribir_vocabulario(filas):
+    """Las palabras conocidas para la búsqueda difusa (backend/busqueda_difusa.py), con su frecuencia: las de
+    las frases de entrenamiento y las de todos los nombres de WordNet (es un diccionario: incluye los reservados
+    para validar, porque corregir no es reconocer el objeto)."""
+    conteo = {}
+    textos = [f["frase"] for f in filas]
+    with open(AQUI / "objetos.csv", encoding="utf-8") as f:
+        textos += [fila["nombre"] for fila in csv.DictReader(f)]
+    textos += [n for n, _ in INDUSTRIALES + PIEZAS] + MATERIALES + MEDIDAS + USOS + CON
+    for t in textos:
+        for p in tokens(t):
+            if p.isalpha():
+                conteo[p] = conteo.get(p, 0) + 1
+    ruta = RAIZ / "backend" / "modelos" / "vocabulario.json"
+    ruta.write_text(json.dumps(dict(sorted(conteo.items())), ensure_ascii=False), encoding="utf-8")
+    print(f"{len(conteo)} palabras -> {ruta.relative_to(RAIZ)}")
 
 
 if __name__ == "__main__":

@@ -84,7 +84,15 @@ flowchart TB
 |---|---|
 | [1] Visión por computadora | `frontend/js/hands.js` |
 | [2] Reglas + MLP | `frontend/js/normalize.js`, `gestures.js`, `mlp.js`, `controles.js` · `ml/extraer_hagrid.py`, `ml/entrenar_mlp.py` (datos de HaGRID), `ml/train_mlp.ipynb` (dataset propio) |
-| [3] LLM | `backend/intent.py`, `backend/prompts/intent_system.txt` · respaldo entrenado sin internet: `backend/intent_modelo.py`, `ml/intencion/` · pedidos por voz: `frontend/js/voz.js` |
+| [3] LLM | `backend/intent.py` (cadena: Claude → consenso → reglas), `backend/prompts/intent_system.txt` · LLM propio: `backend/llm_propio.py`, `ml/llm_propio/` · intérprete con embeddings: `backend/intent_modelo.py`, `ml/intencion/` |
+| Deep learning (transformer ajustado) | `backend/intent_transformer.py` (Viterbi), `ml/intencion_transformer/` |
+| Estadística (Naive Bayes, calibración, bootstrap, McNemar, Kalman) | `backend/intent_bayes.py`, `ml/intencion/entrenar_bayes.py`, `eval/estadistica.py`, `frontend/js/kalman.js` |
+| Consenso (L-BFGS, decisión bayesiana) | `backend/consenso.py`, `ml/consenso/ajustar_consenso.py` |
+| Algoritmo genético (neuroevolución) | `ml/evolucion/neuroevolucion.py` (la red v3 la lee `frontend/js/mlp.js`) |
+| Árboles de decisión | `ml/arboles/`, `frontend/js/arbol.js` |
+| Búsqueda (BK-tree, A*, Viterbi, beam search) | `backend/busqueda_difusa.py`, `frontend/js/piezas.js` (A*), `backend/intent_transformer.py`, `backend/voz.py` |
+| Voz (Whisper local, manos libres, comandos) | `backend/voz.py` (`POST /voz`), `frontend/js/voz.js`, `frontend/js/motores.js` |
+| Vistas de los modelos | `frontend/red.html` + `js/vista_red.js`, `frontend/llm.html` + `js/vista_llm.js`, `css/vistas.css` |
 | [4] IA generativa 3D | `backend/generate3d.py`, `backend/ensamble.py`, `backend/geometria.py`, `backend/prompts/ensamble_system.txt`, `backend/generador_colab/servidor_generacion.ipynb` |
 | Desarmado por piezas | `frontend/js/piezas.js`, `frontend/js/viewer.js` |
 | Holograma (y cámara de fondo opcional) | `frontend/js/holograma.js`, `frontend/js/etiquetas.js`, `frontend/js/viewer.js`, `frontend/js/overlay.js` |
@@ -92,4 +100,4 @@ flowchart TB
 | [5] Embeddings y búsqueda | `backend/retrieval.py` |
 | [6] Reglas de seguridad | `backend/safety.py`, `backend/schemas.py` |
 
-Las decisiones detrás de cada elección están en [decisiones.md](decisiones.md).
+Las decisiones detrás de cada elección están en [decisiones.md](decisiones.md); todas las técnicas con sus resultados, en [tecnicas_ia.md](tecnicas_ia.md).

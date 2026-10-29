@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Red neuronal en vivo</title>
+  <link rel="stylesheet" href="css/vistas.css">
+</head>
+<body class="vista">
+  <!-- Muestra cómo funciona la red de gestos con la mano que ve el visor abierto en otra pestaña. Los datos llegan
+       por un BroadcastChannel del navegador (no hay servidor en el medio) y la red se calcula acá con los mismos
+       pesos que usa el visor. -->
+  <header class="vista-cabecera">
+    <div class="vista-marca">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.6" d="M12 2 3 7v10l9 5 9-5V7l-9-5Zm0 0v20M3 7l9 5 9-5"/></svg>
+      Holograma IA
+    </div>
+    <nav class="vista-nav" aria-label="Vistas">
+      <a href="index.html">Visor</a>
+      <a href="red.html" aria-current="page">Red neuronal</a>
+      <a href="llm.html">LLM</a>
+      <a href="actividad.html">Actividad</a>
+    </nav>
+    <div class="vista-conexion" id="conexion"><i></i><span>Esperando al visor…</span></div>
+  </header>
+
+  <main class="vista-contenido vista-red">
+    <section class="tarjeta">
+      <h2>La red en vivo <small id="red-resumen" class="tenue"></small></h2>
+      <canvas id="lienzo-red" class="red-lienzo" aria-label="Diagrama de la red neuronal con las activaciones de cada capa"></canvas>
+      <div class="red-leyenda">
+        <span><i style="background:#2bd4ff"></i>neurona activa (más brillo = más activación)</span>
+        <span><i style="background:linear-gradient(90deg,#2bd4ff,#3dffb0)"></i>conexión que más aporta (activación × peso)</span>
+        <span><i style="background:#ffb84d"></i>umbral de confianza</span>
+      </div>
+    </section>
+
+    <aside style="display:grid;gap:16px">
+      <section class="tarjeta" aria-live="polite">
+        <h2>Lo que ve la red</h2>
+        <div class="gesto-grande">
+          <canvas id="anillo" class="anillo" width="92" height="92" aria-hidden="true"></canvas>
+          <div><strong id="gesto">—</strong><span class="tenue" id="gesto-detalle">Sin manos a la vista</span></div>
+        </div>
+      </section>
+      <section class="tarjeta">
+        <h2>Probabilidades <small class="tenue">salida de la softmax</small></h2>
+        <div class="barras" id="probabilidades"></div>
+      </section>
+      <section class="tarjeta">
+        <h2>Tres modelos, la misma mano</h2>
+        <div class="comparacion" id="comparacion"></div>
+        <p class="tenue" style="margin-top:8px;font-size:12.5px">Resaltado: el que está usando el visor. Se elige en el visor o por voz: «usá el árbol para los gestos».</p>
+      </section>
+    </aside>
+
+    <section class="tarjeta">
+      <h2>Probabilidades en el tiempo <small class="tenue">últimos 8 segundos</small></h2>
+      <canvas id="historia" style="aspect-ratio: 16 / 5" aria-label="Probabilidad de cada gesto en los últimos segundos"></canvas>
+    </section>
+    <section class="tarjeta">
+      <h2>Árbol de decisión <small class="tenue" id="arbol-resumen"></small></h2>
+      <ol class="camino" id="camino"><li class="vacio" style="display:block">Mostrá una mano a la cámara (o activá la simulación en el visor).</li></ol>
+    </section>
+
+    <section class="tarjeta ancho">
+      <h2>Arquitectura <small class="tenue" id="arquitectura-origen"></small></h2>
+      <div class="datos" id="arquitectura"></div>
+    </section>
+
+    <section class="tarjeta ancho">
+      <h2>Cómo funciona, paso a paso</h2>
+      <ol class="pasos" id="pasos"></ol>
+    </section>
+
+    <section class="tarjeta ancho" id="tarjeta-evolucion" hidden>
+      <h2>Cómo se diseñó: algoritmo genético <small class="tenue" id="evolucion-resumen"></small></h2>
+      <canvas id="evolucion" style="aspect-ratio: 16 / 4.5" aria-label="Mejor F1 por generación del algoritmo genético y de la búsqueda al azar"></canvas>
+    </section>
+  </main>
+
+  <script type="module" src="js/vista_red.js"></script>
+</body>
+</html>

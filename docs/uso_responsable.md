@@ -35,10 +35,15 @@ Para cada punto se indica qué está **implementado** (y dónde), y qué está *
 - La ayuda del visor (botón **?**) explica qué se procesa en el equipo y qué se envía a un servicio externo.
 - Sin clave de API y con la generación desactivada, ningún dato sale del equipo: la intención la resuelve el intérprete entrenado (`backend/intent_modelo.py`), y si no está, el de reglas (`backend/intent.py`), los dos en el equipo y los objetos salen solo del catálogo.
 
-### Pedidos por voz (`frontend/js/voz.js`)
+### Pedidos por voz (`frontend/js/voz.js`, `backend/voz.py`)
 
-- El micrófono se enciende solo al tocar el botón o apretar `V`, y se apaga al terminar el pedido.
-- El reconocimiento lo hace el navegador. En Chrome y Edge el audio se envía a su servicio de voz (Google o Microsoft), salvo que el navegador ofrezca el reconocimiento en el equipo: en ese caso se usa, y el botón lo indica. Esto se explica en la ayuda del visor.
+- **Micrófono:** se enciende solo al tocar el botón o apretar `V`, y se apaga al terminar el pedido.
+- **Manos libres** (`M`): escucha sin parar hasta que se apaga; el botón queda resaltado mientras tanto.
+- **Reconocimiento con el backend:** lo hace **Whisper en el mismo equipo** (sección 16.1: "preferir transcripción local"). El audio va del navegador al backend local y no se guarda.
+- **Reconocimiento sin el backend:** lo hace el navegador. En Chrome y Edge, el audio se envía a su servicio de voz (Google o Microsoft), salvo que el navegador ofrezca el reconocimiento en el equipo. La ayuda del visor dice cuál se está usando.
+- **Sesgos de Whisper:** reconoce peor algunos acentos, el habla rápida y los nombres técnicos poco comunes. Para el vocabulario, un texto inicial lo inclina hacia las palabras del visor y la búsqueda difusa corrige nombres mal transcriptos.
+  - **Mediciones con voces sintéticas** (`eval/eval_voz.py`): argentina, española y mexicana, con ruido. Es una cota optimista: hacen falta grabaciones reales del grupo, con consentimiento.
+- **Falsas activaciones:** en modo manos libres, una conversación que empiece con una palabra parecida a «holograma» puede activarlo. Se mide la tasa de falsas activaciones, y cada pedido igual pasa por los filtros y por la confirmación cuando la confianza es baja.
 - El texto reconocido se trata igual que un pedido escrito: va al LLM (si está configurado) y pasa por las mismas validaciones.
 
 ### Dataset de internet (HaGRID)

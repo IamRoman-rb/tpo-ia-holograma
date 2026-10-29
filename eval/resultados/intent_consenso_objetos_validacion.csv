@@ -1,0 +1,56 @@
+frase,ok,errores,accion,objeto,vista,factor_escala,confianza,ms
+mostrame una silla de oficina con ruedas,True,,mostrar,silla de oficina con ruedas,,,0.997,7009
+quiero ver un violín,True,,mostrar,violín,,,0.995,4404
+che traeme una bicicleta de montaña desde atrás,True,,mostrar,bicicleta de montaña,trasera,,0.997,6571
+me podés mostrar el esqueleto de un dinosaurio?,True,,mostrar,esqueleto de un dinosaurio,,,0.996,7092
+necesito un modelo 3d de una cafetera italiana,True,,mostrar,cafetera italiana,,,0.998,6159
+a ver una guitarra eléctrica de costado,True,,mostrar,guitarra eléctrica,lateral,,0.997,6327
+mostrame un corazón humano,True,,mostrar,corazón humano,,,0.995,5036
+cargame la torre eiffel vista desde arriba,True,,mostrar,torre eiffel,superior,,0.997,6269
+dame un taladro percutor,True,,mostrar,taladro percutor,,,0.994,5159
+hola mostrame un dron con cuatro hélices por favor,True,,mostrar,dron con cuatro hélices,,,0.997,6495
+quisiera ver una lámpara de escritorio,True,,mostrar,lámpara de escritorio,,,0.997,6510
+tenés una mochila?,True,,mostrar,mochila,,,0.99,4672
+buscame un casco de bombero,True,,mostrar,casco de bombero,,,0.996,5817
+generá una tetera de porcelana,True,,mostrar,tetera de porcelana,,,0.996,6380
+poneme un microscopio de frente,True,,mostrar,microscopio,frontal,,0.997,5554
+quiero ver cómo es un reloj de pulsera,True,,mostrar,reloj de pulsera,,,0.997,6865
+mostrá un satélite artificial,True,,mostrar,satélite artificial,,,0.993,5328
+dale mostrame el auto,True,,mostrar,auto,,,0.507,4405
+un sillón de dos cuerpos,True,,mostrar,sillón de dos cuerpos,,,0.996,5940
+podrías mostrarme una impresora 3d?,False,objeto 'impresora',mostrar,impresora,,,0.998,5477
+traé la escalera plegable,True,,mostrar,escalera plegable,,,0.994,5716
+abrime un tractor rojo,True,,mostrar,tractor rojo,,,0.995,5047
+me gustaría ver un barco a vela,True,,mostrar,barco a vela,,,0.997,5920
+mostrame unas zapatillas deportivas desde el costado,True,,mostrar,zapatillas deportivas,lateral,,0.997,6130
+quiero un molino de viento,True,,mostrar,molino de viento,,,0.993,5681
+enseñame una cámara de fotos antigua,True,,mostrar,cámara de fotos antigua,,,0.995,6074
+mostrame un caballo,True,,mostrar,caballo,,,0.993,4486
+busco un ventilador de techo,True,,mostrar,ventilador de techo,,,0.995,5844
+mostrame una heladera con freezer de frente,True,,mostrar,heladera con freezer,frontal,,0.997,5472
+dibujame una casa de dos pisos,True,,mostrar,casa de dos pisos,,,0.996,6074
+pasame el martillo,True,,mostrar,martillo,,,0.985,4596
+"che, ¿me cargás un avión comercial?",True,,mostrar,avión comercial,,,0.996,5565
+mostrame un teclado mecánico por favor,True,,mostrar,teclado mecánico,,,0.995,5924
+quiero ver una manzana,True,,mostrar,manzana,,,0.991,4976
+mostrame el motor de un avión,True,,mostrar,motor de un avión,,,0.976,6203
+mostrame la licuadora desarmada,True,,explotar,licuadora,,,0.997,5739
+quiero ver el despiece de la bicicleta,True,,explotar,bicicleta,,,0.998,5961
+mostrame las piezas de un reloj,True,,explotar,reloj,,,0.998,6002
+desarmá la cafetera entera,True,,explotar,cafetera,,,0.997,5735
+mostrame cómo está hecha la mochila,True,,explotar,mochila,,,0.998,5679
+explotá el teléfono celular,True,,explotar,teléfono celular,,,0.996,5334
+quiero ver la impresora en vista explotada,True,,explotar,impresora,,,0.998,5978
+despiece de la silla de oficina,True,,explotar,silla de oficina,,,0.998,6196
+abrí el despiece del taladro,True,,explotar,taladro,,,0.998,5390
+mostrame el control remoto desarmado,True,,explotar,control remoto,,,0.997,5802
+mostrame solo la cuerda,True,,aislar,cuerda,,,0.998,5125
+analizá el mango,True,,aislar,mango,,,0.997,4495
+aislá la batería,True,,aislar,batería,,,0.997,5258
+quiero ver la pantalla sola,True,,aislar,pantalla,,,0.997,4961
+dejá solo el respaldo,True,,aislar,respaldo,,,0.998,4944
+enfocate en el cable de alimentación,True,,aislar,cable de alimentación,,,0.998,5750
+mostrame únicamente la suela,True,,aislar,suela,,,0.998,5279
+analizá el filtro de la cafetera,True,,aislar,filtro de la cafetera,,,0.998,6788
+ver solo el manubrio,True,,aislar,manubrio,,,0.998,5620
+quiero estudiar la placa madre,True,,aislar,placa madre,,,0.998,5480

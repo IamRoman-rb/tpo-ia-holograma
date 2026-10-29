@@ -76,6 +76,13 @@ def _sin_modelo_entrenado():
     raise intent.intent_modelo.ModeloNoDisponible("prueba")
 
 
+@pytest.fixture(autouse=True)
+def sin_consenso(monkeypatch):
+    # El consenso corre todos los motores propios (algunos pesan GB): estas pruebas miran la cadena de respaldo
+    monkeypatch.setattr(intent, "CADENA_PROPIA", ["modelo", "reglas"])
+    monkeypatch.setattr(intent, "_claude_pausado_hasta", 0.0)
+
+
 def test_sin_llm_la_traza_dice_por_que(monkeypatch):
     monkeypatch.setattr(intent, "_cliente_llm", lambda: ClienteFalso("esto no es json"))
     monkeypatch.setattr(intent.intent_modelo, "cargar", _sin_modelo_entrenado)
@@ -102,6 +109,37 @@ def test_sin_llm_se_usa_el_modelo_entrenado(monkeypatch):
     monkeypatch.setattr(intent.intent_modelo, "interpretar_modelo", lambda f, traza=None: dict(respuesta))
     r = intent.interpretar("giralo")
     assert r["motor"] == "modelo" and r["accion"] == "rotar" and "error" in r["traza"]
+
+
+def test_sin_claude_primero_el_consenso(monkeypatch):
+    monkeypatch.setattr(intent, "_cliente_llm", lambda: ClienteFalso("esto no es json"))
+    monkeypatch.setattr(intent, "CADENA_PROPIA", ["consenso", "modelo", "reglas"])
+    import consenso
+    respuesta = {"accion": "rotar", "objeto": None, "parametros": {"vista": None, "factor_escala": None},
+                 "confianza": 0.95, "umbral_confirmacion": 0.8}
+    monkeypatch.setattr(consenso, "interpretar_consenso", lambda f, traza=None: dict(respuesta))
+    r = intent.interpretar("giralo")
+    assert r["motor"] == "consenso" and r["umbral_confirmacion"] == 0.8
+
+
+def test_motor_elegido_por_voz(monkeypatch):
+    llamado = []
+    monkeypatch.setattr(intent, "_cliente_llm", lambda: llamado.append("claude"))
+    r = intent.interpretar("giralo", motor="bayes")
+    assert r["motor"] == "bayes" and r["accion"] == "rotar" and not llamado
+
+
+def test_sin_credito_claude_queda_en_pausa(monkeypatch):
+    llamadas = []
+
+    def sin_credito():
+        llamadas.append(1)
+        raise TypeError("sin credenciales")
+    monkeypatch.setattr(intent, "_cliente_llm", sin_credito)
+    monkeypatch.setattr(intent.intent_modelo, "cargar", _sin_modelo_entrenado)
+    intent.interpretar("giralo")
+    r = intent.interpretar("giralo")
+    assert len(llamadas) == 1 and "pausa" in r["traza"]["error"]
 
 
 @pytest.mark.parametrize("frase, factor", [

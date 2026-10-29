@@ -1,0 +1,39 @@
+frase,ok,errores,accion,objeto,vista,factor_escala,confianza,ms
+che usá el árbol de decisión para reconocer los gestos,True,,usar_motor,,,,0.996,1122
+quiero que los gestos los detecte el árbol,True,,usar_motor,,,,0.996,36
+cambiá el reconocimiento de manos a la red neuronal,True,,usar_motor,,,,0.995,37
+pasate a la red para los gestos,True,,usar_motor,,,,0.996,33
+volvé a las reglas para los gestos,True,,usar_motor,,,,0.996,33
+dejá los gestos en automático,True,,usar_motor,,,,0.995,33
+usá naive bayes para interpretar lo que digo,True,,usar_motor,,,,0.996,37
+probemos con el modelo estadístico,True,,usar_motor,,,,0.995,38
+que responda el transformer,True,,usar_motor,,,,0.996,31
+activá roberta,True,,usar_motor,,,,0.995,29
+cambiá al llm local,True,,usar_motor,,,,0.996,37
+quiero que interprete nuestro propio llm,True,,usar_motor,,,,0.996,31
+pasá a qwen,True,,usar_motor,,,,0.987,37
+usá claude para los pedidos,True,,usar_motor,,,,0.997,32
+que decidan todos los modelos,True,,usar_motor,,,,0.995,38
+activá la votación entre modelos,True,,usar_motor,,,,0.996,37
+volvé a la cadena por defecto,True,,usar_motor,,,,0.992,32
+usá solo las reglas,True,,usar_motor,,,,0.992,30
+elegí el intérprete entrenado,True,,usar_motor,,,,0.995,30
+qué modelo contestó recién?,True,,consultar,,,,0.996,30
+con qué motor interpretaste eso?,True,,consultar,,,,0.996,32
+cuál fue la ia que respondió?,True,,consultar,,,,0.996,32
+qué algoritmo reconoció el gesto?,True,,consultar,,,,0.996,38
+estás seguro?,False,pregunta explicar,consultar,,,,0.991,30
+qué probabilidad le diste a eso?,True,,consultar,,,,0.997,32
+qué tan segura estabas de la respuesta?,True,,consultar,,,,0.996,31
+decime la confianza de lo último,True,,consultar,,,,0.996,33
+por qué hiciste eso?,True,,consultar,,,,0.995,31
+explicame cómo lo entendiste,True,,consultar,,,,0.996,37
+justificá la decisión,True,,consultar,,,,0.995,29
+cómo llegaste a esa respuesta?,True,,consultar,,,,0.996,37
+por qué pensaste que te pedí eso?,True,,consultar,,,,0.996,31
+mostrame una red de pesca,True,,mostrar,red de pesca,,,0.998,38
+quiero ver un árbol de levas,True,,mostrar,árbol de levas,,,0.998,33
+explicame física cuántica,True,,desconocido,,,,0.704,31
+qué tan lejos queda la luna,True,,desconocido,,,,0.988,37
+agrandalo,True,,escalar,,,1.5,0.997,30
+sacale una pieza,True,,desmontar,,,,0.997,29

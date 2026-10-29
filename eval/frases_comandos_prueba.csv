@@ -1,0 +1,39 @@
+frase,accion,motor,ambito,pregunta
+che usá el árbol de decisión para reconocer los gestos,usar_motor,arbol,gestos,
+quiero que los gestos los detecte el árbol,usar_motor,arbol,gestos,
+cambiá el reconocimiento de manos a la red neuronal,usar_motor,red,gestos,
+pasate a la red para los gestos,usar_motor,red,gestos,
+volvé a las reglas para los gestos,usar_motor,reglas,gestos,
+dejá los gestos en automático,usar_motor,automatico,gestos,
+usá naive bayes para interpretar lo que digo,usar_motor,bayes,pedidos,
+probemos con el modelo estadístico,usar_motor,bayes,pedidos,
+que responda el transformer,usar_motor,transformer,pedidos,
+activá roberta,usar_motor,transformer,pedidos,
+cambiá al llm local,usar_motor,llm_propio,pedidos,
+quiero que interprete nuestro propio llm,usar_motor,llm_propio,pedidos,
+pasá a qwen,usar_motor,llm_propio,pedidos,
+usá claude para los pedidos,usar_motor,claude,pedidos,
+que decidan todos los modelos,usar_motor,consenso,pedidos,
+activá la votación entre modelos,usar_motor,consenso,pedidos,
+volvé a la cadena por defecto,usar_motor,automatico,pedidos,
+usá solo las reglas,usar_motor,reglas,pedidos,
+elegí el intérprete entrenado,usar_motor,modelo,pedidos,
+qué modelo contestó recién?,consultar,,,que_motor
+con qué motor interpretaste eso?,consultar,,,que_motor
+cuál fue la ia que respondió?,consultar,,,que_motor
+qué algoritmo reconoció el gesto?,consultar,,,que_motor
+estás seguro?,consultar,,,confianza
+qué probabilidad le diste a eso?,consultar,,,confianza
+qué tan segura estabas de la respuesta?,consultar,,,confianza
+decime la confianza de lo último,consultar,,,confianza
+por qué hiciste eso?,consultar,,,explicar
+explicame cómo lo entendiste,consultar,,,explicar
+justificá la decisión,consultar,,,explicar
+cómo llegaste a esa respuesta?,consultar,,,explicar
+por qué pensaste que te pedí eso?,consultar,,,explicar
+mostrame una red de pesca,mostrar,,,
+quiero ver un árbol de levas,mostrar,,,
+explicame física cuántica,desconocido,,,
+qué tan lejos queda la luna,desconocido,,,
+agrandalo,escalar,,,
+sacale una pieza,desmontar,,,

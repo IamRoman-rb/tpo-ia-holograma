@@ -10,11 +10,11 @@ Dos partes, entrenadas con ml/intencion/frases_entrenamiento.csv (generar_frases
        - "contexto": el vector de cada palabra que da el modelo de embeddings (ya mira toda la frase), con el de
          sus vecinas, en una regresión logística o en una red con una capa oculta;
        - "combinado": el promedio de las probabilidades de los dos anteriores.
-     A igual exactitud (diferencia menor a 0,2 puntos) se queda el más liviano.
+     A igual exactitud (diferencia menor a 0,2 puntos) se queda el más grande (el tamaño no es una restricción).
 La vista y el factor de escala son conjuntos cerrados: los siguen sacando las reglas (backend/intent.py).
 
 Se elige con VALIDACIÓN:
-  - acción: eval/frases_validacion.csv y eval/frases_objetos_validacion.csv (escritas a mano);
+  - acción: eval/frases_validacion.csv, frases_objetos_validacion.csv y frases_comandos_validacion.csv (a mano);
   - objeto: ml/intencion/frases_validacion_generada.csv (objetos reservados, que no están en el entrenamiento)
     y eval/frases_objetos_validacion.csv.
 La PRUEBA (eval/frases_prueba.csv, frases_nuevas.csv y frases_objetos_prueba.csv) se mide de punta a punta con
@@ -146,7 +146,8 @@ def main():
     entrenamiento = leer(AQUI / "frases_entrenamiento.csv")
     validacion_generada = leer(AQUI / "frases_validacion_generada.csv")
     validacion = leer(RAIZ / "eval" / "frases_validacion.csv") + \
-        [{"frase": f["frase"], "accion": f["accion"]} for f in leer(RAIZ / "eval" / "frases_objetos_validacion.csv")]
+        [{"frase": f["frase"], "accion": f["accion"]} for f in leer(RAIZ / "eval" / "frases_objetos_validacion.csv")] + \
+        [{"frase": f["frase"], "accion": f["accion"]} for f in leer(RAIZ / "eval" / "frases_comandos_validacion.csv")]
     objetos_validacion = leer(RAIZ / "eval" / "frases_objetos_validacion.csv")
     prueba = leer(RAIZ / "eval" / "frases_prueba.csv")
     acciones = sorted({f["accion"] for f in entrenamiento})
@@ -157,7 +158,7 @@ def main():
           f"{len(acciones)} acciones · validación de objetos {len(validacion_generada)} generadas + "
           f"{len(objetos_validacion)} a mano")
 
-    # 1) Acción: embeddings x cabezales, elegido con validación (a igual exactitud, el más chico)
+    # 1) Acción: embeddings x cabezales, elegido con validación (a igual exactitud, el más grande)
     resultados, mejor = [], None
     for nombre in EMBEDDINGS:
         modelo = SentenceTransformer(nombre)
@@ -178,7 +179,7 @@ def main():
             resultados.append(fila)
             print(f"  {nombre.split('/')[-1]:38s} {cabezal:12s} validación {fila['exactitud_validacion']:.3f} "
                   f"(F1 {fila['f1_validacion']:.3f}) · prueba {fila['exactitud_prueba']:.3f} · {fila['segundos']} s")
-            clave = (fila["exactitud_validacion"], fila["f1_validacion"], -TAMANO[cabezal])
+            clave = (fila["exactitud_validacion"], fila["f1_validacion"], TAMANO[cabezal])
             if mejor is None or clave > mejor[0]:
                 mejor = (clave, nombre, cabezal, clf, p_val)
 
@@ -236,7 +237,7 @@ def main():
               f"{fila['segundos']} s")
     promedio = {f["etiquetador"]: (f["objeto_exacto_generadas"] + f["objeto_exacto_a_mano"]) / 2 for f in comparacion}
     mejor_promedio = max(promedio.values())
-    nombre_et = min((n for n in promedio if promedio[n] >= mejor_promedio - TOLERANCIA),
+    nombre_et = max((n for n in promedio if promedio[n] >= mejor_promedio - TOLERANCIA),
                     key=TAMANO_ETIQUETADOR.get)
     etiquetador = dict(candidatos)[nombre_et]
     print(f"elegido para el objeto: {nombre_et}")

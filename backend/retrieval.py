@@ -7,7 +7,9 @@ sinónimos y su descripción. La consulta se compara con todas y se queda con la
 Método híbrido, elegido con eval/eval_busqueda.py (ver docs/decisiones.md):
   1. Palabras clave: proporción de palabras de un nombre o sinónimo presentes en la consulta.
      Es exacto cuando el usuario usa un nombre conocido y rechaza bien lo que no está.
-  2. Embeddings (si el paso 1 no encontró nada): similitud coseno entre vectores de
+  1b. Si no hubo coincidencia, se corrigen los errores de tipeo o de transcripción con la búsqueda difusa
+     (busqueda_difusa.py: Damerau-Levenshtein + BK-tree) y se repite el paso 1 ("rulemam" -> "rulemán").
+  2. Embeddings (si los pasos anteriores no encontraron nada): similitud coseno entre vectores de
      sentence-transformers. Resuelve paráfrasis ("máquina que convierte electricidad en movimiento").
 Si sentence-transformers no está instalado, se usa solo el paso 1.
 
@@ -23,6 +25,7 @@ from pathlib import Path
 
 import numpy as np
 
+import busqueda_difusa
 from texto import normalizar
 
 log = logging.getLogger(__name__)
@@ -123,8 +126,14 @@ class Catalogo:
         """Devuelve la pieza más parecida o None si ninguna supera los umbrales."""
         umbral = UMBRAL if umbral is None else umbral
         item, sim = self.ranking_palabras(texto)[0]
-        metodo = "palabras"
+        metodo, cambios = "palabras", []
         if sim < UMBRAL_PALABRAS:
+            corregido, cambios = self.corrector().corregir(texto)
+            if cambios:
+                item, sim = self.ranking_palabras(corregido)[0]
+                metodo = "palabras + corrección"
+        if sim < UMBRAL_PALABRAS:
+            cambios = []
             if not self.modelo:
                 return None
             # Una sola palabra sin coincidencia en el catálogo: los embeddings de palabras sueltas,
@@ -140,7 +149,15 @@ class Catalogo:
         return {"id": item["id"], "nombre": item["nombre"], "modelo_url": item["url"],
                 "similitud": round(sim, 3), "metodo": metodo,
                 # un modelo generado antes y reutilizado sigue mostrándose como generado por IA
-                "origen": item.get("origen", "catalogo")}
+                "origen": item.get("origen", "catalogo"),
+                **({"correccion": [f"{a} → {b}" for a, b in cambios]} if cambios else {})}
+
+    def corrector(self):
+        """El corrector de la búsqueda difusa, con las palabras del catálogo (pesan más que las del vocabulario)."""
+        c = busqueda_difusa.corrector()
+        nuevas = {p for it in self.items for v in _variantes(it)[:-1] for p in normalizar(v).split()}
+        c.agregar(sorted(nuevas - set(c.frecuencias)))
+        return c
 
     def recargar(self):
         """Vuelve a leer el catálogo reutilizando el modelo ya cargado (solo recalcula los embeddings)."""

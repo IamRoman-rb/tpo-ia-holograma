@@ -1,0 +1,39 @@
+frase,ok,errores,accion,objeto,vista,factor_escala,confianza,ms
+che usá el árbol de decisión para reconocer los gestos,True,,usar_motor,,,,0.7,2
+quiero que los gestos los detecte el árbol,True,,usar_motor,,,,0.7,0
+cambiá el reconocimiento de manos a la red neuronal,True,,usar_motor,,,,0.7,0
+pasate a la red para los gestos,True,,usar_motor,,,,0.7,0
+volvé a las reglas para los gestos,True,,usar_motor,,,,0.7,0
+dejá los gestos en automático,False,acción desconocido,desconocido,,,,0.0,1
+usá naive bayes para interpretar lo que digo,True,,usar_motor,,,,0.7,0
+probemos con el modelo estadístico,False,acción desconocido,desconocido,,,,0.0,0
+que responda el transformer,True,,usar_motor,,,,0.7,0
+activá roberta,True,,usar_motor,,,,0.7,0
+cambiá al llm local,True,,usar_motor,,,,0.7,0
+quiero que interprete nuestro propio llm,True,,usar_motor,,,,0.7,0
+pasá a qwen,True,,usar_motor,,,,0.7,0
+usá claude para los pedidos,True,,usar_motor,,,,0.7,0
+que decidan todos los modelos,False,acción desconocido,desconocido,,,,0.0,0
+activá la votación entre modelos,True,,usar_motor,,,,0.7,0
+volvé a la cadena por defecto,True,,usar_motor,,,,0.7,0
+usá solo las reglas,True,,usar_motor,,,,0.7,0
+elegí el intérprete entrenado,True,,usar_motor,,,,0.7,0
+qué modelo contestó recién?,True,,consultar,,,,0.7,0
+con qué motor interpretaste eso?,False,acción desconocido,desconocido,,,,0.0,0
+cuál fue la ia que respondió?,True,,consultar,,,,0.7,0
+qué algoritmo reconoció el gesto?,False,acción desconocido,desconocido,,,,0.0,0
+estás seguro?,False,acción desconocido,desconocido,,,,0.0,0
+qué probabilidad le diste a eso?,True,,consultar,,,,0.7,0
+qué tan segura estabas de la respuesta?,True,,consultar,,,,0.7,0
+decime la confianza de lo último,True,,consultar,,,,0.7,0
+por qué hiciste eso?,True,,consultar,,,,0.7,0
+explicame cómo lo entendiste,True,,consultar,,,,0.7,0
+justificá la decisión,True,,consultar,,,,0.7,0
+cómo llegaste a esa respuesta?,False,acción desconocido,desconocido,,,,0.0,0
+por qué pensaste que te pedí eso?,False,acción desconocido,desconocido,,,,0.0,0
+mostrame una red de pesca,True,,mostrar,red de pesca,,,0.7,0
+quiero ver un árbol de levas,True,,mostrar,arbol de levas,,,0.7,0
+explicame física cuántica,True,,desconocido,,,,0.0,0
+qué tan lejos queda la luna,True,,desconocido,,,,0.0,0
+agrandalo,True,,escalar,,,1.5,0.7,0
+sacale una pieza,True,,desmontar,,,,0.7,0

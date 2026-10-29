@@ -1,0 +1,25 @@
+frase,ok,errores,accion,objeto,vista,factor_escala,confianza,ms
+usá el árbol para los gestos,True,,usar_motor,,,,0.996,1086
+cambiá a naive bayes,True,,usar_motor,,,,0.996,30
+pasá al transformer,True,,usar_motor,,,,0.994,31
+que los gestos los reconozca la red neuronal,True,,usar_motor,,,,0.997,35
+volvé al modo automático,True,,usar_motor,,,,0.993,30
+usá el llm propio para interpretar,True,,usar_motor,,,,0.996,30
+activá el consenso,True,,usar_motor,,,,0.994,29
+probá con las reglas para las manos,True,,usar_motor,,,,0.996,30
+quiero usar claude,True,,usar_motor,,,,0.996,29
+elegí el modelo de embeddings,True,,usar_motor,,,,0.996,34
+usá todos los modelos juntos,True,,usar_motor,,,,0.994,33
+qué modelo respondió?,True,,consultar,,,,0.996,32
+quién interpretó lo último?,True,,consultar,,,,0.996,33
+qué tan seguro estás?,True,,consultar,,,,0.996,32
+cuánta confianza tenías?,True,,consultar,,,,0.996,32
+explicame por qué hiciste eso,True,,consultar,,,,0.996,33
+por qué elegiste esa acción?,True,,consultar,,,,0.996,37
+cómo lo decidiste?,True,,consultar,,,,0.995,33
+qué motor estás usando?,True,,consultar,,,,0.995,32
+mostrame un engranaje,True,,mostrar,engranaje,,,0.998,33
+giralo un poco,True,,rotar,,,,0.996,32
+qué hora es,True,,desconocido,,,,0.994,33
+mostrame un árbol de transmisión,True,,mostrar,árbol de transmisión,,,0.998,34
+desarmalo,True,,desmontar,,,,0.937,32

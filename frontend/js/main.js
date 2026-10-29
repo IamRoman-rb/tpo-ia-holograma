@@ -10,11 +10,15 @@ import { camaraAPantalla } from './holograma.js';
 import { crearActividad } from './actividad.js';
 import { crearPanelActividad } from './panel_actividad.js';
 import { cargarCatalogo, buscarLocal } from './catalogo.js';
-import { interpretarPedido, pedirObjeto } from './api.js';
+import { interpretarPedido, pedirObjeto, salud, transcribir } from './api.js';
+import { CLASIFICADOR_DE_MOTOR, nombreMotor, respuestaComando } from './motores.js';
 import * as ui from './ui.js';
 import * as metricas from './metricas.js';
 import { cargarMlp } from './mlp.js';
-import { crearVoz, decir, puedeReconocerLocal, reconocimientoDisponible } from './voz.js';
+import { cargarArbol, textoCamino } from './arbol.js';
+import { crearFiltroManos } from './kalman.js';
+import { aVector, normalizar } from './normalize.js';
+import { crearVoz, decir, escucharMicrofono, puedeReconocerLocal, reconocimientoDisponible } from './voz.js';
 
 const UMBRAL_CONFIANZA = 0.8;      // sección 7.3, flujo 1
 const PASO_ROTACION = Math.PI / 12;
@@ -97,26 +101,28 @@ function aPantalla(p) {
 }
 const controles = crearControles(visor, { alEvento: (tipo, datos) => EVENTOS_GESTO[tipo]?.(datos), aPantalla });
 
-// Clasificador de gestos: reglas o red neuronal (sección 5.2). Se recuerda la elección en este navegador.
+// Clasificador de gestos: reglas, red neuronal (sección 5.2) o árbol de decisión. Se recuerda la elección en este
+// navegador; también se elige por voz ("usá el árbol para los gestos").
 let clasificar = crearClasificador();
 const clasificarSimulacion = crearClasificador(); // siempre reglas: ver simulador.js
 let mlp = null;
+let arbol = null;
 let metodoGestos = 'reglas';
 const selectorClasificador = document.getElementById('clasificador');
+const NOMBRES_CLASIFICADOR = { reglas: 'las reglas', mlp: 'la red neuronal', arbol: 'el árbol de decisión' };
 
 async function elegirClasificador(metodo) {
-  if (metodo === 'mlp') {
-    try {
-      mlp ??= await cargarMlp();
-    } catch (err) {
-      console.error(err);
-      ui.mostrarEstado('No se pudo cargar la red neuronal: se usan las reglas.', 'error');
-      metodo = 'reglas';
-    }
+  try {
+    if (metodo === 'mlp') mlp ??= await cargarMlp();
+    if (metodo === 'arbol') arbol ??= await cargarArbol();
+  } catch (err) {
+    console.error(err);
+    ui.mostrarEstado(`No se pudo cargar ${NOMBRES_CLASIFICADOR[metodo]}: se usan las reglas.`, 'error');
+    metodo = 'reglas';
   }
   selectorClasificador.value = metodo;
   metodoGestos = metodo;
-  clasificar = crearClasificador({ mlp: metodo === 'mlp' ? mlp : null });
+  clasificar = crearClasificador({ modelo: metodo === 'mlp' ? mlp : metodo === 'arbol' ? arbol : null });
   try { localStorage.setItem('clasificador', metodo); } catch { /* sin almacenamiento: no se recuerda */ }
 }
 
@@ -247,14 +253,49 @@ function publicarFin(id) {
   publicarPedido(id, error ? 'error' : 'ejecutado', { resumen: texto, mensaje: texto });
 }
 
+// Motor de los pedidos elegido por voz ("usá el LLM propio"); null = la cadena por defecto del backend
+let motorPedidos = null;
+try { motorPedidos = localStorage.getItem('motor-pedidos'); } catch { /* sin almacenamiento */ }
+const mostrarMotorPedidos = () => {
+  document.getElementById('motor-pedidos').textContent = motorPedidos ? nombreMotor(motorPedidos) : 'automático';
+};
+mostrarMotorPedidos();
+let ultimoPedido = null;    // el último pedido atendido (para "¿qué modelo respondió?")
+let ultimoGesto = null;     // el último gesto reconocido (para "¿por qué ese gesto?")
+let respuestasHabladas = true;
+try { respuestasHabladas = localStorage.getItem('respuestas-habladas') !== 'no'; } catch { /* sin almacenamiento */ }
+
+// usar_motor y consultar: no tocan el visor, cambian o explican los modelos. Se responde en pantalla y, si el
+// pedido vino por voz, en voz alta.
+async function atenderComando(intencion, frase, porVoz) {
+  const p = intencion.parametros;
+  let aplicado = null;
+  if (intencion.accion === 'usar_motor' && p.ambito === 'gestos') {
+    await elegirClasificador(CLASIFICADOR_DE_MOTOR[p.motor] ?? 'mlp');
+    aplicado = metodoGestos;
+  } else if (intencion.accion === 'usar_motor') {
+    motorPedidos = p.motor === 'automatico' ? null : p.motor;
+    try {
+      if (motorPedidos) localStorage.setItem('motor-pedidos', motorPedidos);
+      else localStorage.removeItem('motor-pedidos');
+    } catch { /* sin almacenamiento */ }
+    mostrarMotorPedidos();
+  }
+  const respuesta = respuestaComando({ ...intencion, frase }, { ultimo: ultimoPedido, gestos: ultimoGesto, aplicado });
+  ui.mostrarEstado(respuesta);
+  if (porVoz && respuestasHabladas) decir(respuesta);
+  return respuesta;
+}
+
 async function atenderPedido(frase, { porVoz = false } = {}) {
   const id = ++pedidoActual;
   ui.mostrarEstado('interpretando…');
   const t0 = performance.now();
-  publicarPedido(id, 'enviado', { frase, porVoz });
+  // Si vino por voz con Whisper, la transcripción (modelo, confianza, tiempo) también va a la vista del LLM
+  publicarPedido(id, 'enviado', { frase, porVoz, voz: porVoz ? ultimaTranscripcion : null });
   let intencion;
   try {
-    intencion = await interpretarPedido(frase);
+    intencion = await interpretarPedido(frase, motorPedidos);
   } catch (err) {
     if (id !== pedidoActual) return;
     if (err.estado !== undefined) {
@@ -270,8 +311,13 @@ async function atenderPedido(frase, { porVoz = false } = {}) {
   publicarPedido(id, 'intencion', { intencion, msTotal: performance.now() - t0 });
   if (id !== pedidoActual) return;
   ui.mostrarInterpretacion(intencion);
+  if (intencion.accion === 'usar_motor' || intencion.accion === 'consultar') {
+    const respuesta = await atenderComando(intencion, frase, porVoz);
+    return publicarPedido(id, 'ejecutado', { resumen: respuesta, mensaje: respuesta });
+  }
+  if (intencion.accion !== 'desconocido') ultimoPedido = intencion;
   // Si se pidió hablando, la respuesta también se escucha (sin el porcentaje ni el motor)
-  if (porVoz) {
+  if (porVoz && respuestasHabladas) {
     decir(intencion.accion === 'desconocido' ? 'No entendí el pedido.'
       : document.getElementById('interpretacion').textContent.split(' — ')[0]);
   }
@@ -318,31 +364,73 @@ document.getElementById('pedido').addEventListener('submit', (e) => {
 });
 
 // --- pedidos por voz: el texto reconocido sigue el mismo camino que uno escrito
+// Con el backend, la voz la reconoce Whisper en este equipo (backend/voz.py); si no, el navegador (Web Speech).
 const botonMicrofono = document.getElementById('microfono');
-let voz = null;
+const botonManosLibres = document.getElementById('manos-libres');
+let voz = null;            // Web Speech (respaldo)
+let vozLocal = false;      // ¿hay Whisper en el backend?
+let microfono = null;      // grabación en curso (Whisper)
+let manosLibres = null;    // escucha continua (Whisper)
+
+function mostrarEscucha(estado) {
+  const escuchando = estado === 'escuchando' || estado === 'hablando';
+  actividad.publicar({ tipo: 'voz', estado: escuchando ? 'escuchando' : 'inactivo', texto: '' });
+  botonMicrofono.classList.toggle('escuchando', escuchando && !manosLibres);
+  botonMicrofono.setAttribute('aria-pressed', String(escuchando && !manosLibres));
+}
+
+function pedirPorVoz(texto) {
+  const campo = document.getElementById('frase');
+  campo.value = texto;
+  actividad.publicar({ tipo: 'voz', estado: 'final', texto });
+  pedidoPorVoz = true;
+  document.getElementById('pedido').requestSubmit();
+}
+
+let ultimaTranscripcion = null;
+async function reconocerFrase(audio, { activacion = false } = {}) {
+  ui.mostrarEstado('reconociendo la voz…');
+  try {
+    const r = await transcribir(audio, { activacion });
+    ultimaTranscripcion = r;
+    metricas.registrar('voz_whisper', r.ms_transcripcion);
+    return r;
+  } catch (err) {
+    ui.mostrarEstado(`No pude reconocer la voz: ${err.message}`, 'error');
+    return null;
+  }
+}
+
+const sinMicrofono = (err) => ui.mostrarEstado(err.name === 'NotAllowedError'
+  ? 'No hay permiso para usar el micrófono.' : 'No pude abrir el micrófono.', 'error');
 
 async function prepararVoz() {
-  const Reconocimiento = reconocimientoDisponible();
-  if (!Reconocimiento) return; // Firefox: sin reconocimiento de voz, queda el texto
-  const local = await puedeReconocerLocal(Reconocimiento);
   const campo = document.getElementById('frase');
+  const privacidad = document.getElementById('privacidad-voz');
+  try {
+    vozLocal = Boolean((await salud()).voz) && Boolean(globalThis.MediaRecorder);
+  } catch { vozLocal = false; }
+  if (vozLocal) {
+    botonMicrofono.hidden = false;
+    botonManosLibres.hidden = false;
+    botonMicrofono.title = 'Pedir por voz (V) · Whisper la reconoce en este equipo';
+    privacidad.textContent = 'Los pedidos por voz los reconoce Whisper en este equipo: el audio no sale de la '
+      + 'computadora y no se guarda. Solo se escucha mientras el micrófono o el modo manos libres están encendidos.';
+    return;
+  }
+  const Reconocimiento = reconocimientoDisponible();
+  if (!Reconocimiento) return; // Firefox sin backend: sin reconocimiento de voz, queda el texto
+  const local = await puedeReconocerLocal(Reconocimiento);
   voz = crearVoz({
     local,
     alParcial: (texto) => {
       campo.value = texto;
       actividad.publicar({ tipo: 'voz', estado: 'escuchando', texto });
     },
-    alFinal: (texto) => {
-      campo.value = texto;
-      actividad.publicar({ tipo: 'voz', estado: 'final', texto });
-      pedidoPorVoz = true;
-      document.getElementById('pedido').requestSubmit();
-    },
+    alFinal: pedirPorVoz,
     alEstado: (estado, detalle) => {
       // Lo reconocido queda en el pedido (con la marca "voz"); acá solo se muestra mientras se escucha
-      actividad.publicar({ tipo: 'voz', estado: estado === 'escuchando' ? 'escuchando' : 'inactivo', texto: '' });
-      botonMicrofono.classList.toggle('escuchando', estado === 'escuchando');
-      botonMicrofono.setAttribute('aria-pressed', String(estado === 'escuchando'));
+      mostrarEscucha(estado);
       if (estado === 'escuchando') ui.mostrarEstado('escuchando…');
       else if (estado === 'error') ui.mostrarEstado(detalle, 'error');
       else if (detalle) ui.mostrarEstado(detalle);
@@ -353,11 +441,86 @@ async function prepararVoz() {
     : 'Pedir por voz (V) · el audio lo procesa el servicio de voz del navegador';
 }
 
-function alternarVoz() {
+async function alternarVoz() {
+  if (vozLocal) {
+    if (manosLibres) return ui.mostrarEstado('El modo manos libres ya está escuchando: decí "holograma, …".');
+    if (microfono) return microfono.detener();
+    try {
+      microfono = await escucharMicrofono({
+        alEstado: (estado) => {
+          mostrarEscucha(estado);
+          if (estado === 'escuchando') ui.mostrarEstado('escuchando…');
+          if (estado === 'hablando') ui.mostrarEstado('te escucho…');
+          if (estado === 'listo') microfono = null;
+        },
+        alFrase: async (audio) => {
+          const r = await reconocerFrase(audio);
+          if (r?.texto) pedirPorVoz(r.texto);
+          else if (r) ui.mostrarEstado('No escuché nada.');
+        },
+      });
+    } catch (err) {
+      microfono = null;
+      sinMicrofono(err);
+    }
+    return;
+  }
   if (!voz) return ui.mostrarEstado('Este navegador no reconoce la voz: escribí el pedido.', 'error');
   if (voz.escuchando) voz.detener();
   else voz.escuchar();
 }
+
+// Manos libres: escucha sin parar y atiende solo lo que empieza con "holograma". Si se dice solo "holograma",
+// el sistema contesta "¿sí?" y la frase siguiente no necesita la palabra.
+let esperandoOrden = 0;
+async function alternarManosLibres() {
+  if (!vozLocal) return ui.mostrarEstado('El modo manos libres necesita el backend con Whisper.', 'error');
+  if (manosLibres) {
+    manosLibres.detener();
+    manosLibres = null;
+    botonManosLibres.classList.remove('escuchando');
+    botonManosLibres.setAttribute('aria-pressed', 'false');
+    return ui.mostrarEstado('manos libres apagado');
+  }
+  microfono?.detener();
+  try {
+    manosLibres = await escucharMicrofono({
+      continuo: true,
+      alEstado: (estado) => {
+        if (estado === 'hablando') ui.mostrarEstado('te escucho…');
+        else if (estado === 'escuchando') ui.mostrarEstado('manos libres: decí "holograma, …"');
+      },
+      alFrase: async (audio) => {
+        const sinPalabra = performance.now() < esperandoOrden;
+        const r = await reconocerFrase(audio, { activacion: !sinPalabra });
+        if (!r || r.sin_voz) return;
+        if (sinPalabra && r.texto) { esperandoOrden = 0; return pedirPorVoz(r.texto); }
+        if (r.activado && r.texto) return pedirPorVoz(r.texto);
+        if (r.activado) {
+          esperandoOrden = performance.now() + 6000;
+          if (respuestasHabladas) decir('¿Sí?');
+          return ui.mostrarEstado('¿sí? te escucho');
+        }
+        ui.mostrarEstado(`escuché «${r.texto}», pero no empezó con "holograma"`);
+      },
+    });
+    botonManosLibres.classList.add('escuchando');
+    botonManosLibres.setAttribute('aria-pressed', 'true');
+    if (respuestasHabladas) decir('Manos libres activado. Decí holograma y tu pedido.');
+  } catch (err) {
+    manosLibres = null;
+    sinMicrofono(err);
+  }
+}
+botonManosLibres.addEventListener('click', alternarManosLibres);
+
+function alternarRespuestasHabladas() {
+  respuestasHabladas = !respuestasHabladas;
+  try { localStorage.setItem('respuestas-habladas', respuestasHabladas ? 'si' : 'no'); } catch { /* sin almacenamiento */ }
+  ui.mostrarEstado(respuestasHabladas ? 'respuestas habladas encendidas' : 'respuestas habladas apagadas');
+  if (respuestasHabladas) decir('Respuestas habladas encendidas.');
+}
+
 botonMicrofono.addEventListener('click', alternarVoz);
 prepararVoz().catch(console.error);
 
@@ -458,6 +621,8 @@ addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT') return;
   if (e.key === 'd' || e.key === 'D') return ui.alternarDepuracion();
   if (e.key === 'v' || e.key === 'V') return alternarVoz();
+  if (e.key === 'm' || e.key === 'M') return alternarManosLibres();
+  if (e.key === 'j' || e.key === 'J') return alternarRespuestasHabladas();
   if (e.key === '?') return ui.alternarAyuda();
   const accion = TECLAS[e.key];
   if (accion) {
@@ -473,9 +638,13 @@ const overlay = crearOverlay(lienzo);
 let detenerSimulacion = null;
 let ultimoCuadro = 0;
 let fps = 0;
+// Filtro de Kalman sobre los puntos de la cámara: saca el temblor de MediaPipe antes de clasificar y de mover
+// el objeto (la simulación ya trae su propio ruido controlado y no se filtra)
+const filtroManos = crearFiltroManos();
 
-function alDetectar(manos, info) {
+function alDetectar(manosDetectadas, info) {
   const t0 = performance.now();
+  const manos = info.simulacion ? manosDetectadas : filtroManos.filtrar(manosDetectadas, info.lados ?? [], t0);
   const r = (info.simulacion ? clasificarSimulacion : clasificar)(manos, info.aspecto);
   // Por debajo del umbral el gesto se muestra pero no se aplica
   const aplicado = r.confianza >= UMBRAL_CONFIANZA ? r.gesto : 'ninguno';
@@ -489,12 +658,22 @@ function alDetectar(manos, info) {
   metricas.registrar(info.simulacion ? 'fotograma_simulado' : 'fotograma', msCuadro);
   // Panel de actividad: qué vio el clasificador en este cuadro (con el MLP, también sus activaciones)
   const red = r.red?.[0];
+  if (manos.length && r.gesto !== 'ninguno' && !info.simulacion) {
+    ultimoGesto = { metodo: metodoGestos, gesto: r.gesto, confianza: r.confianza,
+      camino: red?.camino ? textoCamino(red.camino, r.porMano?.[0] ?? r.gesto) : null };
+  }
   actividad.publicar({
     tipo: 'cuadro', metodo: info.simulacion ? 'reglas' : metodoGestos, simulacion: Boolean(info.simulacion),
+    // Los puntos de la primera mano, normalizados: red.html los pasa por la red y el árbol para dibujarlos
+    puntos: manos[0] ? aVector(normalizar(manos[0], info.aspecto)).map((v) => Math.round(v * 1000) / 1000) : null,
     gesto: r.gesto, confianza: r.confianza, aplicado, umbral: UMBRAL_CONFIANZA, porMano: r.porMano ?? [],
     manos: manos.length, ms: msCuadro, fps, metricas: r.metricas?.[0] ?? null, umbralesReglas: UMBRALES,
-    clasesRed: mlp?.clases,
-    red: red ? { clases: mlp.clases, umbral: mlp.umbral, probabilidades: red.probabilidades, activaciones: red.activaciones } : null,
+    clasesRed: (metodoGestos === 'arbol' ? arbol : mlp)?.clases,
+    red: red && metodoGestos === 'mlp'
+      ? { clases: mlp.clases, umbral: mlp.umbral, probabilidades: red.probabilidades, activaciones: red.activaciones } : null,
+    arbol: red && metodoGestos === 'arbol'
+      ? { clases: arbol.clases, umbral: arbol.umbral, probabilidades: red.probabilidades, camino: red.camino,
+        texto: textoCamino(red.camino, r.porMano?.[0] ?? r.gesto), profundidad: arbol.profundidad } : null,
   });
   ui.mostrarDepuracion(r, info, metricas.lineasResumen());
 

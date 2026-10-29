@@ -1,4 +1,6 @@
 // Indicadores en pantalla: gesto detectado, confianza, estado, origen del modelo.
+import { nombreAccion, nombreMotor } from './motores.js';
+
 const $ = (id) => document.getElementById(id);
 
 const NOMBRES_GESTO = {
@@ -56,21 +58,16 @@ export function alternarTamanoCamara() {
   $('camara-tamano').title = grande ? 'Achicar' : 'Agrandar';
 }
 
-const NOMBRES_ACCION = {
-  mostrar: 'mostrar', rotar: 'rotar', escalar: 'escalar', vista: 'cambiar la vista',
-  reiniciar: 'reiniciar', desmontar: 'desmontar una pieza', explotar: 'mostrar el despiece',
-  armar: 'armar todo', aislar: 'analizar la pieza', conjunto: 'volver al conjunto', desconocido: 'no reconocido',
-};
-
 // "Entendí: mostrar «motor» · vista trasera · ×0.67 — 93 % (LLM)"
 export function mostrarInterpretacion(i) {
-  const partes = [`<strong>${NOMBRES_ACCION[i.accion] ?? i.accion}</strong>`];
+  const partes = [`<strong>${nombreAccion(i.accion)}</strong>`];
   if (i.objeto) partes.push(`«${escapar(i.objeto)}»`);
   if (i.parametros?.vista) partes.push(`vista ${i.parametros.vista}`);
   if (i.parametros?.factor_escala) partes.push(`×${i.parametros.factor_escala}`);
-  const motor = { llm: 'LLM', modelo: 'modelo propio' }[i.motor] ?? 'reglas';
+  if (i.parametros?.motor) partes.push(`${escapar(nombreMotor(i.parametros.motor))} para los ${i.parametros.ambito ?? 'pedidos'}`);
+  if (i.parametros?.pregunta) partes.push({ que_motor: 'qué modelo', confianza: 'qué confianza', explicar: 'por qué' }[i.parametros.pregunta]);
   const el = $('interpretacion');
-  el.innerHTML = `Entendí: ${partes.join(' · ')} — ${Math.round(i.confianza * 100)} % (${motor})`;
+  el.innerHTML = `Entendí: ${partes.join(' · ')} — ${Math.round(i.confianza * 100)} % (${escapar(nombreMotor(i.motor))})`;
   el.hidden = false;
 }
 

@@ -79,10 +79,12 @@ export function clasificarFotograma(puntos, aspecto) {
 }
 
 /**
- * Clasificador con ventana temporal. Por defecto usa las reglas; con opciones.mlp (frontend/js/mlp.js) cada mano
- * la clasifica la red neuronal y las reglas solo aportan las métricas del panel de depuración.
+ * Clasificador con ventana temporal. Por defecto usa las reglas; con opciones.modelo cada mano la clasifica un
+ * modelo entrenado (la red neuronal de mlp.js o el árbol de decisión de arbol.js: los dos devuelven
+ * { gesto, probabilidades, ... }) y las reglas solo aportan las métricas del panel de depuración.
+ * opciones.mlp es el nombre anterior de opciones.modelo.
  */
-export function crearClasificador({ mlp = null } = {}) {
+export function crearClasificador({ mlp = null, modelo = mlp } = {}) {
   let historial = [];
   let pellizcaban = [false, false];
 
@@ -94,11 +96,11 @@ export function crearClasificador({ mlp = null } = {}) {
     }
 
     const metricas = manos.slice(0, 2).map((puntos) => medir(normalizar(puntos, aspecto)));
-    // Con el MLP, un pellizco que ya empezó se mantiene mientras el pulgar y el índice sigan cerca
+    // Con un modelo, un pellizco que ya empezó se mantiene mientras el pulgar y el índice sigan cerca
     // (la misma histéresis de las reglas): así no se suelta la pieza a mitad de un arrastre.
     // La salida completa de la red (probabilidades y activaciones) queda en "red" para el panel de actividad.
-    const red = mlp ? manos.slice(0, 2).map((puntos) => mlp(puntos, aspecto)) : null;
-    const porMano = mlp
+    const red = modelo ? manos.slice(0, 2).map((puntos) => modelo(puntos, aspecto)) : null;
+    const porMano = modelo
       ? red.map((salida, i) => (pellizcaban[i] && metricas[i].pulgarIndice < UMBRALES.pellizcoSalir
         ? 'pellizco' : salida.gesto))
       : metricas.map((m, i) => clasificarMano(m, pellizcaban[i]));

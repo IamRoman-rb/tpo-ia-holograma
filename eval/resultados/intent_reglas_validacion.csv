@@ -1,5 +1,5 @@
 frase,ok,errores,accion,objeto,vista,factor_escala,confianza,ms
-che mostrame un compresor de aire,False,acción desconocido; objeto None,desconocido,,,,0.0,2
+che mostrame un compresor de aire,False,acción desconocido; objeto None,desconocido,,,,0.0,3
 tenés una turbina?,False,acción desconocido; objeto None,desconocido,,,,0.0,0
 quisiera ver una polea de aluminio,True,,mostrar,polea de aluminio,,,0.7,0
 me podés traer el cilindro hidráulico,False,acción desconocido; objeto None,desconocido,,,,0.0,0

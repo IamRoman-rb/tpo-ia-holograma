@@ -1,0 +1,76 @@
+{
+  "fecha": "2026-10-29",
+  "frases_entrenamiento": 10200,
+  "epocas": 1.0,
+  "lote": 16,
+  "candidatos": [
+    {
+      "nombre": "beto",
+      "base": "dccuchile/bert-base-spanish-wwm-cased",
+      "parametros": 109863184,
+      "minutos": null,
+      "validacion": {
+        "validacion": {
+          "accion": 0.983
+        },
+        "objetos_validacion": {
+          "accion": 0.982,
+          "accion_y_objeto_exacto": 0.964
+        },
+        "comandos_validacion": {
+          "accion": 1.0
+        },
+        "generadas_objetos_reservados": {
+          "accion": 1.0,
+          "accion_y_objeto_exacto": 0.997
+        }
+      },
+      "puntaje": 0.9859,
+      "ms_por_frase": 36,
+      "temperatura": 1.4221,
+      "ece_antes": 0.004,
+      "ece_despues": 0.001
+    },
+    {
+      "nombre": "xlmr",
+      "base": "FacebookAI/xlm-roberta-large",
+      "parametros": 559906832,
+      "minutos": 52.7,
+      "perdida_final": 0.019,
+      "validacion": {
+        "validacion": {
+          "frases": 59,
+          "accion": 0.9322,
+          "accion_y_objeto_exacto": null
+        },
+        "objetos_validacion": {
+          "frases": 55,
+          "accion": 0.9818,
+          "accion_y_objeto_exacto": 0.9818
+        },
+        "comandos_validacion": {
+          "frases": 24,
+          "accion": 0.9583,
+          "accion_y_objeto_exacto": null
+        },
+        "generadas_objetos_reservados": {
+          "frases": 300,
+          "accion": 0.9967,
+          "accion_y_objeto_exacto": 0.9833
+        }
+      },
+      "puntaje": 0.9639,
+      "ms_por_frase": 127,
+      "temperatura": 1.385,
+      "ece_antes": 0.0128,
+      "ece_despues": 0.0082
+    },
+    {
+      "nombre": "instalado",
+      "base": "dccuchile/bert-base-spanish-wwm-cased",
+      "parametros": 109863184,
+      "puntaje": 0.9859
+    }
+  ],
+  "elegido": "instalado"
+}

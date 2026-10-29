@@ -29,7 +29,8 @@ ok(crearClasificadorMlp(dudoso)(mano, 1).gesto === 'ninguno', 'si no llega al um
 // El panel de actividad dibuja las activaciones de cada capa: entrada 63, las ocultas y la salida (una por clase)
 const salida = crearClasificadorMlp(modelo)(mano, 1);
 const tamanos = salida.activaciones.map((a) => a.length);
-ok(tamanos.length === modelo.capas.length + 1 && tamanos[0] === 63 && tamanos.at(-1) === modelo.clases.length,
+const capas = modelo.version === 3 ? modelo.bloques.length + 2 : modelo.capas.length;   // v3: entrada, bloques, salida
+ok(tamanos.length === capas + 1 && tamanos[0] === 63 && tamanos.at(-1) === modelo.clases.length,
   `devuelve las activaciones de cada capa (${tamanos.join(' → ')})`);
 ok(Math.abs(salida.probabilidades.reduce((s, v) => s + v, 0) - 1) < 1e-9, 'y las probabilidades de todas las clases (suman 1)');
 
@@ -40,10 +41,12 @@ const aListas = (m) => {
   const [filas, cols] = m.forma;
   return cols ? Array.from({ length: filas }, (_, i) => plano.slice(i * cols, (i + 1) * cols)) : plano;
 };
-const enListas = { ...modelo, capas: modelo.capas.map(({ W, b }) => ({ W: aListas(W), b: aListas(b) })) };
-const x0 = casos[0].x;
-const dif = Math.max(...crearPredictor(enListas)(x0).map((v, i) => Math.abs(v - crearPredictor(modelo)(x0)[i])));
-ok(dif < 1e-6, `los pesos en base64 y como listas dan las mismas probabilidades (diferencia ${dif.toExponential(1)})`);
+if (modelo.capas) {   // versiones 1 y 2 (la 3 solo se guarda en base64)
+  const enListas = { ...modelo, capas: modelo.capas.map(({ W, b }) => ({ W: aListas(W), b: aListas(b) })) };
+  const x0 = casos[0].x;
+  const dif = Math.max(...crearPredictor(enListas)(x0).map((v, i) => Math.abs(v - crearPredictor(modelo)(x0)[i])));
+  ok(dif < 1e-6, `los pesos en base64 y como listas dan las mismas probabilidades (diferencia ${dif.toExponential(1)})`);
+}
 
 // El clasificador temporal acepta el MLP en lugar de las reglas
 const fijo = () => ({ gesto: 'victoria', probabilidad: 0.9 });
