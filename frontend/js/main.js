@@ -132,6 +132,7 @@ try { clasificadorGuardado = localStorage.getItem('clasificador'); } catch { /* 
 elegirClasificador(clasificadorGuardado ?? 'mlp');
 let catalogo = [];
 let pedidoActual = 0; // las respuestas de pedidos anteriores se descartan
+let pedidoDeVozActual = null;
 
 let ultimoModelo = { origen: null, t: 0 }; // para medir la latencia del pedido
 
@@ -172,6 +173,9 @@ async function cargarObjeto(objeto, id) {
     // Un modelo recién generado se suma a la lista del catálogo
     if (r.origen === 'generado') await refrescarCatalogo().catch(console.error);
     await mostrarModelo(r.modelo_url, r.nombre, r.origen, r.id);
+    if (id === pedidoDeVozActual) {
+      mostrarEstadoVoz('listo', vozLocal ? 'Objeto actualizado.' : 'Objeto actualizado. Reactivando escucha…');
+    }
     return true;
   } catch (err) {
     if (id !== pedidoActual) return false;
@@ -283,12 +287,16 @@ async function atenderComando(intencion, frase, porVoz) {
   }
   const respuesta = respuestaComando({ ...intencion, frase }, { ultimo: ultimoPedido, gestos: ultimoGesto, aplicado });
   ui.mostrarEstado(respuesta);
-  if (porVoz && respuestasHabladas) decir(respuesta);
+  if (porVoz && respuestasHabladas) respuestaHablada = decir(respuesta);
   return respuesta;
 }
 
 async function atenderPedido(frase, { porVoz = false } = {}) {
   const id = ++pedidoActual;
+  if (porVoz) {
+    pedidoDeVozActual = id;
+    respuestaHablada = Promise.resolve();
+  }
   ui.mostrarEstado('interpretando…');
   const t0 = performance.now();
   // Si vino por voz con Whisper, la transcripción (modelo, confianza, tiempo) también va a la vista del LLM
@@ -316,12 +324,13 @@ async function atenderPedido(frase, { porVoz = false } = {}) {
     return publicarPedido(id, 'ejecutado', { resumen: respuesta, mensaje: respuesta });
   }
   if (intencion.accion !== 'desconocido') ultimoPedido = intencion;
-  // Si se pidió hablando, la respuesta también se escucha (sin el porcentaje ni el motor)
-  if (porVoz && respuestasHabladas) {
-    decir(intencion.accion === 'desconocido' ? 'No entendí el pedido.'
-      : document.getElementById('interpretacion').textContent.split(' — ')[0]);
+  // Con Whisper, la respuesta también se escucha (sin el porcentaje ni el motor). Con la escucha continua del
+  // navegador, un pedido que sale bien solo se muestra: así vuelve a escuchar enseguida.
+  if (porVoz && vozLocal && respuestasHabladas && intencion.accion !== 'desconocido') {
+    respuestaHablada = decir(document.getElementById('interpretacion').textContent.split(' — ')[0]);
   }
   if (intencion.accion === 'desconocido') {
+    if (porVoz && respuestasHabladas) respuestaHablada = decir('No entendí el pedido.');
     const motivo = intencion.motivo ? ` (${intencion.motivo})` : '';
     ui.mostrarEstado(`No entendí el pedido${motivo}. Probá con "mostrame un engranaje".`, 'error');
     return publicarFin(id);
@@ -331,6 +340,7 @@ async function atenderPedido(frase, { porVoz = false } = {}) {
     ui.mostrarEstado('esperando confirmación');
     if (!(await ui.pedirConfirmacion())) {
       ui.mostrarEstado('pedido cancelado');
+      if (porVoz && respuestasHabladas) respuestaHablada = decir('Pedido cancelado.');
       return publicarPedido(id, 'error', { mensaje: 'cancelado por el usuario' });
     }
     if (id !== pedidoActual) return;
@@ -350,15 +360,27 @@ document.getElementById('pedido').addEventListener('submit', (e) => {
   if (!frase) return;
   const t0 = performance.now();
   atenderPedido(frase, { porVoz }).then(async () => {
+    if (porVoz && estadoVoz.dataset.estado === 'procesando') {
+      mostrarEstadoVoz('listo', vozLocal ? 'Pedido terminado.' : 'Pedido terminado. Reactivando escucha…');
+    }
+    if (porVoz) {
+      await respuestaHablada;
+      voz?.reanudar();
+    }
     // Latencia de punta a punta: solo cuenta si este pedido terminó mostrando un modelo
     if (ultimoModelo.t < t0) return;
     await metricas.proximoCuadro();
     metricas.registrar(ultimoModelo.origen === 'generado' ? 'pedido_generado' : 'pedido_catalogo', performance.now() - t0);
     ui.mostrarDepuracion(null, null, metricas.lineasResumen());
-  }).catch((err) => {
+  }).catch(async (err) => {
     console.error(err);
     ui.mostrarEstado(err.estado ? err.message : 'No pude cargar el modelo, ¿probás de nuevo?', 'error');
+    if (porVoz) mostrarEstadoVoz('error', err.message || 'No pude completar el pedido.');
     publicarFin(pedidoActual);
+    if (porVoz) {
+      await respuestaHablada;
+      voz?.reanudar();
+    }
   });
   campo.select();
 });
@@ -367,20 +389,34 @@ document.getElementById('pedido').addEventListener('submit', (e) => {
 // Con el backend, la voz la reconoce Whisper en este equipo (backend/voz.py); si no, el navegador (Web Speech).
 const botonMicrofono = document.getElementById('microfono');
 const botonManosLibres = document.getElementById('manos-libres');
+const estadoVoz = document.getElementById('estado-voz');
 let voz = null;            // Web Speech (respaldo)
 let vozLocal = false;      // ¿hay Whisper en el backend?
 let microfono = null;      // grabación en curso (Whisper)
 let manosLibres = null;    // escucha continua (Whisper)
+let respuestaHablada = Promise.resolve();
+
+function mostrarEstadoVoz(estado, texto) {
+  estadoVoz.dataset.estado = estado;
+  estadoVoz.textContent = texto;
+  estadoVoz.hidden = !texto;
+}
 
 function mostrarEscucha(estado) {
   const escuchando = estado === 'escuchando' || estado === 'hablando';
   actividad.publicar({ tipo: 'voz', estado: escuchando ? 'escuchando' : 'inactivo', texto: '' });
   botonMicrofono.classList.toggle('escuchando', escuchando && !manosLibres);
   botonMicrofono.setAttribute('aria-pressed', String(escuchando && !manosLibres));
+  if (estado === 'escuchando') {
+    mostrarEstadoVoz(estado, manosLibres ? 'Manos libres: decí «holograma, …».' : 'Micrófono activo: hablá y nombrá un objeto.');
+  } else if (estado === 'hablando') {
+    mostrarEstadoVoz('escuchando', 'Te escucho…');
+  }
 }
 
 function pedirPorVoz(texto) {
   const campo = document.getElementById('frase');
+  mostrarEstadoVoz('reconocido', `Reconocí: «${texto}». Procesando pedido…`);
   campo.value = texto;
   actividad.publicar({ tipo: 'voz', estado: 'final', texto });
   pedidoPorVoz = true;
@@ -390,6 +426,7 @@ function pedirPorVoz(texto) {
 let ultimaTranscripcion = null;
 async function reconocerFrase(audio, { activacion = false } = {}) {
   ui.mostrarEstado('reconociendo la voz…');
+  mostrarEstadoVoz('procesando', 'Reconociendo la voz con Whisper…');
   try {
     const r = await transcribir(audio, { activacion });
     ultimaTranscripcion = r;
@@ -397,6 +434,7 @@ async function reconocerFrase(audio, { activacion = false } = {}) {
     return r;
   } catch (err) {
     ui.mostrarEstado(`No pude reconocer la voz: ${err.message}`, 'error');
+    mostrarEstadoVoz('error', 'No pude reconocer la voz.');
     return null;
   }
 }
@@ -423,22 +461,42 @@ async function prepararVoz() {
   const local = await puedeReconocerLocal(Reconocimiento);
   voz = crearVoz({
     local,
+    continuo: true,
+    esperaReinicioMs: 100,
     alParcial: (texto) => {
       campo.value = texto;
+      mostrarEstadoVoz('escuchando', `Te escucho: «${texto}»`);
       actividad.publicar({ tipo: 'voz', estado: 'escuchando', texto });
     },
     alFinal: pedirPorVoz,
     alEstado: (estado, detalle) => {
       // Lo reconocido queda en el pedido (con la marca "voz"); acá solo se muestra mientras se escucha
-      mostrarEscucha(estado);
-      if (estado === 'escuchando') ui.mostrarEstado('escuchando…');
-      else if (estado === 'error') ui.mostrarEstado(detalle, 'error');
-      else if (detalle) ui.mostrarEstado(detalle);
+      actividad.publicar({ tipo: 'voz', estado: estado === 'escuchando' ? 'escuchando' : 'inactivo', texto: '' });
+      botonMicrofono.classList.toggle('escuchando', estado === 'escuchando');
+      botonMicrofono.setAttribute('aria-pressed', String(voz?.activo ?? false));
+      botonMicrofono.setAttribute('aria-label', voz?.activo ? 'Pausar micrófono' : 'Activar micrófono');
+      if (estado === 'escuchando') {
+        mostrarEstadoVoz(estado, 'Micrófono activo: hablá y nombrá un objeto.');
+        ui.mostrarEstado('escuchando…');
+      } else if (estado === 'procesando') {
+        mostrarEstadoVoz(estado, 'Pedido reconocido; procesándolo…');
+      } else if (estado === 'error') {
+        mostrarEstadoVoz(estado, detalle);
+        ui.mostrarEstado(detalle, 'error');
+      } else if (detalle) {
+        mostrarEstadoVoz(estado, detalle);
+        ui.mostrarEstado(detalle);
+      } else if (!estadoVoz.dataset.estado || estadoVoz.dataset.estado === 'escuchando') {
+        mostrarEstadoVoz('', '');
+      }
     },
   });
   botonMicrofono.hidden = false;
-  botonMicrofono.title = local ? 'Pedir por voz (V) · se reconoce en este equipo'
-    : 'Pedir por voz (V) · el audio lo procesa el servicio de voz del navegador';
+  botonMicrofono.title = local
+    ? 'Escucha continua (V para pausar o activar) · se reconoce en este equipo'
+    : 'Escucha continua (V para pausar o activar) · el audio lo procesa el servicio de voz del navegador';
+  mostrarEstadoVoz('listo', 'Activando micrófono…');
+  voz.escuchar();
 }
 
 async function alternarVoz() {
@@ -466,7 +524,7 @@ async function alternarVoz() {
     return;
   }
   if (!voz) return ui.mostrarEstado('Este navegador no reconoce la voz: escribí el pedido.', 'error');
-  if (voz.escuchando) voz.detener();
+  if (voz.activo) voz.detener();
   else voz.escuchar();
 }
 

@@ -151,7 +151,7 @@ Por voz también se manejan los modelos:
 - **Elegir motor:** «usá el árbol de decisión para los gestos», «pasá a la red neuronal», «usá Naive Bayes», «que responda el transformer», «volvé al modo automático».
 - **Consultar:** «¿qué modelo respondió?», «¿qué tan seguro estás?», «¿por qué hiciste eso?».
 
-Sin el backend, el micrófono usa el reconocimiento del navegador (Chrome y Edge, que mandan el audio a su servicio). Ver [docs/uso_responsable.md](docs/uso_responsable.md).
+Sin el backend, la voz la reconoce el navegador (Chrome y Edge, que mandan el audio a su servicio). En ese caso el micrófono empieza a escuchar al abrir el visor, muestra la transcripción parcial y vuelve a escuchar después de cada pedido, sin esperar una respuesta hablada; el botón o `V` lo pausan. Ver [docs/uso_responsable.md](docs/uso_responsable.md).
 
 ## Dataset de gestos y MLP
 

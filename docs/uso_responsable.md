@@ -12,7 +12,7 @@ Para cada punto se indica qué está **implementado** (y dónde), y qué está *
 | Qué datos salen del equipo | ✅ Implementado y explicado en la ayuda del visor |
 | Dataset de gestos | ✅ Consentimiento, identificador anónimo, solo coordenadas |
 | Sesgos en la detección de manos | 🔶 Mitigaciones implementadas · medido con fotos de 1.134 personas (HaGRID): sin diferencia entre manos · ⏳ falta medirlo con la cámara |
-| Pedidos por voz | ✅ Aviso de a dónde va el audio; solo se escucha con el micrófono encendido |
+| Pedidos por voz | ✅ Con el backend, Whisper en el equipo; sin él, el navegador avisa a dónde va el audio. La escucha automática se puede pausar |
 | Dataset de internet (HaGRID) | ✅ Licencia CC BY-SA 4.0, citado; solo se guardan coordenadas, nunca imágenes |
 | Errores de la IA (sección 16.3) | ✅ Hay una protección implementada para cada caso de la tabla |
 | Transparencia | ✅ Gesto, confianza, interpretación, motor y origen del modelo, todo en pantalla |
@@ -37,7 +37,8 @@ Para cada punto se indica qué está **implementado** (y dónde), y qué está *
 
 ### Pedidos por voz (`frontend/js/voz.js`, `backend/voz.py`)
 
-- **Micrófono:** se enciende solo al tocar el botón o apretar `V`, y se apaga al terminar el pedido.
+- **Micrófono con Whisper:** se enciende solo al tocar el botón o apretar `V`, y se apaga al terminar el pedido.
+- **Micrófono sin el backend:** empieza a escuchar al abrir el visor y vuelve a activarse después de cada pedido. El botón o `V` lo pausan y lo reactivan; el navegador puede pedir permiso o un primer clic.
 - **Manos libres** (`M`): escucha sin parar hasta que se apaga; el botón queda resaltado mientras tanto.
 - **Reconocimiento con el backend:** lo hace **Whisper en el mismo equipo** (sección 16.1: "preferir transcripción local"). El audio va del navegador al backend local y no se guarda.
 - **Reconocimiento sin el backend:** lo hace el navegador. En Chrome y Edge, el audio se envía a su servicio de voz (Google o Microsoft), salvo que el navegador ofrezca el reconocimiento en el equipo. La ayuda del visor dice cuál se está usando.
