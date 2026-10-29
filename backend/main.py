@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 
 import generate3d  # noqa: E402
 from generate3d import GeneracionFallida, GeneracionNoDisponible, generar  # noqa: E402
+import intent_modelo  # noqa: E402
 from intent import interpretar  # noqa: E402
 from retrieval import buscar_similar, catalogo, listar_catalogo, recargar  # noqa: E402
 from safety import LimiteFrecuencia, fuera_de_dominio, validar_intencion  # noqa: E402
@@ -23,8 +24,12 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(messag
 
 @asynccontextmanager
 async def lifespan(app):
-    # Carga el modelo de embeddings al arrancar: si no, el primer pedido tarda varios segundos
+    # Carga los modelos de embeddings al arrancar: si no, el primer pedido tarda varios segundos
     catalogo()
+    try:
+        intent_modelo.cargar()
+    except intent_modelo.ModeloNoDisponible as e:
+        logging.getLogger(__name__).warning("Intérprete entrenado no disponible: %s", e)
     yield
 
 

@@ -1,4 +1,8 @@
-"""Entrena el MLP de gestos con los landmarks de HaGRID (ml/extraer_hagrid.py) y lo compara con las reglas.
+"""VERSIÓN 1 del MLP de gestos (scikit-learn, muestra de 30k de HaGRID). La red del visor ahora sale de
+ml/entrenar_red_gestos.py (versión 2: PyTorch, 250k fotos, aumento de datos). Este script queda para reproducir
+la versión 1: lee los landmarks de ml/data/externo/v1_30k/ y necesita las reglas evaluadas sobre ESA prueba.
+
+Entrena el MLP de gestos con los landmarks de HaGRID (ml/extraer_hagrid.py) y lo compara con las reglas.
 
 - Partición fija por persona (preparar.particion): se elige la arquitectura con VALIDACIÓN y se informa
   el resultado en PRUEBA, con personas que el modelo nunca vio (sección 15: persona no vista).
@@ -31,7 +35,7 @@ RAIZ = ML.parent
 sys.path.insert(0, str(ML))
 import preparar  # noqa: E402
 
-DATOS = ML / "data" / "externo"
+DATOS = ML / "data" / "externo" / "v1_30k"
 RESULTADOS = ML / "resultados"
 MODELO_WEB = RAIZ / "frontend" / "ml" / "mlp_gestos.json"
 CASOS_TEST = RAIZ / "frontend" / "tests" / "datos" / "mlp_casos.json"

@@ -69,9 +69,11 @@ El guion de los 15 minutos, la demo paso a paso y las respuestas a las preguntas
 
 Los gestos los reconoce una red neuronal (MLP) entrenada con fotos reales de miles de personas, o las reglas geométricas: se elige en el panel de la izquierda (**Clasificador**).
 
-### Holograma sobre la cámara
+### Holograma
 
-Con el botón **Holograma** (o la tecla `H`) activado, que es lo que viene por defecto, el video de la cámara ocupa toda la pantalla y el objeto se dibuja encima como un holograma. Cada pieza tiene su color neón y se ve con sus aristas, una nube de puntos y un relleno tenue. A los costados aparecen etiquetas con el nombre y la función de cada pieza, con una línea guía hasta ella; al tocar una etiqueta se elige esa pieza. El esqueleto de la mano se dibuja sobre la mano real, el cursor de señalar queda en la punta del índice, al rotar con la palma aparece un aro y al escalar con las dos manos se ve el zoom. El catálogo pasa a ser una fila de pestañas abajo. **Paneles** muestra el panel de piezas y **Despiece** abre o cierra la vista explotada. Sin cámara, el holograma se ve sobre el fondo oscuro y el recuadro de cámara sigue abajo a la derecha. Apagando **Holograma** se vuelve a la vista de estudio, con los materiales del modelo.
+Con el botón **Holograma** (o la tecla `H`) activado, que es lo que viene por defecto, el objeto se dibuja como un holograma sobre el fondo oscuro, con la cámara en su recuadro abajo a la derecha. Cada pieza tiene su color neón y se ve con sus aristas, una nube de puntos y un relleno tenue. A los costados aparecen etiquetas con el nombre y la función de cada pieza, con una línea guía hasta ella; al tocar una etiqueta se elige esa pieza. El catálogo pasa a ser una fila de pestañas abajo. **Paneles** muestra el panel de piezas y **Despiece** abre o cierra la vista explotada. Apagando **Holograma** se vuelve a la vista de estudio, con los materiales del modelo.
+
+**Cámara de fondo** (o la tecla `C`, apagado por defecto) pone el video de la cámara a pantalla completa detrás del holograma: el esqueleto de la mano se dibuja sobre la mano real, el cursor de señalar queda en la punta del índice, al rotar con la palma aparece un aro y al escalar con las dos manos se ve el zoom.
 
 ### Actividad de la IA en vivo
 
@@ -94,13 +96,17 @@ Sin cámara se puede usar el teclado (flechas para rotar, `+` y `−` para escal
 
 Qué datos se procesan en el equipo y cuáles salen de él, sesgos y protecciones: [docs/uso_responsable.md](docs/uso_responsable.md). Con la tecla `D` se abre el panel de depuración, que muestra las métricas de la mano en vivo y sirve para calibrar los umbrales de `frontend/js/gestures.js`.
 
+### Pedidos sin LLM
+
+Los pedidos escritos o por voz los interpreta el LLM (Claude). Si no hay clave o no hay internet, los interpreta un **modelo propio entrenado** que corre en el equipo (`backend/intent_modelo.py`): reconoce la acción con embeddings de la frase y un clasificador entrenado con 18.800 frases rioplatenses, y un etiquetador entrenado encuentra el objeto, de cualquier tipo, con lo que lo describe ("una silla de oficina con ruedas", "el cráneo de un tigre"). Aprendió con casi 10 mil nombres de objetos de WordNet en español. Con 45 pedidos de objetos que nunca vio acierta 91 %, contra 60 % de las reglas que usaba antes ([docs/metricas.md](docs/metricas.md#intérprete-de-pedidos-entrenado-respaldo-del-llm)). Si tampoco está ese modelo, quedan las reglas. El visor y el panel de actividad muestran qué motor respondió.
+
 ### Pedidos por voz
 
 El micrófono empieza a escuchar al abrir el visor y vuelve a activarse después de procesar cada pedido. Mientras escucha, la interfaz lo indica y muestra la transcripción parcial; al terminar, procesa el pedido para mostrar el objeto del catálogo y reanuda la escucha sin esperar una respuesta hablada. El botón del micrófono (o la tecla `V`) permite pausarlo y activarlo de nuevo. El navegador puede solicitar permiso o requerir un primer clic para iniciar. Funciona en Chrome y Edge; en Firefox queda solo el texto. En esos navegadores el audio lo procesa su servicio de voz, salvo que puedan reconocerlo en el equipo (ver [docs/uso_responsable.md](docs/uso_responsable.md)).
 
 ## Dataset de gestos y MLP
 
-El MLP del visor (`frontend/ml/mlp_gestos.json`) está entrenado con **HaGRID**, un dataset público de fotos de gestos de miles de personas: 97,4 % de exactitud con personas que no vio, contra 63,2 % de las reglas. Cómo se reproduce: [ml/README.md](ml/README.md#entrenar-con-hagrid-datos-de-internet). Resultados: [docs/metricas.md](docs/metricas.md).
+La red de gestos del visor (`frontend/ml/mlp_gestos.json`, versión 2) está entrenada con **HaGRID**, un dataset público de fotos de gestos: 276.237 manos de más de 23 mil personas, con aumento de datos. Con personas que no vio acierta 97,9 %, contra 62,4 % de las reglas, y confunde una mano sin gesto con un gesto solo el 1,3 % de las veces. Se probaron redes de hasta 724 mil parámetros, pero no mejoraron a la de 17 mil. Cómo se reproduce: [ml/README.md](ml/README.md#entrenar-con-hagrid-datos-de-internet). Resultados: [docs/metricas.md](docs/metricas.md).
 
 La página <http://localhost:5500/captura.html> sirve para grabar un dataset propio con la cámara. Los pasos para grabar y entrenar están en [ml/README.md](ml/README.md).
 

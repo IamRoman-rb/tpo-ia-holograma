@@ -1,0 +1,180 @@
+{
+  "fecha": "2026-10-28",
+  "dataset": "HaGRID (ml\\data\\externo), CC BY-SA 4.0",
+  "filas": {
+    "entrenamiento": 195699,
+    "validacion": 37663,
+    "prueba": 42875
+  },
+  "personas": {
+    "entrenamiento": 16279,
+    "validacion": 3510,
+    "prueba": 3416
+  },
+  "arquitecturas_validacion": [
+    {
+      "ocultas": [
+        128,
+        64
+      ],
+      "dropout": 0.1,
+      "parametros": 16968,
+      "f1_validacion": 0.9598,
+      "epocas": 23,
+      "segundos": 25
+    },
+    {
+      "ocultas": [
+        256,
+        128
+      ],
+      "dropout": 0.15,
+      "parametros": 50312,
+      "f1_validacion": 0.9583,
+      "epocas": 23,
+      "segundos": 40
+    },
+    {
+      "ocultas": [
+        512,
+        256
+      ],
+      "dropout": 0.2,
+      "parametros": 166152,
+      "f1_validacion": 0.9582,
+      "epocas": 14,
+      "segundos": 46
+    },
+    {
+      "ocultas": [
+        512,
+        256,
+        128
+      ],
+      "dropout": 0.2,
+      "parametros": 198024,
+      "f1_validacion": 0.9576,
+      "epocas": 14,
+      "segundos": 51
+    },
+    {
+      "ocultas": [
+        1024,
+        512,
+        256
+      ],
+      "dropout": 0.3,
+      "parametros": 723720,
+      "f1_validacion": 0.9599,
+      "epocas": 14,
+      "segundos": 115
+    }
+  ],
+  "elegida": {
+    "ocultas": [
+      128,
+      64
+    ],
+    "dropout": 0.1
+  },
+  "aumento_de_datos": {
+    "f1_validacion_con": 0.9598,
+    "f1_validacion_sin": 0.9537
+  },
+  "umbral_confianza": 0.8,
+  "comparacion_prueba": [
+    {
+      "metodo": "reglas",
+      "exactitud": 0.6243,
+      "f1_macro": 0.6949,
+      "recall_gestos": 0.926,
+      "falsas_alarmas_ninguno": 0.5531
+    },
+    {
+      "metodo": "mlp v1 [128, 64]",
+      "exactitud": 0.9759,
+      "f1_macro": 0.9658,
+      "recall_gestos": 0.9543,
+      "falsas_alarmas_ninguno": 0.0121
+    },
+    {
+      "metodo": "red v2 [128, 64]",
+      "exactitud": 0.9793,
+      "f1_macro": 0.9689,
+      "recall_gestos": 0.963,
+      "falsas_alarmas_ninguno": 0.013
+    }
+  ],
+  "sesgos_prueba": {
+    "recall_por_mano": {
+      "derecha": 0.9603,
+      "izquierda": 0.9704
+    },
+    "personas_con_3_gestos": 790,
+    "mediana_por_persona": 1.0,
+    "personas_bajo_80": 27
+  },
+  "por_clase": {
+    "ninguno": {
+      "precision": 0.9838462100723632,
+      "recall": 0.9870206057050671,
+      "f1-score": 0.9854308514532543,
+      "support": 27274.0
+    },
+    "palma_abierta": {
+      "precision": 0.9770058708414873,
+      "recall": 0.9827755905511811,
+      "f1-score": 0.9798822374877331,
+      "support": 4064.0
+    },
+    "pellizco": {
+      "precision": 0.9934673366834171,
+      "recall": 0.9738916256157636,
+      "f1-score": 0.9835820895522388,
+      "support": 2030.0
+    },
+    "pulgar_abajo": {
+      "precision": 0.9774072081764389,
+      "recall": 0.9659755449229134,
+      "f1-score": 0.9716577540106952,
+      "support": 1881.0
+    },
+    "pulgar_arriba": {
+      "precision": 0.9502382212811011,
+      "recall": 0.9692224622030238,
+      "f1-score": 0.9596364608393477,
+      "support": 1852.0
+    },
+    "puño": {
+      "precision": 0.9790685504971219,
+      "recall": 0.9785564853556485,
+      "f1-score": 0.9788124509547476,
+      "support": 1912.0
+    },
+    "señalar": {
+      "precision": 0.9390180878552972,
+      "recall": 0.9370809695719443,
+      "f1-score": 0.9380485286525555,
+      "support": 1939.0
+    },
+    "victoria": {
+      "precision": 0.9750135795763172,
+      "recall": 0.9334373374934998,
+      "f1-score": 0.9537725823591924,
+      "support": 1923.0
+    },
+    "accuracy": 0.979265306122449,
+    "macro avg": {
+      "precision": 0.9718831331229429,
+      "recall": 0.9659950776773802,
+      "f1-score": 0.9688528694137205,
+      "support": 42875.0
+    },
+    "weighted avg": {
+      "precision": 0.979282623554529,
+      "recall": 0.979265306122449,
+      "f1-score": 0.979241031776218,
+      "support": 42875.0
+    }
+  }
+}

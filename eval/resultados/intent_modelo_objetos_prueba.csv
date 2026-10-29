@@ -1,0 +1,46 @@
+frase,ok,errores,accion,objeto,vista,factor_escala,confianza,ms
+mostrame un trombón,True,,mostrar,trombón,,,0.967,10160
+quiero ver una mesa ratona de vidrio,True,,mostrar,mesa ratona de vidrio,,,0.996,14
+traeme un colectivo de larga distancia,False,objeto 'colectivo de larga',mostrar,colectivo de larga,,,0.993,13
+che me mostrás una jirafa?,True,,mostrar,jirafa,,,0.864,13
+necesito ver un compresor de aire de frente,True,,mostrar,compresor de aire,frontal,,0.998,13
+dame una lavadora automática,True,,mostrar,lavadora automática,,,0.939,12
+mostrame un faro de la costa,False,objeto 'faro de',mostrar,faro de,,,0.966,13
+"hola, quisiera ver un termo de acero",True,,mostrar,termo de acero,,,0.982,14
+cargá una grúa torre desde arriba,True,,mostrar,grúa torre,superior,,0.991,13
+podés mostrarme un pulmón?,True,,mostrar,pulmón,,,0.914,13
+a ver un piano de cola,True,,mostrar,piano de cola,,,0.972,12
+buscame una carpa para cuatro personas,True,,mostrar,carpa para cuatro personas,,,0.993,15
+mostrá un submarino nuclear de costado,True,,mostrar,submarino nuclear,lateral,,0.934,14
+quiero ver la estatua de la libertad,False,acción aislar,aislar,estatua de la libertad,,,0.908,16
+generame un robot aspiradora,True,,mostrar,robot aspiradora,,,0.966,14
+mostrame unos auriculares inalámbricos por favor,True,,mostrar,auriculares inalámbricos,,,0.985,16
+tenés un horno de barro?,True,,mostrar,horno de barro,,,0.979,13
+poné una pelota de fútbol,True,,mostrar,pelota de fútbol,,,0.844,12
+enseñame el cráneo de un tigre,True,,mostrar,cráneo de un tigre,,,0.909,13
+haceme un sombrero de copa,True,,mostrar,sombrero de copa,,,0.886,13
+dale mostrame una motosierra,True,,mostrar,motosierra,,,0.685,12
+me mostrás un escritorio en l?,False,objeto 'escritorio',mostrar,escritorio,,,0.984,12
+quiero ver un cohete espacial desde abajo,True,,mostrar,cohete espacial,,,0.978,13
+mostrame una banana,True,,mostrar,banana,,,0.535,13
+abrí un tanque de guerra,True,,mostrar,tanque de guerra,,,0.961,13
+traé el monitor curvo,True,,mostrar,monitor curvo,,,0.675,14
+podrías traerme una aspiradora de mano?,True,,mostrar,aspiradora de mano,,,0.981,13
+mostrame un globo terráqueo,True,,mostrar,globo terráqueo,,,0.991,13
+me gustaría ver una ballena azul,True,,mostrar,ballena azul,,,0.978,14
+mostrame una tostadora de dos ranuras de perfil,True,,mostrar,tostadora de dos ranuras,lateral,,0.855,16
+quiero ver el despiece del trombón,True,,explotar,trombón,,,0.999,14
+mostrame la lavadora desarmada,True,,explotar,lavadora,,,0.997,13
+mostrame las piezas de una motosierra,True,,explotar,motosierra,,,0.998,13
+desarmá el robot aspiradora,True,,explotar,robot aspiradora,,,0.967,14
+explotá la tostadora,True,,explotar,tostadora,,,0.998,13
+quiero ver cómo está hecho el termo,True,,explotar,termo,,,0.996,13
+despiece del compresor de aire,True,,explotar,compresor de aire,,,1.0,13
+mostrame los auriculares desarmados,True,,explotar,auriculares,,,0.988,13
+aislá la cadena,True,,aislar,cadena,,,0.995,13
+mostrame solo el tambor,True,,aislar,tambor,,,0.999,13
+analizá la boquilla,True,,aislar,boquilla,,,0.999,13
+quiero ver el cable de la tostadora solo,True,,aislar,cable de la tostadora,,,0.993,16
+dejá sola la espada,True,,aislar,espada,,,0.922,13
+enfocate en el gatillo,True,,aislar,gatillo,,,0.985,12
+mostrame únicamente las teclas,True,,aislar,teclas,,,0.996,12

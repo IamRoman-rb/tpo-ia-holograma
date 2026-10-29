@@ -1,8 +1,9 @@
 """Extrae los 21 landmarks de las manos de HaGRID (fotos reales de gestos tomadas de internet) y los
 guarda con el mismo formato que la herramienta de captura, para entrenar y evaluar el MLP.
 
-Dataset: muestra de 31.833 imágenes de HaGRID a 384p, publicada en Hugging Face
-(https://huggingface.co/datasets/cj-mills/hagrid-sample-30k-384p). HaGRID: Kapitanov, Makhlyarchuk y
+Dataset: muestras de HaGRID a 384p publicadas en Hugging Face: 31.833 imágenes
+(https://huggingface.co/datasets/cj-mills/hagrid-sample-30k-384p) y 254.661
+(https://huggingface.co/datasets/cj-mills/hagrid-sample-250k-384p), con la misma estructura. HaGRID: Kapitanov, Makhlyarchuk y
 Kvanchiani (https://github.com/hukenovs/hagrid), licencia CC BY-SA 4.0 (variante de HaGRID).
 Las imágenes NO se guardan en el repositorio: solo los landmarks, como en la captura propia.
 
@@ -11,8 +12,8 @@ Cada mano detectada se asigna a la caja anotada que la contiene, y de ahí sale 
 La persona es el user_id de HaGRID: permite evaluar con personas que el modelo no vio.
 
 Uso (con el entorno de Python 3.12 que tiene MediaPipe):
-    ml/.venv-mediapipe/Scripts/python.exe ml/extraer_hagrid.py <carpeta hagrid-sample-30k-384p> [--procesos 4] [--limite N]
-Salida: ml/data/externo/hagrid.csv
+    ml/.venv-mediapipe/Scripts/python.exe ml/extraer_hagrid.py <carpeta de la muestra> [--procesos 4] [--limite N]
+        [--salida ml/data/externo/hagrid.csv]
 """
 import argparse
 import csv
@@ -90,10 +91,12 @@ def procesar(tarea):
 
 
 def tareas(base: Path, limite):
+    # La carpeta de imágenes se llama según la muestra: hagrid_30k, hagrid_250k…
+    [carpeta_fotos] = [c for c in base.glob("hagrid_*") if c.is_dir()]
     for etiqueta in list(MAPEO) + OTRAS:
         if etiqueta == "no_gesture":
             continue   # no tiene carpeta: aparece como la otra mano en las fotos de los demás gestos
-        carpeta = base / "hagrid_30k" / f"train_val_{etiqueta}"
+        carpeta = carpeta_fotos / f"train_val_{etiqueta}"
         anotaciones = json.loads((base / "ann_train_val" / f"{etiqueta}.json").read_text(encoding="utf-8"))
         imagenes = sorted(carpeta.glob("*.jpg"))[:limite]
         for ruta in imagenes:
@@ -104,16 +107,18 @@ def tareas(base: Path, limite):
 def main():
     sys.stdout.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser()
-    ap.add_argument("base", type=Path, help="carpeta hagrid-sample-30k-384p (la que tiene hagrid_30k/ y ann_train_val/)")
+    ap.add_argument("base", type=Path, help="carpeta de la muestra (la que tiene hagrid_*/ y ann_train_val/)")
+    ap.add_argument("--salida", type=Path, default=SALIDA)
     ap.add_argument("--procesos", type=int, default=4)
     ap.add_argument("--limite", type=int, default=None, help="imágenes por gesto (para probar)")
     args = ap.parse_args()
 
     lista = list(tareas(args.base, args.limite))
     print(f"{len(lista)} imágenes")
-    SALIDA.parent.mkdir(parents=True, exist_ok=True)
+    salida = args.salida
+    salida.parent.mkdir(parents=True, exist_ok=True)
     total = sin_mano = 0
-    with open(SALIDA, "w", newline="", encoding="utf-8") as f, \
+    with open(salida, "w", newline="", encoding="utf-8") as f, \
             ProcessPoolExecutor(args.procesos, initializer=_iniciar) as pool:
         w = csv.writer(f)
         w.writerow(COLUMNAS)
@@ -121,9 +126,9 @@ def main():
             w.writerows(filas)
             total += len(filas)
             sin_mano += not filas
-            if n % 2000 == 0:
+            if n % 10000 == 0:
                 print(f"  {n}/{len(lista)} imágenes · {total} manos", flush=True)
-    print(f"{total} manos de {len(lista)} imágenes ({sin_mano} sin mano asignada) -> {SALIDA}")
+    print(f"{total} manos de {len(lista)} imágenes ({sin_mano} sin mano asignada) -> {salida}")
 
 
 if __name__ == "__main__":

@@ -28,9 +28,11 @@ const recordar = (clave, valor) => {
   try { localStorage.setItem(clave, valor); } catch { /* sin almacenamiento: no se recuerda */ }
 };
 
-// Modo holograma: piezas de colores con aristas y puntos, etiquetas con líneas guía y, con la cámara
-// encendida, el video de fondo a pantalla completa con las manos dibujadas encima (como realidad aumentada).
+// Modo holograma: piezas de colores con aristas y puntos y etiquetas con líneas guía, sobre el fondo oscuro con
+// la cámara en su recuadro. Opcional ("Cámara de fondo"): el video a pantalla completa detrás, con las manos
+// dibujadas encima (como realidad aumentada).
 let modoHolograma = preferencia('holograma', 'si') === 'si';
+let camaraDeFondo = preferencia('camara-fondo', 'no') === 'si';
 let conEtiquetas = preferencia('etiquetas', 'si') === 'si';
 const etiquetas = crearEtiquetas(document.getElementById('etiquetas'), {
   alElegir: (id) => {
@@ -243,8 +245,10 @@ async function ejecutar({ accion, objeto, parametros }, id) {
 // Para el panel de actividad: cómo terminó el pedido, según el último estado que se mostró
 function publicarFin(id) {
   const estado = document.getElementById('estado');
-  publicarPedido(id, estado.classList.contains('error') ? 'error' : 'ejecutado',
-    { resumen: estado.textContent, mensaje: estado.textContent });
+  const error = estado.classList.contains('error');
+  // Con un error, el estado dice "atención" y el detalle está en el aviso
+  const texto = error ? document.getElementById('aviso').textContent || estado.textContent : estado.textContent;
+  publicarPedido(id, error ? 'error' : 'ejecutado', { resumen: texto, mensaje: texto });
 }
 
 async function atenderPedido(frase, { porVoz = false } = {}) {
@@ -581,26 +585,29 @@ document.getElementById('camara-detener').addEventListener('click', () => {
 });
 document.getElementById('camara-tamano').addEventListener('click', ui.alternarTamanoCamara);
 
-// --- modo holograma: la cámara pasa a ser el fondo de toda la pantalla cuando está activa (o simulada)
+// --- modo holograma; con "Cámara de fondo", el video es el fondo de toda la pantalla si está activa (o simulada)
 let tamanoVideo = { ancho: 640, alto: 480 };
 const RESOLUCION_HOLOGRAMA = 2; // el lienzo de las manos se agranda para que el trazo no se vea borroso
 
 function actualizarModo() {
   const estado = document.getElementById('camara').dataset.estado;
-  const ar = modoHolograma && (estado === 'activa' || estado === 'simulacion');
+  const ar = modoHolograma && camaraDeFondo && (estado === 'activa' || estado === 'simulacion');
   document.body.classList.toggle('holograma', modoHolograma);
   document.body.classList.toggle('holograma-ar', ar);
   visor.fijarEstilo(modoHolograma ? 'holograma' : 'solido');
+  visor.mostrarGrilla(!ar);
   etiquetas.fijarActivas(modoHolograma && conEtiquetas);
   const f = ar ? RESOLUCION_HOLOGRAMA : 1;
   if (lienzo.width !== tamanoVideo.ancho * f || lienzo.height !== tamanoVideo.alto * f) {
     lienzo.width = tamanoVideo.ancho * f;
     lienzo.height = tamanoVideo.alto * f;
   }
-  for (const [clave, activo] of [['holograma', modoHolograma], ['etiquetas', modoHolograma && conEtiquetas]]) {
+  for (const [clave, activo] of [['holograma', modoHolograma], ['etiquetas', modoHolograma && conEtiquetas],
+    ['fondo', modoHolograma && camaraDeFondo]]) {
     document.querySelector(`[data-barra="${clave}"]`).setAttribute('aria-pressed', String(activo));
   }
   document.querySelector('[data-barra="etiquetas"]').disabled = !modoHolograma;
+  document.querySelector('[data-barra="fondo"]').disabled = !modoHolograma;
 }
 new MutationObserver(actualizarModo).observe(document.getElementById('camara'), { attributeFilter: ['data-estado'] });
 
@@ -608,6 +615,11 @@ const ACCIONES_BARRA = {
   holograma: () => {
     modoHolograma = !modoHolograma;
     recordar('holograma', modoHolograma ? 'si' : 'no');
+    actualizarModo();
+  },
+  fondo: () => {
+    camaraDeFondo = !camaraDeFondo;
+    recordar('camara-fondo', camaraDeFondo ? 'si' : 'no');
     actualizarModo();
   },
   etiquetas: () => {
@@ -632,6 +644,7 @@ document.getElementById('barra').addEventListener('click', (e) => {
 addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT') return;
   if (e.key === 'h' || e.key === 'H') ACCIONES_BARRA.holograma();
+  if ((e.key === 'c' || e.key === 'C') && modoHolograma) ACCIONES_BARRA.fondo();
   if (e.key === 'l' || e.key === 'L') ACCIONES_BARRA.actividad();
 });
 

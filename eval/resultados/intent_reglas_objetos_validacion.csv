@@ -1,0 +1,56 @@
+frase,ok,errores,accion,objeto,vista,factor_escala,confianza,ms
+mostrame una silla de oficina con ruedas,True,,mostrar,silla de oficina con ruedas,,,0.7,2
+quiero ver un violín,True,,mostrar,violin,,,0.7,0
+che traeme una bicicleta de montaña desde atrás,False,acción vista; objeto None,vista,,trasera,,0.7,0
+me podés mostrar el esqueleto de un dinosaurio?,False,acción desconocido; objeto None,desconocido,,,,0.0,0
+necesito un modelo 3d de una cafetera italiana,False,objeto 'modelo 3d de una cafetera italiana',mostrar,modelo 3d de una cafetera italiana,,,0.7,0
+a ver una guitarra eléctrica de costado,False,acción vista; objeto None,vista,,lateral,,0.7,0
+mostrame un corazón humano,True,,mostrar,corazon humano,,,0.7,0
+cargame la torre eiffel vista desde arriba,False,objeto 'torre eiffel vista',mostrar,torre eiffel vista,superior,,0.7,0
+dame un taladro percutor,True,,mostrar,taladro percutor,,,0.7,0
+hola mostrame un dron con cuatro hélices por favor,False,acción desconocido; objeto None,desconocido,,,,0.0,0
+quisiera ver una lámpara de escritorio,True,,mostrar,lampara de escritorio,,,0.7,0
+tenés una mochila?,False,acción desconocido; objeto None,desconocido,,,,0.0,0
+buscame un casco de bombero,True,,mostrar,casco de bombero,,,0.7,0
+generá una tetera de porcelana,True,,mostrar,tetera de porcelana,,,0.7,0
+poneme un microscopio de frente,True,,mostrar,microscopio,frontal,,0.7,0
+quiero ver cómo es un reloj de pulsera,False,objeto 'como es un reloj de pulsera',mostrar,como es un reloj de pulsera,,,0.7,0
+mostrá un satélite artificial,True,,mostrar,satelite artificial,,,0.7,0
+dale mostrame el auto,False,acción desconocido; objeto None,desconocido,,,,0.0,0
+un sillón de dos cuerpos,True,,mostrar,sillon de dos cuerpos,,,0.7,0
+podrías mostrarme una impresora 3d?,False,acción desconocido; objeto None,desconocido,,,,0.0,0
+traé la escalera plegable,True,,mostrar,escalera plegable,,,0.7,0
+abrime un tractor rojo,True,,mostrar,tractor rojo,,,0.7,0
+me gustaría ver un barco a vela,False,acción desconocido; objeto None,desconocido,,,,0.0,0
+mostrame unas zapatillas deportivas desde el costado,True,,mostrar,zapatillas deportivas,lateral,,0.7,0
+quiero un molino de viento,True,,mostrar,molino de viento,,,0.7,0
+enseñame una cámara de fotos antigua,False,acción desconocido; objeto None,desconocido,,,,0.0,0
+mostrame un caballo,True,,mostrar,caballo,,,0.7,0
+busco un ventilador de techo,False,acción desconocido; objeto None,desconocido,,,,0.0,0
+mostrame una heladera con freezer de frente,True,,mostrar,heladera con freezer,frontal,,0.7,0
+dibujame una casa de dos pisos,False,acción desconocido; objeto None,desconocido,,,,0.0,0
+pasame el martillo,False,acción desconocido; objeto None,desconocido,,,,0.0,0
+"che, ¿me cargás un avión comercial?",False,acción desconocido; objeto None,desconocido,,,,0.0,0
+mostrame un teclado mecánico por favor,True,,mostrar,teclado mecanico,,,0.7,0
+quiero ver una manzana,True,,mostrar,manzana,,,0.7,0
+mostrame el motor de un avión,True,,mostrar,motor de un avion,,,0.7,0
+mostrame la licuadora desarmada,True,,explotar,licuadora,,,0.7,0
+quiero ver el despiece de la bicicleta,True,,explotar,bicicleta,,,0.7,0
+mostrame las piezas de un reloj,True,,explotar,reloj,,,0.7,0
+desarmá la cafetera entera,False,acción desmontar; objeto None,desmontar,,,,0.7,0
+mostrame cómo está hecha la mochila,False,acción mostrar; objeto 'como esta hecha la mochila',mostrar,como esta hecha la mochila,,,0.7,0
+explotá el teléfono celular,False,objeto None,explotar,,,,0.7,0
+quiero ver la impresora en vista explotada,False,objeto 'impresora en vista',explotar,impresora en vista,,,0.7,0
+despiece de la silla de oficina,False,objeto None,explotar,,,,0.7,0
+abrí el despiece del taladro,True,,explotar,taladro,,,0.7,0
+mostrame el control remoto desarmado,True,,explotar,control remoto,,,0.7,0
+mostrame solo la cuerda,True,,aislar,cuerda,,,0.7,0
+analizá el mango,True,,aislar,mango,,,0.7,0
+aislá la batería,True,,aislar,bateria,,,0.7,0
+quiero ver la pantalla sola,False,acción mostrar; objeto 'pantalla sola',mostrar,pantalla sola,,,0.7,0
+dejá solo el respaldo,True,,aislar,respaldo,,,0.7,0
+enfocate en el cable de alimentación,False,acción desconocido; objeto None,desconocido,,,,0.0,0
+mostrame únicamente la suela,True,,aislar,suela,,,0.7,0
+analizá el filtro de la cafetera,True,,aislar,filtro de la cafetera,,,0.7,0
+ver solo el manubrio,True,,aislar,manubrio,,,0.7,0
+quiero estudiar la placa madre,False,acción mostrar; objeto 'estudiar la placa madre',mostrar,estudiar la placa madre,,,0.7,0
