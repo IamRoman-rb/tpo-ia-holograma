@@ -27,9 +27,15 @@ eval/resultados/indice_*.json
 # Entorno de Python 3.12 con MediaPipe y datasets externos procesados (ml/extraer_hagrid.py)
 .venv-*/
 ml/data/externo/
+# Los landmarks de HaGRID se versionan solo comprimidos (ml/data/hagrid/README.md)
+ml/data/hagrid/*.csv
 
 # LLM propio ajustado (ml/llm_propio/entrenar_llm.py): ~1 GB, se regenera
 backend/modelos/llm_propio/
 backend/modelos/llm_propio_grande/
 backend/modelos/transformer/
 backend/modelos/transformer_candidatos/
+backend/modelos/*_prueba/
+
+# Salida de cada paso de scripts/entrenar.py
+ml/logs/

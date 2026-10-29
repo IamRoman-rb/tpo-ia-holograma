@@ -309,7 +309,7 @@ def red_v2(X):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--datos", type=Path, default=ML / "data" / "externo")
+    ap.add_argument("--datos", type=Path, default=preparar.DATOS_HAGRID)
     ap.add_argument("--poblacion", type=int, default=14)
     ap.add_argument("--generaciones", type=int, default=10)
     ap.add_argument("--muestra", type=int, default=50000, help="manos de entrenamiento para la aptitud")
@@ -405,8 +405,9 @@ def main():
             "elegida": reporte["elegida"], "comparacion_prueba": comparacion}, ensure_ascii=False), encoding="utf-8")
     gana = f1_v2_val is None or final["f1_validacion"] > f1_v2_val
     reporte["exportada"] = bool(gana and not args.rapido)
-    (RESULTADOS / "neuroevolucion_reporte.json").write_text(json.dumps(reporte, ensure_ascii=False, indent=2),
-                                                            encoding="utf-8")
+    if not args.rapido:
+        (RESULTADOS / "neuroevolucion_reporte.json").write_text(json.dumps(reporte, ensure_ascii=False, indent=2),
+                                                                encoding="utf-8")
     if args.rapido or not gana:
         print("(no se exporta: " + ("--rapido" if args.rapido else "no le gana a la v2 en validación") + ")")
         return

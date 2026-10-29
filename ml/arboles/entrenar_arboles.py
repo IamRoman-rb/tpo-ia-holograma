@@ -13,7 +13,7 @@ distancias entre puntas), iguales a frontend/js/arbol.js. Misma partición por p
 (preparar.particion), elección con VALIDACIÓN, resultado en PRUEBA (personas no vistas), con intervalos por
 bootstrap y McNemar contra las reglas y contra la red v2.
 
-Uso (desde la raíz):  backend/.venv/Scripts/python ml/arboles/entrenar_arboles.py [--datos ml/data/externo]
+Uso (desde la raíz):  backend/.venv/Scripts/python ml/arboles/entrenar_arboles.py [--datos ml/data/hagrid]
 Salida: frontend/ml/arbol_gestos.json, frontend/tests/datos/arbol_casos.json, ml/resultados/arboles_reporte.json
 y ml/resultados/arbol_reglas.txt (las reglas aprendidas por un árbol de profundidad 4, para leerlas).
 """
@@ -94,7 +94,7 @@ def exportar_arbol(arbol, umbral):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--datos", type=Path, default=ML / "data" / "externo")
+    ap.add_argument("--datos", type=Path, default=preparar.DATOS_HAGRID)
     args = ap.parse_args()
 
     df = preparar.cargar(args.datos)

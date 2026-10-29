@@ -15,7 +15,7 @@ Arquitectura (entregable 4): [docs/arquitectura.md](docs/arquitectura.md), con e
 | `backend/` | API FastAPI: intención (LLM), búsqueda por similitud, generación 3D, seguridad |
 | `ml/` | Captura del dataset de gestos y entrenamiento del MLP |
 | `eval/` | Frases de prueba del LLM y resultados de pruebas con usuarios |
-| `scripts/` | Arranque con un solo comando, verificación pre-defensa y modo offline |
+| `scripts/` | Arranque y entrenamiento con un solo comando, verificación pre-defensa y modo offline |
 
 ## Levantar el proyecto
 
@@ -59,6 +59,29 @@ python -m http.server 5500
 ```
 
 Abrir <http://localhost:5500> y permitir el acceso a la cámara. El frontend funciona aunque el backend no esté levantado: los pedidos se buscan en el catálogo local.
+
+## Entrenar los modelos
+
+Los modelos grandes (transformer y LLM propio) no se suben al repositorio: cada uno los entrena en su máquina con las frases que sí están versionadas (`ml/intencion/frases_entrenamiento.csv` y los sets de `eval/`). Desde la raíz:
+
+```bash
+python scripts/entrenar.py --prueba
+```
+
+Corre cada paso en su versión mínima (unos 20 minutos) para comprobar que la máquina puede entrenar todo, sin reemplazar los modelos lentos. Si termina bien, el entrenamiento completo:
+
+```bash
+python scripts/entrenar.py
+```
+
+Tarda unas 6-7 horas en CPU con el LLM de 1.5B; con `--llm chico` (0.5B) son unas 3 horas. Usa el mismo `backend/.venv` que `scripts/levantar.py` y le suma `ml/requirements-entrenamiento.txt`. La primera vez descarga PyTorch y las bases de Hugging Face, unos 10 GB entre todo.
+
+Opciones:
+- `--listar`: los pasos, cuánto tarda cada uno y cuáles se pueden correr en esta máquina.
+- `--solo bayes,modelo`: solo esos pasos.
+- `--desde llm`: retoma después de un corte o un error. El script imprime el comando exacto.
+
+La salida de cada paso queda en `ml/logs/`, y los reportes en `ml/resultados/`. La evaluación no usa Claude aunque haya clave en `.env`. Los gestos se entrenan con los landmarks de HaGRID que están en el repositorio, comprimidos (`ml/data/hagrid/hagrid.csv.xz`, 44 MB; ver [ml/data/hagrid/README.md](ml/data/hagrid/README.md)). La red de gestos necesita además Node.js, para compararse con las reglas del visor.
 
 ## Antes de la defensa
 

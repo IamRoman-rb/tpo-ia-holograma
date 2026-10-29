@@ -239,6 +239,10 @@ def main():
         shutil.copytree(TEMPORAL / mejor["nombre"], SALIDA)
         shutil.rmtree(TEMPORAL)
     print(f"\nelegido: {mejor['nombre']} ({mejor['base']}) -> {SALIDA.relative_to(RAIZ)}")
+    if args.rapido:   # no pisa el reporte del instalado
+        shutil.rmtree(TEMPORAL, ignore_errors=True)
+        print("(--rapido: no se instala ni se escribe el reporte)")
+        return
     if REPORTE.exists():   # se acumulan los candidatos de corridas anteriores
         anterior = json.loads(REPORTE.read_text(encoding="utf-8"))
         tabla = [f for f in anterior.get("candidatos", []) if f["nombre"] not in {g["nombre"] for g in tabla}] + tabla

@@ -51,6 +51,8 @@ ml/.venv-mediapipe/Scripts/python.exe -I ml/extraer_hagrid.py <carpeta>/hagrid-s
 ml/.venv-mediapipe/Scripts/python.exe ml/entrenar_red_gestos.py      # ~10 min en CPU; --rapido para probar el script
 ```
 
+Los landmarks extraídos ya están en el repositorio, comprimidos: `ml/data/hagrid/hagrid.csv.xz` ([fuente, licencia y cómo rehacerlo](data/hagrid/README.md)). Para entrenar no hace falta bajar las fotos ni MediaPipe; los scripts de gestos los leen por defecto.
+
 `entrenar_red_gestos.py` compara cinco tamaños de red con aumento de datos, elige con validación, evalúa las reglas (con node) y la red anterior sobre la misma prueba, y escribe `frontend/ml/mlp_gestos.json`, `frontend/tests/datos/mlp_casos.json` y `ml/resultados/hagrid_red_v2_reporte.json`.
 
 **Versión 1 (para reproducirla):** muestra de 31.833 fotos, <https://huggingface.co/datasets/cj-mills/hagrid-sample-30k-384p> (1,0 GB), con scikit-learn. Sus landmarks van en `ml/data/externo/v1_30k/`:
@@ -95,6 +97,8 @@ backend/.venv/Scripts/python eval/eval_intent.py --frases objetos_prueba   # de 
 El vocabulario sale del WordNet en español del Open Multilingual Wordnet (Multilingual Central Repository, CC BY 3.0), descargado con nltk; `objetos.csv` se versiona, así que `generar_frases.py` no necesita nltk. Ningún objeto de entrenamiento contiene el núcleo de un objeto de los sets de evaluación (`eval/frases_*.csv`), y se saltean esas frases y sus variantes con muletillas. Resultados y por qué cada set mide algo distinto: [docs/metricas.md](../docs/metricas.md#intérprete-de-pedidos-entrenado-respaldo-del-llm).
 
 ## Las demás técnicas (todas con el entorno del backend)
+
+`python scripts/entrenar.py` corre estos pasos en orden, con el entorno ya preparado (ver el [README](../README.md#entrenar-los-modelos)). Uno por uno:
 
 ```bash
 backend/.venv/Scripts/python ml/intencion/entrenar_bayes.py                        # Naive Bayes + temperatura (1 min)

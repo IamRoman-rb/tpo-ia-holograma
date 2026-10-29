@@ -26,6 +26,7 @@ import csv
 import json
 import math
 import random
+import shutil
 import sys
 import time
 from datetime import date
@@ -114,9 +115,10 @@ def main():
         "comandos_validacion": (leer(RAIZ / "eval" / "frases_comandos_validacion.csv"), False),
         "generadas_objetos_reservados": (generadas[:200], True),
     }
-    if args.rapido:
+    if args.rapido:   # no pisa el modelo instalado ni su reporte
         entrenamiento = entrenamiento[:40 * LOTE]
         validacion = {k: (v[:15], o) for k, (v, o) in validacion.items()}
+        SALIDA = SALIDA.with_name(SALIDA.name + "_prueba")
     pasos = math.ceil(len(entrenamiento) / LOTE)
     print(f"{len(entrenamiento)} frases de entrenamiento · {pasos} pasos de {LOTE}")
 
@@ -169,6 +171,11 @@ def main():
     n = sum(len(f) for f, _ in validacion.values())
     ms = round((time.perf_counter() - t1) * 1000 / n)
     print(f"  {ms} ms por frase")
+    if args.rapido:
+        del interprete
+        shutil.rmtree(SALIDA, ignore_errors=True)
+        print("(--rapido: se borra el modelo de prueba y no se escribe el reporte)")
+        return
 
     REPORTE.parent.mkdir(exist_ok=True)
     REPORTE.write_text(json.dumps({

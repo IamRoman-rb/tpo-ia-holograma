@@ -19,17 +19,19 @@ import pandas as pd
 CLASES = ["pellizco", "palma_abierta", "puño", "señalar", "pulgar_arriba", "pulgar_abajo", "victoria", "ninguno"]
 COLUMNAS_PUNTOS = [f"{e}{i}" for i in range(21) for e in "xyz"]
 PERSONA_SIMULADA = "simulacion"
+# Landmarks de HaGRID (ml/extraer_hagrid.py), versionados comprimidos con xz: ver ml/data/hagrid/README.md
+DATOS_HAGRID = Path(__file__).resolve().parent / "data" / "hagrid"
 
 
 def cargar(directorio, incluir_simulacion=False) -> pd.DataFrame:
-    """Une todos los CSV del directorio. Agrega 'archivo' y 'fila' para poder cruzar resultados."""
-    archivos = sorted(Path(directorio).glob("*.csv"))
+    """Une todos los CSV del directorio (también .csv.xz). Agrega 'archivo' y 'fila' para poder cruzar resultados."""
+    archivos = sorted([*Path(directorio).glob("*.csv"), *Path(directorio).glob("*.csv.xz")])
     if not archivos:
         raise FileNotFoundError(f"No hay archivos CSV en {directorio}")
     partes = []
     for ruta in archivos:
         df = pd.read_csv(ruta, dtype={"persona": str, "mano": str})
-        df.insert(0, "archivo", ruta.name)
+        df.insert(0, "archivo", ruta.name.removesuffix(".xz"))
         df.insert(1, "fila", range(len(df)))
         partes.append(df)
     df = pd.concat(partes, ignore_index=True)

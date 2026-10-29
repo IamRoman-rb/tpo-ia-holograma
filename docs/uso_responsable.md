@@ -50,7 +50,7 @@ Para cada punto se indica qué está **implementado** (y dónde), y qué está *
 ### Dataset de internet (HaGRID)
 
 - HaGRID fue publicado por sus autores (Kapitanov, Makhlyarchuk y Kvanchiani) con licencia CC BY-SA 4.0 (variante de HaGRID). Se usa la muestra pública de Hugging Face `cj-mills/hagrid-sample-30k-384p`.
-- Las fotos quedan fuera del repositorio. Solo se guardan los 21 puntos de cada mano (`ml/data/externo/`, que tampoco se sube) y el modelo entrenado.
+- Las fotos quedan fuera del repositorio. Solo se guardan los 21 puntos de cada mano y el modelo entrenado. Los puntos de HaGRID se versionan comprimidos en `ml/data/hagrid/`, con su licencia (CC BY-SA 4.0), para que todo el grupo pueda entrenar. No permiten reconstruir las fotos, pero conservan el identificador anónimo de persona de HaGRID, que hace falta para separar por persona.
 - El identificador de persona de HaGRID se usa solo para separar entrenamiento y prueba.
 
 ### Dataset de gestos (`frontend/captura.html`)

@@ -12,7 +12,7 @@ reglas del visor sobre las mismas filas (ml/evaluar_reglas.mjs) y exportación a
 La red v1 (frontend/ml/mlp_gestos.json antes de correr esto) también se evalúa en la misma prueba.
 
 Uso (desde la raíz, con el entorno del backend, que tiene PyTorch):
-    backend/.venv/Scripts/python ml/entrenar_red_gestos.py [--datos ml/data/externo] [--rapido]
+    backend/.venv/Scripts/python ml/entrenar_red_gestos.py [--datos ml/data/hagrid] [--rapido]
 """
 import argparse
 import base64
@@ -211,7 +211,7 @@ def reglas_en(df_prueba):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--datos", type=Path, default=ML / "data" / "externo")
+    ap.add_argument("--datos", type=Path, default=preparar.DATOS_HAGRID)
     ap.add_argument("--rapido", action="store_true", help="pocas épocas y dos candidatos (para probar el script)")
     args = ap.parse_args()
     torch.set_num_threads(max(1, torch.get_num_threads()))

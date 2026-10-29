@@ -1,0 +1,8 @@
+# Lo que hace falta para entrenar, además de backend/requirements.txt (scripts/entrenar.py instala los dos)
+# LoRA del LLM propio
+peft
+accelerate
+# tokenizador de XLM-R (candidato del transformer)
+sentencepiece
+# gestos con HaGRID (árboles, red y neuroevolución)
+pandas

@@ -34,12 +34,17 @@ def preparar_entorno():
     if not PYTHON_ENTORNO.exists():
         print(f"Creando el entorno de Python en {ENTORNO.relative_to(RAIZ)} (solo la primera vez)…")
         venv.create(ENTORNO, with_pip=True)
-    huella = hashlib.sha256(REQUISITOS.read_bytes()).hexdigest()
-    if HUELLA.exists() and HUELLA.read_text().strip() == huella:
+    instalar(REQUISITOS, HUELLA, "las dependencias del backend")
+
+
+def instalar(requisitos, huella_guardada, que):
+    """pip install -r requisitos en el entorno, solo si el archivo cambió desde la última vez."""
+    huella = hashlib.sha256(requisitos.read_bytes()).hexdigest()
+    if huella_guardada.exists() and huella_guardada.read_text().strip() == huella:
         return
-    print("Instalando las dependencias del backend (solo cuando cambia requirements.txt)…")
-    subprocess.run([str(PYTHON_ENTORNO), "-m", "pip", "install", "-q", "-r", str(REQUISITOS)], check=True)
-    HUELLA.write_text(huella)
+    print(f"Instalando {que} (solo cuando cambia {requisitos.relative_to(RAIZ).as_posix()})…")
+    subprocess.run([str(PYTHON_ENTORNO), "-m", "pip", "install", "-q", "-r", str(requisitos)], check=True)
+    huella_guardada.write_text(huella)
 
 
 def puerto_ocupado(puerto):
