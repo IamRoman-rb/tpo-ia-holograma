@@ -124,6 +124,7 @@ try { clasificadorGuardado = localStorage.getItem('clasificador'); } catch { /* 
 elegirClasificador(clasificadorGuardado ?? 'mlp');
 let catalogo = [];
 let pedidoActual = 0; // las respuestas de pedidos anteriores se descartan
+let pedidoDeVozActual = null;
 
 let ultimoModelo = { origen: null, t: 0 }; // para medir la latencia del pedido
 
@@ -164,6 +165,9 @@ async function cargarObjeto(objeto, id) {
     // Un modelo recién generado se suma a la lista del catálogo
     if (r.origen === 'generado') await refrescarCatalogo().catch(console.error);
     await mostrarModelo(r.modelo_url, r.nombre, r.origen, r.id);
+    if (id === pedidoDeVozActual) {
+      mostrarEstadoVoz('listo', 'Objeto actualizado. Reactivando escucha…');
+    }
     return true;
   } catch (err) {
     if (id !== pedidoActual) return false;
@@ -245,6 +249,10 @@ function publicarFin(id) {
 
 async function atenderPedido(frase, { porVoz = false } = {}) {
   const id = ++pedidoActual;
+  if (porVoz) {
+    pedidoDeVozActual = id;
+    respuestaHablada = Promise.resolve();
+  }
   ui.mostrarEstado('interpretando…');
   const t0 = performance.now();
   publicarPedido(id, 'enviado', { frase, porVoz });
@@ -266,12 +274,8 @@ async function atenderPedido(frase, { porVoz = false } = {}) {
   publicarPedido(id, 'intencion', { intencion, msTotal: performance.now() - t0 });
   if (id !== pedidoActual) return;
   ui.mostrarInterpretacion(intencion);
-  // Si se pidió hablando, la respuesta también se escucha (sin el porcentaje ni el motor)
-  if (porVoz) {
-    respuestaHablada = Promise.resolve(decir(intencion.accion === 'desconocido' ? 'No entendí el pedido.'
-      : document.getElementById('interpretacion').textContent.split(' — ')[0]));
-  }
   if (intencion.accion === 'desconocido') {
+    if (porVoz) respuestaHablada = Promise.resolve(decir('No entendí el pedido.'));
     const motivo = intencion.motivo ? ` (${intencion.motivo})` : '';
     ui.mostrarEstado(`No entendí el pedido${motivo}. Probá con "mostrame un engranaje".`, 'error');
     return publicarFin(id);
@@ -281,6 +285,7 @@ async function atenderPedido(frase, { porVoz = false } = {}) {
     ui.mostrarEstado('esperando confirmación');
     if (!(await ui.pedirConfirmacion())) {
       ui.mostrarEstado('pedido cancelado');
+      if (porVoz) respuestaHablada = Promise.resolve(decir('Pedido cancelado.'));
       return publicarPedido(id, 'error', { mensaje: 'cancelado por el usuario' });
     }
     if (id !== pedidoActual) return;
@@ -300,6 +305,13 @@ document.getElementById('pedido').addEventListener('submit', (e) => {
   if (!frase) return;
   const t0 = performance.now();
   atenderPedido(frase, { porVoz }).then(async () => {
+    if (porVoz && estadoVoz.dataset.estado === 'procesando') {
+      mostrarEstadoVoz('listo', 'Pedido terminado. Reactivando escucha…');
+    }
+    if (porVoz) {
+      await respuestaHablada;
+      voz?.reanudar();
+    }
     // Latencia de punta a punta: solo cuenta si este pedido terminó mostrando un modelo
     if (ultimoModelo.t < t0) return;
     await metricas.proximoCuadro();
@@ -308,8 +320,8 @@ document.getElementById('pedido').addEventListener('submit', (e) => {
   }).catch((err) => {
     console.error(err);
     ui.mostrarEstado(err.estado ? err.message : 'No pude cargar el modelo, ¿probás de nuevo?', 'error');
+    if (porVoz) mostrarEstadoVoz('error', err.message || 'No pude completar el pedido.');
     publicarFin(pedidoActual);
-  }).finally(async () => {
     if (porVoz) {
       await respuestaHablada;
       voz?.reanudar();
@@ -338,6 +350,7 @@ async function prepararVoz() {
   voz = crearVoz({
     local,
     continuo: true,
+    esperaReinicioMs: 100,
     alParcial: (texto) => {
       campo.value = texto;
       mostrarEstadoVoz('escuchando', `Te escucho: «${texto}»`);
