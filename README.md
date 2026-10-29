@@ -102,7 +102,7 @@ Los pedidos escritos o por voz los interpreta el LLM (Claude). Si no hay clave o
 
 ### Pedidos por voz
 
-El botón del micrófono (o la tecla `V`) escucha un pedido en español y lo trata igual que uno escrito. Si el pedido vino por voz, la respuesta también se escucha. Funciona en Chrome y Edge; en Firefox queda solo el texto. En esos navegadores el audio lo procesa su servicio de voz, salvo que puedan reconocerlo en el equipo (ver [docs/uso_responsable.md](docs/uso_responsable.md)).
+El micrófono empieza a escuchar al abrir el visor y vuelve a activarse después de procesar cada pedido. Mientras escucha, la interfaz lo indica y muestra la transcripción parcial; al terminar, procesa el pedido para mostrar el objeto del catálogo y reanuda la escucha sin esperar una respuesta hablada. El botón del micrófono (o la tecla `V`) permite pausarlo y activarlo de nuevo. El navegador puede solicitar permiso o requerir un primer clic para iniciar. Funciona en Chrome y Edge; en Firefox queda solo el texto. En esos navegadores el audio lo procesa su servicio de voz, salvo que puedan reconocerlo en el equipo (ver [docs/uso_responsable.md](docs/uso_responsable.md)).
 
 ## Dataset de gestos y MLP
 

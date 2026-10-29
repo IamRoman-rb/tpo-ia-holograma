@@ -12,7 +12,7 @@ Para cada punto se indica qué está **implementado** (y dónde), y qué está *
 | Qué datos salen del equipo | ✅ Implementado y explicado en la ayuda del visor |
 | Dataset de gestos | ✅ Consentimiento, identificador anónimo, solo coordenadas |
 | Sesgos en la detección de manos | 🔶 Mitigaciones implementadas · medido con fotos de 1.134 personas (HaGRID): sin diferencia entre manos · ⏳ falta medirlo con la cámara |
-| Pedidos por voz | ✅ Aviso de a dónde va el audio; solo se escucha con el micrófono encendido |
+| Pedidos por voz | ✅ Aviso de a dónde va el audio; escucha automática al abrir y se puede pausar |
 | Dataset de internet (HaGRID) | ✅ Licencia CC BY-SA 4.0, citado; solo se guardan coordenadas, nunca imágenes |
 | Errores de la IA (sección 16.3) | ✅ Hay una protección implementada para cada caso de la tabla |
 | Transparencia | ✅ Gesto, confianza, interpretación, motor y origen del modelo, todo en pantalla |
@@ -37,7 +37,7 @@ Para cada punto se indica qué está **implementado** (y dónde), y qué está *
 
 ### Pedidos por voz (`frontend/js/voz.js`)
 
-- El micrófono se enciende solo al tocar el botón o apretar `V`, y se apaga al terminar el pedido.
+- El micrófono empieza a escuchar al abrir el visor y vuelve a activarse después de cada pedido. El botón o `V` permite pausarlo y reactivarlo; el navegador puede requerir permiso o un primer clic.
 - El reconocimiento lo hace el navegador. En Chrome y Edge el audio se envía a su servicio de voz (Google o Microsoft), salvo que el navegador ofrezca el reconocimiento en el equipo: en ese caso se usa, y el botón lo indica. Esto se explica en la ayuda del visor.
 - El texto reconocido se trata igual que un pedido escrito: va al LLM (si está configurado) y pasa por las mismas validaciones.
 

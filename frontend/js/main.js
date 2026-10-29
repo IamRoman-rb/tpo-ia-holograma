@@ -126,6 +126,7 @@ try { clasificadorGuardado = localStorage.getItem('clasificador'); } catch { /* 
 elegirClasificador(clasificadorGuardado ?? 'mlp');
 let catalogo = [];
 let pedidoActual = 0; // las respuestas de pedidos anteriores se descartan
+let pedidoDeVozActual = null;
 
 let ultimoModelo = { origen: null, t: 0 }; // para medir la latencia del pedido
 
@@ -166,6 +167,9 @@ async function cargarObjeto(objeto, id) {
     // Un modelo recién generado se suma a la lista del catálogo
     if (r.origen === 'generado') await refrescarCatalogo().catch(console.error);
     await mostrarModelo(r.modelo_url, r.nombre, r.origen, r.id);
+    if (id === pedidoDeVozActual) {
+      mostrarEstadoVoz('listo', 'Objeto actualizado. Reactivando escucha…');
+    }
     return true;
   } catch (err) {
     if (id !== pedidoActual) return false;
@@ -249,6 +253,10 @@ function publicarFin(id) {
 
 async function atenderPedido(frase, { porVoz = false } = {}) {
   const id = ++pedidoActual;
+  if (porVoz) {
+    pedidoDeVozActual = id;
+    respuestaHablada = Promise.resolve();
+  }
   ui.mostrarEstado('interpretando…');
   const t0 = performance.now();
   publicarPedido(id, 'enviado', { frase, porVoz });
@@ -270,12 +278,8 @@ async function atenderPedido(frase, { porVoz = false } = {}) {
   publicarPedido(id, 'intencion', { intencion, msTotal: performance.now() - t0 });
   if (id !== pedidoActual) return;
   ui.mostrarInterpretacion(intencion);
-  // Si se pidió hablando, la respuesta también se escucha (sin el porcentaje ni el motor)
-  if (porVoz) {
-    decir(intencion.accion === 'desconocido' ? 'No entendí el pedido.'
-      : document.getElementById('interpretacion').textContent.split(' — ')[0]);
-  }
   if (intencion.accion === 'desconocido') {
+    if (porVoz) respuestaHablada = Promise.resolve(decir('No entendí el pedido.'));
     const motivo = intencion.motivo ? ` (${intencion.motivo})` : '';
     ui.mostrarEstado(`No entendí el pedido${motivo}. Probá con "mostrame un engranaje".`, 'error');
     return publicarFin(id);
@@ -285,6 +289,7 @@ async function atenderPedido(frase, { porVoz = false } = {}) {
     ui.mostrarEstado('esperando confirmación');
     if (!(await ui.pedirConfirmacion())) {
       ui.mostrarEstado('pedido cancelado');
+      if (porVoz) respuestaHablada = Promise.resolve(decir('Pedido cancelado.'));
       return publicarPedido(id, 'error', { mensaje: 'cancelado por el usuario' });
     }
     if (id !== pedidoActual) return;
@@ -304,6 +309,13 @@ document.getElementById('pedido').addEventListener('submit', (e) => {
   if (!frase) return;
   const t0 = performance.now();
   atenderPedido(frase, { porVoz }).then(async () => {
+    if (porVoz && estadoVoz.dataset.estado === 'procesando') {
+      mostrarEstadoVoz('listo', 'Pedido terminado. Reactivando escucha…');
+    }
+    if (porVoz) {
+      await respuestaHablada;
+      voz?.reanudar();
+    }
     // Latencia de punta a punta: solo cuenta si este pedido terminó mostrando un modelo
     if (ultimoModelo.t < t0) return;
     await metricas.proximoCuadro();
@@ -312,14 +324,27 @@ document.getElementById('pedido').addEventListener('submit', (e) => {
   }).catch((err) => {
     console.error(err);
     ui.mostrarEstado(err.estado ? err.message : 'No pude cargar el modelo, ¿probás de nuevo?', 'error');
+    if (porVoz) mostrarEstadoVoz('error', err.message || 'No pude completar el pedido.');
     publicarFin(pedidoActual);
+    if (porVoz) {
+      await respuestaHablada;
+      voz?.reanudar();
+    }
   });
   campo.select();
 });
 
 // --- pedidos por voz: el texto reconocido sigue el mismo camino que uno escrito
 const botonMicrofono = document.getElementById('microfono');
+const estadoVoz = document.getElementById('estado-voz');
 let voz = null;
+let respuestaHablada = Promise.resolve();
+
+function mostrarEstadoVoz(estado, texto) {
+  estadoVoz.dataset.estado = estado;
+  estadoVoz.textContent = texto;
+  estadoVoz.hidden = !texto;
+}
 
 async function prepararVoz() {
   const Reconocimiento = reconocimientoDisponible();
@@ -328,12 +353,16 @@ async function prepararVoz() {
   const campo = document.getElementById('frase');
   voz = crearVoz({
     local,
+    continuo: true,
+    esperaReinicioMs: 100,
     alParcial: (texto) => {
       campo.value = texto;
+      mostrarEstadoVoz('escuchando', `Te escucho: «${texto}»`);
       actividad.publicar({ tipo: 'voz', estado: 'escuchando', texto });
     },
     alFinal: (texto) => {
       campo.value = texto;
+      mostrarEstadoVoz('reconocido', `Reconocí: «${texto}». Procesando pedido…`);
       actividad.publicar({ tipo: 'voz', estado: 'final', texto });
       pedidoPorVoz = true;
       document.getElementById('pedido').requestSubmit();
@@ -342,20 +371,35 @@ async function prepararVoz() {
       // Lo reconocido queda en el pedido (con la marca "voz"); acá solo se muestra mientras se escucha
       actividad.publicar({ tipo: 'voz', estado: estado === 'escuchando' ? 'escuchando' : 'inactivo', texto: '' });
       botonMicrofono.classList.toggle('escuchando', estado === 'escuchando');
-      botonMicrofono.setAttribute('aria-pressed', String(estado === 'escuchando'));
-      if (estado === 'escuchando') ui.mostrarEstado('escuchando…');
-      else if (estado === 'error') ui.mostrarEstado(detalle, 'error');
-      else if (detalle) ui.mostrarEstado(detalle);
+      botonMicrofono.setAttribute('aria-pressed', String(voz?.activo ?? false));
+      botonMicrofono.setAttribute('aria-label', voz?.activo ? 'Pausar micrófono' : 'Activar micrófono');
+      if (estado === 'escuchando') {
+        mostrarEstadoVoz(estado, 'Micrófono activo: hablá y nombrá un objeto.');
+        ui.mostrarEstado('escuchando…');
+      } else if (estado === 'procesando') {
+        mostrarEstadoVoz(estado, 'Pedido reconocido; procesándolo…');
+      } else if (estado === 'error') {
+        mostrarEstadoVoz(estado, detalle);
+        ui.mostrarEstado(detalle, 'error');
+      } else if (detalle) {
+        mostrarEstadoVoz(estado, detalle);
+        ui.mostrarEstado(detalle);
+      } else if (!estadoVoz.dataset.estado || estadoVoz.dataset.estado === 'escuchando') {
+        mostrarEstadoVoz('', '');
+      }
     },
   });
   botonMicrofono.hidden = false;
-  botonMicrofono.title = local ? 'Pedir por voz (V) · se reconoce en este equipo'
-    : 'Pedir por voz (V) · el audio lo procesa el servicio de voz del navegador';
+  botonMicrofono.title = local
+    ? 'Escucha continua (V para pausar o activar) · se reconoce en este equipo'
+    : 'Escucha continua (V para pausar o activar) · el audio lo procesa el servicio de voz del navegador';
+  mostrarEstadoVoz('listo', 'Activando micrófono…');
+  voz.escuchar();
 }
 
 function alternarVoz() {
   if (!voz) return ui.mostrarEstado('Este navegador no reconoce la voz: escribí el pedido.', 'error');
-  if (voz.escuchando) voz.detener();
+  if (voz.activo) voz.detener();
   else voz.escuchar();
 }
 botonMicrofono.addEventListener('click', alternarVoz);

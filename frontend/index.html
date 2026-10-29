@@ -141,7 +141,7 @@
     </dl>
     <h2>Privacidad</h2>
     <p class="privacidad">El video de la cámara se procesa en este equipo y no se guarda ni se envía. Los pedidos escritos se envían a un servicio de IA externo (Claude, de Anthropic) para interpretarlos, si está configurado.</p>
-    <p class="privacidad" id="privacidad-voz">Los pedidos por voz los reconoce el navegador: en Chrome y Edge el audio se envía a su servicio de voz (Google o Microsoft), salvo que el navegador lo pueda reconocer en este equipo. Solo se escucha mientras el micrófono está encendido.</p>
+    <p class="privacidad" id="privacidad-voz">El micrófono empieza a escuchar al abrir el visor y se puede pausar con el botón o la tecla V. El navegador puede pedir permiso. En Chrome y Edge el audio se envía a su servicio de voz (Google o Microsoft), salvo que el navegador lo pueda reconocer en este equipo. Solo se escucha mientras el micrófono está encendido.</p>
     <p><a href="captura.html">Grabar datos para entrenar el clasificador →</a></p>
   </section>
 
@@ -162,6 +162,7 @@
       </button>
       <button type="submit">Pedir</button>
     </form>
+    <p id="estado-voz" class="estado-voz" role="status" aria-live="polite" aria-atomic="true" hidden></p>
     <div id="botones" role="group" aria-label="Controles alternativos">
       <button type="button" data-accion="izquierda" aria-label="Rotar a la izquierda">⟲</button>
       <button type="button" data-accion="derecha" aria-label="Rotar a la derecha">⟳</button>
