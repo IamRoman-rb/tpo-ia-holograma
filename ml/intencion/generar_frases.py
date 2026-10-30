@@ -5,7 +5,12 @@ Los objetos salen de dos fuentes:
   - una lista de objetos industriales escrita a mano (el dominio de la propuesta);
   - ml/intencion/objetos.csv: unos 9.800 nombres de WordNet en español (artefactos, máquinas, herramientas,
     muebles, ropa, vehículos, construcciones, animales, partes del cuerpo, frutas), para que el etiquetador
-    aprenda a reconocer CUALQUIER objeto por el contexto de la frase y no una lista cerrada.
+    aprenda a reconocer CUALQUIER objeto por el contexto de la frase y no una lista cerrada;
+  - los nombres en español de las categorías del catálogo 3D (ml/catalogo3d/seleccion.csv): justo lo que se va a
+    pedir. El género gramatical sale de la terminación (no lo da WordNet).
+Para acercarse a lo que llega de verdad, se suman copias con errores de tipeo (~10 %: tildes que faltan, letras
+cambiadas, de más o de menos, teclas vecinas) y, si existe, ml/intencion/frases_voz.csv: frases de entrenamiento
+dichas por voces sintéticas con ruido y transcritas por Whisper (ml/intencion/aumentar_voz.py).
 A cada objeto se le pueden sumar adjetivos (concordados en género y número), materiales, medidas, "con …",
 "para …" o "de un …" (el objeto de otro objeto): todo eso es información del pedido y queda dentro del objeto.
 Lo que no es el objeto (la vista, "en 3D", "para el cliente", las cortesías) va afuera.
@@ -15,9 +20,10 @@ objeto de los sets de evaluación (eval/frases_*.csv), y no se copia ninguna fra
 Además, el 10 % de los nombres de WordNet se reserva: con ellos se arma ml/intencion/frases_validacion_generada.csv,
 que mide el etiquetador con objetos que no vio (sirve para elegir el modelo; la prueba son las frases a mano).
 
-Uso (desde la raíz):  backend/.venv/Scripts/python ml/intencion/generar_frases.py
+Uso (desde la raíz):  backend/.venv/Scripts/python ml/intencion/generar_frases.py [--escala 5]
 Salida: ml/intencion/frases_entrenamiento.csv y ml/intencion/frases_validacion_generada.csv
 """
+import argparse
 import csv
 import json
 import hashlib
@@ -33,8 +39,11 @@ AQUI = Path(__file__).resolve().parent
 RAIZ = AQUI.parent.parent
 SALIDA = AQUI / "frases_entrenamiento.csv"
 SALIDA_VALIDACION = AQUI / "frases_validacion_generada.csv"
-CANTIDAD = {"mostrar": 8000, "explotar": 3000, "aislar": 3000}   # las acciones con objeto
-POR_ACCION = 600                                                  # el resto
+CANTIDAD = {"mostrar": 8000, "explotar": 3000, "aislar": 3000}   # las acciones con objeto (por --escala)
+POR_ACCION = 600                                                  # el resto (por --escala)
+TIPEO = 0.10                                                      # copias con errores de tipeo
+FRASES_VOZ = AQUI / "frases_voz.csv"
+CATALOGO_3D = RAIZ / "ml" / "catalogo3d" / "seleccion.csv"
 CANTIDAD_VALIDACION = {"mostrar": 800, "explotar": 300, "aislar": 300}
 
 # Núcleos de los objetos de evaluación: no pueden aparecer en ningún objeto de entrenamiento
@@ -191,7 +200,23 @@ def _leer_vocabulario():
             partes[parte][tipo].append((fila["nombre"], fila["genero"]))
             if fila["categoria"] in ("componente", "cuerpo") or (tipo == "cosa" and len(fila["nombre"]) < 12):
                 partes[parte]["pieza"].append((fila["nombre"], fila["genero"]))
+    ya = {n for p in partes.values() for lista in p.values() for n, _ in lista}
+    if CATALOGO_3D.exists():
+        with open(CATALOGO_3D, encoding="utf-8") as f:
+            nombres = {n for fila in csv.DictReader(f) for n in fila["nombres_es"].split("|") if n}
+        for nombre in sorted(nombres - ya):
+            if permitido(nombre) and not nombre[:1].isupper():
+                parte = "validacion" if int(hashlib.md5(nombre.encode()).hexdigest(), 16) % 10 == 0 else "entrenamiento"
+                partes[parte]["cosa"].append((nombre, genero(nombre)))
     return partes
+
+
+def genero(nombre):
+    """Género gramatical por la terminación del núcleo (la primera palabra): alcanza para elegir el artículo."""
+    nucleo = normalizar(nombre).split()[0]
+    if nucleo.endswith(("ma", "pa")) and len(nucleo) > 4:   # sistema, mapa: masculinos de origen griego
+        return "m"
+    return "f" if nucleo.endswith(("a", "cion", "sion", "dad", "tad", "tud", "umbre", "ez")) else "m"
 
 
 VOCABULARIO = _leer_vocabulario()
@@ -554,13 +579,72 @@ def generar(r, cantidades, parte, vistas):
 
 def escribir(ruta, filas):
     with open(ruta, "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=["frase", "accion", "objeto"])
+        w = csv.DictWriter(f, fieldnames=["frase", "accion", "objeto", "fuente"], restval="plantilla", extrasaction="ignore")
         w.writeheader()
         w.writerows(filas)
     print(f"{len(filas)} frases -> {ruta.relative_to(RAIZ)}")
 
 
+VECINAS = dict(zip("qwertyuiopasdfghjklñzxcvbnm",
+                   ["wa", "qes", "wrd", "etf", "ryg", "tuh", "yij", "uok", "ipl", "olñ", "qsz", "awdx", "sefc",
+                    "drgv", "fthb", "gyjn", "hukm", "jilm", "kopñ", "lp", "asx", "zsdc", "xdfv", "cfgb", "vghn",
+                    "bhjm", "njk"]))
+SIN_TILDE = str.maketrans("áéíóú", "aeiou")
+
+
+def con_tipeo(r, frase, objeto):
+    """Uno o dos errores de tipeo en palabras de 4 letras o más. Si la palabra es del objeto, el objeto cambia
+    igual (sigue siendo un tramo de la frase, como pide el etiquetador)."""
+    palabras = [p for p in re.findall(r"\w+", frase) if len(p) >= 4]
+    if not palabras:
+        return None
+    for p in r.sample(palabras, min(len(palabras), r.choice([1, 1, 2]))):
+        i = r.randrange(len(p))
+        tipo = r.random()
+        if tipo < 0.3 and p != p.translate(SIN_TILDE):
+            nueva = p.translate(SIN_TILDE)
+        elif tipo < 0.5 and i < len(p) - 1:
+            nueva = p[:i] + p[i + 1] + p[i] + p[i + 2:]       # dos letras cambiadas de lugar
+        elif tipo < 0.7:
+            nueva = p[:i] + p[i + 1:]                         # falta una
+        elif tipo < 0.85:
+            nueva = p[:i] + p[i] + p[i:]                      # sobra una
+        else:
+            nueva = p[:i] + r.choice(VECINAS.get(p[i].lower(), p[i])) + p[i + 1:]   # tecla vecina
+        frase = re.sub(rf"\b{re.escape(p)}\b", nueva, frase, count=1)
+        objeto = re.sub(rf"\b{re.escape(p)}\b", nueva, objeto, count=1) if objeto else objeto
+    return frase, objeto
+
+
+def con_errores_de_tipeo(r, filas, vistas):
+    copias = []
+    for fila in r.sample(filas, int(len(filas) * TIPEO)):
+        cambio = con_tipeo(r, fila["frase"], fila["objeto"])
+        if not cambio or normalizar(cambio[0]) in vistas or normalizar(cambio[0]) in CONTROL:
+            continue
+        if cambio[1] and normalizar(cambio[1]) not in normalizar(cambio[0]):
+            continue
+        vistas.add(normalizar(cambio[0]))
+        copias.append({"frase": cambio[0], "accion": fila["accion"], "objeto": cambio[1], "fuente": "tipeo"})
+    print(f"  {len(copias)} copias con errores de tipeo")
+    return copias
+
+
+def frases_de_voz(vistas):
+    """Las frases transcritas por Whisper (ml/intencion/aumentar_voz.py), si ya se generaron."""
+    if not FRASES_VOZ.exists():
+        return []
+    with open(FRASES_VOZ, encoding="utf-8") as f:
+        filas = [{**x, "fuente": "voz"} for x in csv.DictReader(f) if normalizar(x["frase"]) not in CONTROL]
+    vistas |= {normalizar(x["frase"]) for x in filas}
+    print(f"  {len(filas)} frases transcritas por Whisper ({FRASES_VOZ.name})")
+    return filas
+
+
 def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--escala", type=float, default=5, help="multiplica las frases de entrenamiento (1 = 20 mil)")
+    args = ap.parse_args()
     sys.stdout.reconfigure(encoding="utf-8")
     r = random.Random(20261028)
     v = VOCABULARIO
@@ -568,11 +652,14 @@ def main():
           f"{sum(map(len, v['validacion'].values()))} reservados · {len(INDUSTRIALES)} industriales · "
           f"{len(PROHIBIDAS)} núcleos de evaluación excluidos")
     vistas = set()
-    cantidades = {a: CANTIDAD.get(a, POR_ACCION) for a in GENERADORES}
+    cantidades = {a: round(CANTIDAD.get(a, POR_ACCION) * args.escala) for a in GENERADORES}
     entrenamiento = generar(r, cantidades, "entrenamiento", vistas)
-    escribir(SALIDA, entrenamiento)
-    escribir(SALIDA_VALIDACION, generar(r, CANTIDAD_VALIDACION, "validacion", vistas))
+    validacion = generar(r, CANTIDAD_VALIDACION, "validacion", vistas)
+    # el vocabulario de la búsqueda difusa sale de las frases limpias: un error de tipeo no es una palabra conocida
     escribir_vocabulario(entrenamiento)
+    entrenamiento += con_errores_de_tipeo(r, entrenamiento, vistas) + frases_de_voz(vistas)
+    escribir(SALIDA, entrenamiento)
+    escribir(SALIDA_VALIDACION, validacion)
 
 
 def escribir_vocabulario(filas):

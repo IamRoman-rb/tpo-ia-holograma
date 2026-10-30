@@ -1,0 +1,104 @@
+set,consulta,esperada,obtenida,modelo,metodo,similitud,ok,ms
+sinonimos_reservados,climatización,lvis:air_conditioner,,,,,False,1231
+sinonimos_reservados,alcohol,lvis:alcohol,lvis:liquor,Aguardiente,palabras,1.0,True,0
+sinonimos_reservados,almendro dulce,lvis:almond,lvis:almond,Almendra,palabras,0.5,True,0
+sinonimos_reservados,tanque,lvis:army_tank,lvis:tank_(storage_vessel),Depósito,palabras,1.0,True,0
+sinonimos_reservados,panecillo,lvis:bagel,,,,,False,73
+sinonimos_reservados,pelota,lvis:ball,lvis:smoothie,Cobista,palabras,1.0,True,0
+sinonimos_reservados,bate,lvis:baseball_bat,,,,,False,1
+sinonimos_reservados,escarabajo,lvis:beetle,,,,,False,1
+sinonimos_reservados,bulldog,lvis:bulldog,,,,,False,1
+sinonimos_reservados,chaleco antibalas,lvis:bulletproof_vest,lvis:vest,Chaleco,palabras,0.5,False,0
+sinonimos_reservados,ómnibus,lvis:bus_(vehicle),dominio:colectivo,Colectivo,palabras,1.0,True,0
+sinonimos_reservados,cámara fotográfica,lvis:camera,lvis:camera,Cámara,palabras,0.5,True,0
+sinonimos_reservados,cantina,lvis:canteen,,,,,False,1
+sinonimos_reservados,caja de cartón,lvis:carton,lvis:elevator_car,Caja,palabras,0.5,False,0
+sinonimos_reservados,pastilla de chocolate,lvis:chocolate_bar,lvis:cake,Pastilla,palabras,0.5,False,0
+sinonimos_reservados,cigarro,lvis:cigarette,,,,,False,1
+sinonimos_reservados,máquina de café,lvis:coffee_maker,dominio:cafetera,Cafetera,embeddings,0.894,False,76
+sinonimos_reservados,convertible,lvis:convertible_(automobile),,,,,False,1
+sinonimos_reservados,lápiz pastel,lvis:crayon,lvis:pencil,Lápiz,palabras,0.5,False,0
+sinonimos_reservados,media luna,lvis:crescent_roll,lvis:tights_(clothing),Leotardos,palabras,0.5,False,0
+sinonimos_reservados,patata frita,lvis:crisp_(potato_chip),lvis:potato,Papa,palabras,0.5,False,0
+sinonimos_reservados,cuervo,lvis:crow,,,,,False,1
+sinonimos_reservados,platillos,lvis:cymbal,,,,,False,1
+sinonimos_reservados,pomo,lvis:doorknob,,,,,False,1
+sinonimos_reservados,patito,lvis:duckling,,,,,False,1
+sinonimos_reservados,contenedor de basura,lvis:dumpster,lvis:garbage,Migajas,embeddings,0.891,False,27
+sinonimos_reservados,ante,lvis:elk,,,,,False,1
+sinonimos_reservados,fieltro,lvis:fedora,,,,,False,1
+sinonimos_reservados,pabellón,lvis:flag,,,,,False,1
+sinonimos_reservados,destello,lvis:flash,,,,,False,1
+sinonimos_reservados,restos,lvis:garbage,,,,,False,1
+sinonimos_reservados,asa,lvis:handle,,,,,False,1
+sinonimos_reservados,carro tirado por caballos,lvis:horse_buggy,lvis:sawhorse,Burro,embeddings,0.776,False,27
+sinonimos_reservados,globo,lvis:hot-air_balloon,lvis:globe,Globo,palabras,1.0,True,0
+sinonimos_reservados,placa eléctrica,lvis:hotplate,lvis:license_plate,Chapa,palabras,0.5,False,0
+sinonimos_reservados,mermelada,lvis:jam,,,,,False,1
+sinonimos_reservados,joyas,lvis:jewelry,lvis:jewelry,Joya,palabras,1.0,True,0
+sinonimos_reservados,gatito,lvis:kitten,,,,,False,1
+sinonimos_reservados,bata de laboratorio,lvis:lab_coat,lvis:fume_hood,Campana de laboratorio,embeddings,0.717,False,27
+sinonimos_reservados,taquilla,lvis:locker,,,,,False,1
+sinonimos_reservados,mandarina,lvis:mandarin_orange,,,,,False,1
+sinonimos_reservados,vespa,lvis:motor_scooter,lvis:hornet,Avispón,palabras,1.0,True,0
+sinonimos_reservados,instrumento musical,lvis:musical_instrument,lvis:musical_instrument,Instrumento,palabras,0.5,True,0
+sinonimos_reservados,naranja,lvis:orange_(fruit),,,,,False,1
+sinonimos_reservados,otomana,lvis:ottoman,,,,,False,1
+sinonimos_reservados,piano,lvis:piano,dominio:piano,Piano,palabras,1.0,True,0
+sinonimos_reservados,pastel,lvis:pie,,,,,False,1
+sinonimos_reservados,polaco,lvis:pole,,,,,False,1
+sinonimos_reservados,papa,lvis:pop_(soda),lvis:potato,Papa,palabras,1.0,True,0
+sinonimos_reservados,tarjeta postal,lvis:postcard,lvis:card,Carta,palabras,0.5,False,0
+sinonimos_reservados,pala excavadora,lvis:power_shovel,dominio:excavadora,Excavadora,palabras,0.5,False,0
+sinonimos_reservados,perrito,lvis:puppy,,,,,False,1
+sinonimos_reservados,conejo,lvis:rabbit,,,,,False,1
+sinonimos_reservados,coche de competición,lvis:race_car,dominio:auto,Auto,palabras,0.5,False,0
+sinonimos_reservados,refrigerador,lvis:refrigerator,,,,,False,1
+sinonimos_reservados,alforjas,lvis:saddlebag,lvis:saddlebag,Alforja,palabras,1.0,True,0
+sinonimos_reservados,salchicha,lvis:sausage,,,,,False,1
+sinonimos_reservados,báscula,lvis:scale_(measuring_instrument),,,,,False,1
+sinonimos_reservados,autobús escolar,lvis:school_bus,lvis:school_bus,Autobus escolar,palabras,1.0,True,0
+sinonimos_reservados,roca,lvis:sparkler_(fireworks),,,,,False,1
+sinonimos_reservados,farol,lvis:streetlight,lvis:lantern,Farol,palabras,1.0,True,0
+sinonimos_reservados,sudadera,lvis:sweatshirt,,,,,False,1
+sinonimos_reservados,jeringa,lvis:syringe,,,,,False,1
+sinonimos_reservados,mojado,lvis:taco,,,,,False,1
+sinonimos_reservados,oso de peluche,lvis:teddy_bear,lvis:teddy_bear,Osito de peluche,palabras,0.5,True,0
+sinonimos_reservados,termostato,lvis:thermostat,,,,,False,1
+sinonimos_reservados,tostadora,lvis:toaster,,,,,False,1
+sinonimos_reservados,trinchera,lvis:trench_coat,,,,,False,1
+sinonimos_reservados,urinario,lvis:urinal,,,,,False,1
+sinonimos_reservados,lavamanos,lvis:washbasin,lvis:sink,Fregadero,palabras,1.0,True,0
+sinonimos_reservados,torre de agua,lvis:water_tower,lvis:water_tower,Alcubilla,embeddings,0.953,True,28
+sinonimos_reservados,sandía,lvis:watermelon,,,,,False,1
+sinonimos_reservados,lobo,lvis:wolf,,,,,False,1
+a_mano,motor de auto,dominio:motor de auto,dominio:motor de auto,Motor de auto,palabras,1.0,True,0
+a_mano,motor de un avión,dominio:motor de avión|dominio:turbina,dominio:motor de avión,Motor de avión,palabras,1.0,True,0
+a_mano,caja de cambios,dominio:caja de cambios,dominio:caja de cambios,Caja de cambios,palabras,1.0,True,0
+a_mano,pistón,dominio:pistón,dominio:pistón,Pistón,palabras,1.0,True,0
+a_mano,cigüeñal,dominio:cigüeñal,dominio:cigüeñal,Cigüeñal,palabras,1.0,True,0
+a_mano,rulemán de bolas,dominio:rodamiento|propio:rodamiento_bolas,propio:rodamiento_bolas,Rodamiento de bolas,palabras,1.0,True,0
+a_mano,bomba de agua,dominio:bomba,dominio:bomba,Bomba,palabras,1.0,True,0
+a_mano,turbina,dominio:turbina,dominio:turbina,Turbina,palabras,1.0,True,0
+a_mano,brazo robótico industrial,dominio:brazo robótico,dominio:brazo robótico,Brazo robótico,palabras,0.667,True,0
+a_mano,excavadora,dominio:excavadora,dominio:excavadora,Excavadora,palabras,1.0,True,0
+a_mano,locomotora,dominio:locomotora|lvis:train_(railroad_vehicle),dominio:locomotora,Locomotora,palabras,1.0,True,0
+a_mano,torno de taller,dominio:torno,dominio:torno,Torno,palabras,0.5,True,0
+a_mano,motosierra,dominio:motosierra,dominio:motosierra,Motosierra,palabras,1.0,True,0
+a_mano,taladro,dominio:taladro|lvis:drill,dominio:taladro,Taladro,palabras,1.0,True,0
+a_mano,moto,dominio:moto|lvis:motorcycle,dominio:moto,Moto,palabras,1.0,True,0
+a_mano,guitarra eléctrica,dominio:guitarra|lvis:guitar,lvis:guitar,Guitarra,palabras,0.5,True,0
+a_mano,microscopio,dominio:microscopio|lvis:microscope,dominio:microscopio,Microscopio,palabras,1.0,True,0
+a_mano,placa de video,dominio:placa de video,dominio:placa de video,Placa de video,palabras,1.0,True,0
+a_mano,submarino,dominio:submarino,dominio:submarino,Submarino,palabras,1.0,True,0
+a_mano,helicóptero,dominio:helicóptero|lvis:helicopter,dominio:helicóptero,Helicóptero,palabras,1.0,True,0
+a_mano,máquina para coser ropa,dominio:máquina de coser|lvis:sewing_machine,dominio:máquina de coser,Máquina de coser,palabras,0.667,True,0
+a_mano,aparato que enfría la comida,dominio:heladera|lvis:refrigerator,lvis:soupspoon,Cuchara sopera,embeddings,0.719,False,28
+a_mano,instrumento musical de cuerdas que se rasguea,dominio:guitarra|lvis:guitar,lvis:musical_instrument,Instrumento,embeddings,0.772,False,39
+a_mano,vehículo de dos ruedas con pedales,dominio:bicicleta|lvis:bicycle,propio:engranaje_recto,Engranaje recto,palabras,0.5,False,0
+a_mano,nave que viaja al espacio,dominio:cohete|lvis:space_shuttle,lvis:space_shuttle,Transbordador espacial,embeddings,0.874,True,26
+a_mano,aparato para mirar cosas muy pequeñas,dominio:microscopio|lvis:microscope,,,,,False,28
+a_mano,máquina que levanta cargas pesadas en una obra,dominio:grúa|lvis:crane,dominio:reactor,Reactor,embeddings,0.745,False,28
+a_mano,vehículo que va debajo del agua,dominio:submarino,dominio:barco,Barco,embeddings,0.645,False,27
+a_mano,corazón humano,dominio:corazón humano|lvis:heart,dominio:corazón humano,Corazón humano,palabras,1.0,True,0
+a_mano,calavera,dominio:esqueleto,dominio:esqueleto,Esqueleto,palabras,1.0,True,0

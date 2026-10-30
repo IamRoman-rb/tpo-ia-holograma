@@ -3,8 +3,8 @@
 Uso (desde la raíz del repositorio, con cualquier Python 3.10+ de 64 bits):
     python scripts/entrenar.py --listar            # qué pasos hay, cuánto tarda cada uno y cuáles se pueden correr
     python scripts/entrenar.py --prueba            # ~20 min: cada paso en su versión mínima, sin pisar los modelos lentos
-    python scripts/entrenar.py                     # todo (~6-7 h en CPU con el LLM grande)
-    python scripts/entrenar.py --llm chico         # con el LLM de 0.5B (~80 min en vez de ~4 h)
+    python scripts/entrenar.py                     # todo (~13 h en CPU con el LLM grande)
+    python scripts/entrenar.py --llm chico         # con el LLM de 0.5B (~2,5 h en vez de ~8 h)
     python scripts/entrenar.py --solo bayes,modelo # solo esos pasos
     python scripts/entrenar.py --desde llm         # retomar después de un corte
 
@@ -53,12 +53,12 @@ def pasos(llm):
         Paso("bayes", "Naive Bayes de pedidos + calibración", ["ml/intencion/entrenar_bayes.py"], 1, 1,
              salida=["backend/modelos/bayes.json"]),
         Paso("modelo", "Intérprete E5 + regresión logística + etiquetador", ["ml/intencion/entrenar_intencion.py"],
-             6, 6, salida=["backend/modelos/intencion.json"]),
+             25, 25, salida=["backend/modelos/intencion.json"]),
         Paso("transformer", "Transformer BETO (acción + objeto BIO con Viterbi)",
-             ["ml/intencion_transformer/entrenar_transformer.py", "--candidatos", "beto"], 120, 4, rapido=True,
+             ["ml/intencion_transformer/entrenar_transformer.py", "--candidatos", "beto"], 240, 4, rapido=True,
              salida=["backend/modelos/transformer/"]),
         Paso("llm", f"LLM propio Qwen2.5 {'1.5B' if llm == 'grande' else '0.5B'} + LoRA",
-             ["ml/llm_propio/entrenar_llm.py", "--tamano", llm], 240 if llm == "grande" else 80,
+             ["ml/llm_propio/entrenar_llm.py", "--tamano", llm], 480 if llm == "grande" else 160,
              15 if llm == "grande" else 6, rapido=True,
              salida=[f"backend/modelos/{'llm_propio_grande' if llm == 'grande' else 'llm_propio'}/"]),
         Paso("consenso", "Pesos del consenso (L-BFGS contra genético y voto)", ["ml/consenso/ajustar_consenso.py"],

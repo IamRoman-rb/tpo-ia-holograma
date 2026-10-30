@@ -11,6 +11,7 @@ requirements.txt cambió (guarda su huella en backend/.venv/requisitos.sha256). 
 """
 import argparse
 import hashlib
+import json
 import os
 import socket
 import subprocess
@@ -61,14 +62,21 @@ def reenviar(proceso, etiqueta, ocultar=()):
 
 
 def esperar_backend(puerto, abrir):
+    """Espera a que el backend responda y a que carguen los motores de pedidos (el LLM propio tarda ~1 min)."""
     url = f"http://localhost:{puerto}/health"
+    avisado = False
     while True:
         try:
-            with urllib.request.urlopen(url, timeout=2):
-                break
-        except OSError:
-            time.sleep(1)
-    print(f"\n  Backend listo: {url}")
+            with urllib.request.urlopen(url, timeout=5) as r:
+                if json.loads(r.read()).get("motores_listos", True):
+                    break
+            if not avisado:
+                print("\n  El backend responde; cargando los motores de pedidos (la primera vez ~1 min)…", flush=True)
+                avisado = True
+        except (OSError, ValueError):
+            pass
+        time.sleep(2)
+    print(f"\n  Backend listo: {url}", flush=True)
     if abrir:
         webbrowser.open(abrir)
 

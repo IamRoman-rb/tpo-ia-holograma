@@ -48,8 +48,8 @@ CANDIDATOS = {
     "mdeberta": "microsoft/mdeberta-v3-base",
     "xlmr": "FacebookAI/xlm-roberta-large",
 }
-POR_ACCION = {"mostrar": 2600, "explotar": 1300, "aislar": 1300}   # el resto: 500 cada una
-OTRAS = 500
+POR_ACCION = {"mostrar": 5200, "explotar": 2600, "aislar": 2600}   # el resto: 1000 cada una (el doble desde
+OTRAS = 1000                                                      # que hay 100 mil frases, con tipeo y voz)
 EPOCAS = 2
 LOTE = 16
 TASAS = {"beto": 5e-5, "mdeberta": 4e-5, "xlmr": 2e-5}   # los modelos grandes se ajustan con tasas más bajas
