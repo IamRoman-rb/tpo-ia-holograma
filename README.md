@@ -60,6 +60,16 @@ python -m http.server 5500
 
 Abrir <http://localhost:5500> y permitir el acceso a la cámara. El frontend funciona aunque el backend no esté levantado: los pedidos se buscan en el catálogo local.
 
+## Modelos 3D (Objaverse)
+
+Además de los modelos propios, el catálogo tiene unos 5.800 modelos de [Objaverse](https://huggingface.co/datasets/allenai/objaverse): máquinas y piezas (motores, cajas de cambios, turbinas, rodamientos…) y más de mil categorías de objetos comunes, con licencias CC BY, CC BY-SA o CC0. El visor muestra el autor y la licencia de cada uno. No se suben al repositorio; se bajan con:
+
+```bash
+python scripts/descargar_modelos3d.py
+```
+
+Son unos 50 GB. Con `--gb 10` se bajan los mejores de cada categoría hasta ese tamaño. Se puede cortar y volver a correr: sigue donde quedó. Van a `ml/data/externo/objaverse/`; para usar otro disco, definir `HOLOGRAMA_DATOS` (por ejemplo `HOLOGRAMA_DATOS=D:/holograma`) antes de bajar y de levantar el backend. El backend busca solo entre los modelos bajados, así que el proyecto anda igual sin ellos. La selección y cómo se armó: [ml/catalogo3d/](ml/catalogo3d/seleccionar.py).
+
 ## Entrenar los modelos
 
 Los modelos grandes (transformer y LLM propio) no se suben al repositorio: cada uno los entrena en su máquina con las frases que sí están versionadas (`ml/intencion/frases_entrenamiento.csv` y los sets de `eval/`). Desde la raíz:

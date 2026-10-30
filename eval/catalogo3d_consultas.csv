@@ -1,0 +1,31 @@
+consulta,categoria
+motor de auto,dominio:motor de auto
+motor de un avión,dominio:motor de avión|dominio:turbina
+caja de cambios,dominio:caja de cambios
+pistón,dominio:pistón
+cigüeñal,dominio:cigüeñal
+rulemán de bolas,dominio:rodamiento|propio:rodamiento_bolas
+bomba de agua,dominio:bomba
+turbina,dominio:turbina
+brazo robótico industrial,dominio:brazo robótico
+excavadora,dominio:excavadora
+locomotora,dominio:locomotora|lvis:train_(railroad_vehicle)
+torno de taller,dominio:torno
+motosierra,dominio:motosierra
+taladro,dominio:taladro|lvis:drill
+moto,dominio:moto|lvis:motorcycle
+guitarra eléctrica,dominio:guitarra|lvis:guitar
+microscopio,dominio:microscopio|lvis:microscope
+placa de video,dominio:placa de video
+submarino,dominio:submarino
+helicóptero,dominio:helicóptero|lvis:helicopter
+máquina para coser ropa,dominio:máquina de coser|lvis:sewing_machine
+aparato que enfría la comida,dominio:heladera|lvis:refrigerator
+instrumento musical de cuerdas que se rasguea,dominio:guitarra|lvis:guitar
+vehículo de dos ruedas con pedales,dominio:bicicleta|lvis:bicycle
+nave que viaja al espacio,dominio:cohete|lvis:space_shuttle
+aparato para mirar cosas muy pequeñas,dominio:microscopio|lvis:microscope
+máquina que levanta cargas pesadas en una obra,dominio:grúa|lvis:crane
+vehículo que va debajo del agua,dominio:submarino
+corazón humano,dominio:corazón humano|lvis:heart
+calavera,dominio:esqueleto

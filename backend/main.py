@@ -11,12 +11,13 @@ load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 from fastapi import FastAPI, HTTPException, Request  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+from fastapi.staticfiles import StaticFiles  # noqa: E402
 
 import generate3d  # noqa: E402
 from generate3d import GeneracionFallida, GeneracionNoDisponible, generar  # noqa: E402
 import intent_modelo  # noqa: E402
 from intent import interpretar  # noqa: E402
-from retrieval import buscar_similar, catalogo, listar_catalogo, recargar  # noqa: E402
+from retrieval import CARPETA_GLBS, URL_GLBS, buscar_similar, catalogo, listar_catalogo, recargar  # noqa: E402
 from safety import LimiteFrecuencia, fuera_de_dominio, validar_intencion  # noqa: E402
 from schemas import Pedido  # noqa: E402
 import voz  # noqa: E402
@@ -32,10 +33,25 @@ async def lifespan(app):
         intent_modelo.cargar()
     except intent_modelo.ModeloNoDisponible as e:
         logging.getLogger(__name__).warning("Intérprete entrenado no disponible: %s", e)
-    # Whisper tarda en cargar (y ocupa ~2 GB): se carga aparte para no demorar el arranque
+    # Los motores del consenso (LLM propio, transformer…) y Whisper tardan en cargar: se cargan aparte para no demorar
+    # el arranque. Sin esto, el primer pedido tardaba más de un minuto y el visor lo daba por perdido
+    threading.Thread(target=_precargar_motores, daemon=True).start()
     if voz.disponible():
         threading.Thread(target=_precargar_voz, daemon=True).start()
     yield
+
+
+MOTORES = {"listos": False}
+
+
+def _precargar_motores():
+    t0 = time.perf_counter()
+    try:
+        interpretar("mostrame un engranaje")
+    except Exception as e:   # un motor que falta no impide usar los demás
+        logging.getLogger(__name__).warning("Precarga de los motores de pedidos: %s", e)
+    MOTORES["listos"] = True
+    logging.getLogger(__name__).info("Motores de pedidos listos en %.0f s", time.perf_counter() - t0)
 
 
 def _precargar_voz():
@@ -54,6 +70,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# Los modelos de Objaverse bajados con scripts/descargar_modelos3d.py (pueden estar en otro disco: HOLOGRAMA_DATOS)
+app.mount(URL_GLBS, StaticFiles(directory=CARPETA_GLBS, check_dir=False), name="modelos3d")
 
 # Configurable para mediciones (eval/medir_latencias.py); en uso normal, 30 por minuto
 limite = LimiteFrecuencia(maximo=int(os.getenv("LIMITE_PEDIDOS_MINUTO") or 30), ventana_s=60)
@@ -73,6 +91,7 @@ def _controlar_frecuencia(request: Request):
 @app.get("/health")
 def health():
     return {"estado": "ok", "busqueda": catalogo().metodo, "piezas": len(catalogo().items),
+            "modelos3d": len(catalogo().objaverse or ()), "motores_listos": MOTORES["listos"],
             "generacion": generate3d.modo(), "voz": f"whisper {voz.MODELO}" if voz.disponible() else None,
             "motores": motores_instalados()}
 
@@ -137,6 +156,8 @@ def obtener_objeto(p: Pedido, request: Request):
     t0 = time.perf_counter()
     similar = buscar_similar(p.frase)
     if similar:
+        if similar["modelo_url"].startswith(URL_GLBS):   # lo sirve el backend, no el frontend
+            similar["modelo_url"] = str(request.base_url).rstrip("/") + similar["modelo_url"]
         return {**similar, "tiempo_ms": round((time.perf_counter() - t0) * 1000)}
 
     # No está en el catálogo: se genera (flujo 2, paso 5)

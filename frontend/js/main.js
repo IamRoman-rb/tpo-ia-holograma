@@ -136,11 +136,11 @@ let pedidoDeVozActual = null;
 
 let ultimoModelo = { origen: null, t: 0 }; // para medir la latencia del pedido
 
-async function mostrarModelo(url, nombre, origen, id) {
+async function mostrarModelo(url, nombre, origen, id, atribucion = null) {
   ui.mostrarEstado('cargando modelo…');
   await visor.cargarModelo(url);
   ultimoModelo = { origen, t: performance.now() };
-  ui.mostrarOrigen(nombre, origen);
+  ui.mostrarOrigen(nombre, origen, atribucion);
   ui.marcarSeleccionado(id);
   ui.mostrarEstado('listo');
 }
@@ -152,7 +152,9 @@ async function atenderSinBackend(frase) {
     const { item } = encontrado;
     await mostrarModelo(item.url, item.nombre, item.origen ?? 'catalogo', item.id);
   } else {
-    ui.mostrarEstado('No encontré ese objeto en el catálogo. Probá con otro nombre.', 'error');
+    // Sin backend solo están los modelos locales: que se entienda que falta el backend, no el objeto
+    ui.mostrarEstado('El backend no responde y ese objeto no está entre los modelos locales. '
+      + 'Levantalo con «python scripts/levantar.py» para buscar en todo el catálogo.', 'error');
   }
 }
 
@@ -172,7 +174,7 @@ async function cargarObjeto(objeto, id) {
     if (id !== pedidoActual) return false;
     // Un modelo recién generado se suma a la lista del catálogo
     if (r.origen === 'generado') await refrescarCatalogo().catch(console.error);
-    await mostrarModelo(r.modelo_url, r.nombre, r.origen, r.id);
+    await mostrarModelo(r.modelo_url, r.nombre, r.origen, r.id, r.atribucion);
     if (id === pedidoDeVozActual) {
       mostrarEstadoVoz('listo', vozLocal ? 'Objeto actualizado.' : 'Objeto actualizado. Reactivando escucha…');
     }
@@ -302,8 +304,12 @@ async function atenderPedido(frase, { porVoz = false } = {}) {
   // Si vino por voz con Whisper, la transcripción (modelo, confianza, tiempo) también va a la vista del LLM
   publicarPedido(id, 'enviado', { frase, porVoz, voz: porVoz ? ultimaTranscripcion : null });
   let intencion;
+  // Si tarda, que se vea por qué: con el backend recién levantado, el primer pedido carga los motores
+  const aviso = setTimeout(() => {
+    if (id === pedidoActual) ui.mostrarEstado('interpretando… (el backend está cargando los modelos, puede tardar ~1 min)');
+  }, 8000);
   try {
-    intencion = await interpretarPedido(frase, motorPedidos);
+    intencion = await interpretarPedido(frase, motorPedidos).finally(() => clearTimeout(aviso));
   } catch (err) {
     if (id !== pedidoActual) return;
     if (err.estado !== undefined) {

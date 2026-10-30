@@ -14,6 +14,7 @@ Para cada punto se indica qué está **implementado** (y dónde), y qué está *
 | Sesgos en la detección de manos | 🔶 Mitigaciones implementadas · medido con fotos de 1.134 personas (HaGRID): sin diferencia entre manos · ⏳ falta medirlo con la cámara |
 | Pedidos por voz | ✅ Con el backend, Whisper en el equipo; sin él, el navegador avisa a dónde va el audio. La escucha automática se puede pausar |
 | Dataset de internet (HaGRID) | ✅ Licencia CC BY-SA 4.0, citado; solo se guardan coordenadas, nunca imágenes |
+| Modelos 3D de terceros (Objaverse) | ✅ Solo licencias que permiten mostrarlos; autor, licencia y enlace en pantalla |
 | Errores de la IA (sección 16.3) | ✅ Hay una protección implementada para cada caso de la tabla |
 | Transparencia | ✅ Gesto, confianza, interpretación, motor y origen del modelo, todo en pantalla |
 | Seguridad básica | ✅ Claves fuera del repositorio, límites de uso, validación de archivos |
@@ -49,9 +50,16 @@ Para cada punto se indica qué está **implementado** (y dónde), y qué está *
 
 ### Dataset de internet (HaGRID)
 
-- HaGRID fue publicado por sus autores (Kapitanov, Makhlyarchuk y Kvanchiani) con licencia CC BY-SA 4.0 (variante de HaGRID). Se usa la muestra pública de Hugging Face `cj-mills/hagrid-sample-30k-384p`.
+- HaGRID fue publicado por sus autores (Kapitanov, Makhlyarchuk y Kvanchiani) con licencia CC BY-SA 4.0 (variante de HaGRID). Se usan las muestras públicas de Hugging Face `cj-mills/hagrid-sample-30k-384p`, `-250k-384p` y `-500k-384p`.
 - Las fotos quedan fuera del repositorio. Solo se guardan los 21 puntos de cada mano y el modelo entrenado. Los puntos de HaGRID se versionan comprimidos en `ml/data/hagrid/`, con su licencia (CC BY-SA 4.0), para que todo el grupo pueda entrenar. No permiten reconstruir las fotos, pero conservan el identificador anónimo de persona de HaGRID, que hace falta para separar por persona.
 - El identificador de persona de HaGRID se usa solo para separar entrenamiento y prueba.
+
+### Modelos 3D de terceros (Objaverse)
+
+- El catálogo suma ~5.800 modelos de Objaverse (Deitke et al., Allen AI, ODC-By 1.0), subidos a Sketchfab por sus autores. Cada modelo tiene su licencia: solo se usan CC BY, CC BY-SA y CC0, que permiten mostrarlos citando al autor. Las descripciones en inglés son de Cap3D (Luo et al., ODC-By 1.0).
+- El visor muestra, junto a cada modelo, la obra, el autor, la licencia y el enlace a la página original (`frontend/js/ui.js`).
+- Se excluyen los modelos con restricción de edad y las categorías de Sketchfab de personas y personajes (escaneos de gente).
+- Los archivos no se suben al repositorio: cada uno los baja de Hugging Face con `scripts/descargar_modelos3d.py`.
 
 ### Dataset de gestos (`frontend/captura.html`)
 
@@ -104,6 +112,10 @@ MediaPipe puede rendir peor con ciertos tonos de piel, poca luz, manos con difer
 ### Generador 3D
 
 Hereda los sesgos de sus datos de entrenamiento: tiende a generar la versión "típica" de un objeto. **Pendiente:** registrarlo al evaluar los generadores (`eval/generacion3d/`), con piezas industriales que no sean las más comunes.
+
+### Catálogo de Objaverse
+
+Sketchfab tiene sobre todo objetos de Europa y Estados Unidos, y muchos de videojuegos: un "auto" o un "colectivo" probablemente no se parezca a uno argentino. La selección prefiere los modelos más populares, lo que refuerza lo típico. Además, los nombres de las categorías se tradujeron con WordNet, que a veces elige otro sentido de la palabra; los errores encontrados se corrigieron a mano, pero puede haber más. Se mide con `eval/eval_catalogo3d.py`.
 
 ---
 

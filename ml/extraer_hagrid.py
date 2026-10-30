@@ -12,13 +12,14 @@ Cada mano detectada se asigna a la caja anotada que la contiene, y de ahí sale 
 La persona es el user_id de HaGRID: permite evaluar con personas que el modelo no vio.
 
 Uso (con el entorno de Python 3.12 que tiene MediaPipe):
-    ml/.venv-mediapipe/Scripts/python.exe ml/extraer_hagrid.py <carpeta de la muestra> [--procesos 4] [--limite N]
+    ml/.venv-mediapipe/Scripts/python.exe ml/extraer_hagrid.py <carpeta de la muestra o su .zip> [--procesos 4] [--limite N]
         [--salida ml/data/externo/hagrid.csv]
 """
 import argparse
 import csv
 import json
 import sys
+import zipfile
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
@@ -44,6 +45,7 @@ COLUMNAS = (["clase", "persona", "mano", "aspecto", "etiqueta_hagrid", "imagen"]
             + [f"{e}{i}" for i in range(21) for e in "xyz"])
 
 _detector = None
+_zip = None   # en cada proceso, el zip abierto (si la muestra se lee sin descomprimir)
 
 
 def _iniciar():
@@ -71,7 +73,17 @@ def procesar(tarea):
     """Una imagen → lista de filas (una por mano detectada y asignada a una caja anotada)."""
     import mediapipe as mp
     ruta, anotacion = tarea
-    imagen = mp.Image.create_from_file(ruta)
+    if "::" in ruta:   # "muestra.zip::carpeta/foto.jpg": se lee del zip y se decodifica en memoria
+        global _zip
+        import cv2
+        import numpy as np
+        archivo, ruta = ruta.split("::")
+        if _zip is None:
+            _zip = zipfile.ZipFile(archivo)
+        bgr = cv2.imdecode(np.frombuffer(_zip.read(ruta), np.uint8), cv2.IMREAD_COLOR)
+        imagen = mp.Image(image_format=mp.ImageFormat.SRGB, data=np.ascontiguousarray(bgr[:, :, ::-1]))
+    else:
+        imagen = mp.Image.create_from_file(ruta)
     aspecto = imagen.width / imagen.height
     resultado = _detector.detect(imagen)
     filas = []
@@ -90,7 +102,25 @@ def procesar(tarea):
     return filas
 
 
+def tareas_zip(archivo: Path, limite):
+    """Lo mismo que tareas(), leyendo el zip sin descomprimir: escribir medio millón de fotos al disco tarda horas."""
+    z = zipfile.ZipFile(archivo)
+    nombres = z.namelist()
+    for etiqueta in list(MAPEO) + OTRAS:
+        if etiqueta == "no_gesture":
+            continue
+        [json_anot] = [n for n in nombres if n.endswith(f"/ann_train_val/{etiqueta}.json")]
+        anotaciones = json.loads(z.read(json_anot))
+        imagenes = sorted(n for n in nombres if f"/train_val_{etiqueta}/" in n and n.endswith(".jpg"))[:limite]
+        for n in imagenes:
+            if Path(n).stem in anotaciones:
+                yield f"{archivo}::{n}", anotaciones[Path(n).stem]
+
+
 def tareas(base: Path, limite):
+    if base.suffix == ".zip":
+        yield from tareas_zip(base, limite)
+        return
     # La carpeta de imágenes se llama según la muestra: hagrid_30k, hagrid_250k…
     [carpeta_fotos] = [c for c in base.glob("hagrid_*") if c.is_dir()]
     for etiqueta in list(MAPEO) + OTRAS:
@@ -107,7 +137,7 @@ def tareas(base: Path, limite):
 def main():
     sys.stdout.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser()
-    ap.add_argument("base", type=Path, help="carpeta de la muestra (la que tiene hagrid_*/ y ann_train_val/)")
+    ap.add_argument("base", type=Path, help="carpeta de la muestra (la que tiene hagrid_*/ y ann_train_val/) o su .zip")
     ap.add_argument("--salida", type=Path, default=SALIDA)
     ap.add_argument("--procesos", type=int, default=4)
     ap.add_argument("--limite", type=int, default=None, help="imágenes por gesto (para probar)")

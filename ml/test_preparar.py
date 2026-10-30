@@ -87,3 +87,17 @@ def test_particion_por_persona_es_fija_y_proporcionada():
     assert partes == [particion(p) for p in personas]          # siempre la misma parte
     assert abs(partes.count("prueba") / len(partes) - 0.15) < 0.03
     assert abs(partes.count("validacion") / len(partes) - 0.15) < 0.03
+
+def test_carga_varios_csv_comprimidos(tmp_path):
+    """Los landmarks de HaGRID se versionan partidos en varios .csv.xz (ml/data/hagrid/): se unen como un solo CSV."""
+    import lzma
+    from preparar import cargar
+    df, _ = fila_de_ejemplo()
+    df.to_csv(tmp_path / "plano.csv", index=False)
+    for nombre in ("parte_1.csv.xz", "parte_2.csv.xz"):
+        with lzma.open(tmp_path / nombre, "wt", encoding="utf-8") as f:
+            df.to_csv(f, index=False, lineterminator="\n")
+    unidos = cargar(tmp_path)
+    assert len(unidos) == 3
+    assert sorted(unidos["archivo"]) == ["parte_1.csv", "parte_2.csv", "plano.csv"]   # sin el .xz
+    np.testing.assert_allclose(normalizar(unidos)[0], normalizar(unidos)[2])

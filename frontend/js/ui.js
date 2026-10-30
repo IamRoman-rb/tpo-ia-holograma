@@ -94,14 +94,28 @@ export function pedirConfirmacion() {
   });
 }
 
-export function mostrarOrigen(nombre, origen) {
+// atribucion: autor, licencia y enlace de los modelos de Objaverse (CC BY pide citarlos)
+export function mostrarOrigen(nombre, origen, atribucion = null) {
   const el = $('origen');
   el.hidden = false;
   el.classList.toggle('generado', origen === 'generado');
   $('origen-nombre').textContent = nombre;
-  $('origen-etiqueta').textContent = origen === 'generado'
-    ? 'Generado por IA · no apto para fabricación sin revisión'
-    : 'Del catálogo';
+  $('origen-etiqueta').textContent = {
+    generado: 'Generado por IA · no apto para fabricación sin revisión',
+    objaverse: 'De Objaverse (Sketchfab)',
+  }[origen] ?? 'Del catálogo';
+  const credito = $('origen-credito');
+  credito.hidden = !atribucion;
+  if (atribucion) {
+    credito.textContent = creditoModelo(atribucion);
+    credito.title = credito.textContent;
+    credito.href = atribucion.url;
+  }
+}
+
+/** «"Engine V8" de Fulano · CC BY 4.0»: lo que pide la licencia para mostrar un modelo ajeno. */
+export function creditoModelo({ titulo, autor, licencia }) {
+  return `"${titulo}" de ${autor || 'autor desconocido'} · ${licencia}`;
 }
 
 export function mostrarCatalogo(items, alElegir) {

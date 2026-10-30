@@ -41,8 +41,8 @@ sys.path.insert(0, str(RAIZ / "backend"))
 import llm_propio  # noqa: E402  (formato de entrada y salida: el mismo que usa el backend)
 
 BASES = {"chico": "Qwen/Qwen2.5-0.5B-Instruct", "grande": "Qwen/Qwen2.5-1.5B-Instruct"}
-POR_ACCION = {"mostrar": 2000, "explotar": 1200, "aislar": 1200}   # el resto: 450 cada una
-OTRAS = 450
+POR_ACCION = {"mostrar": 4000, "explotar": 2400, "aislar": 2400}   # el resto: 900 cada una (el doble desde
+OTRAS = 900                                                       # que hay 100 mil frases, con tipeo y voz)
 LOTE = 16
 TASA = 2e-4
 

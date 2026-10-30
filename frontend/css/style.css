@@ -78,6 +78,14 @@ button:hover, button:focus-visible { border-color: var(--acento); outline: none;
 }
 #origen-etiqueta { color: var(--tenue); font-size: 12px; }
 #origen.generado #origen-etiqueta { color: var(--alerta); }
+#origen-credito {
+  color: var(--tenue);
+  font-size: 11px;
+  max-width: 340px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 #catalogo {
   position: fixed;
