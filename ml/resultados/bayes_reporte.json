@@ -1,7 +1,7 @@
 {
-  "fecha": "2026-10-28",
-  "frases_entrenamiento": 20000,
-  "rasgos": 15484,
+  "fecha": "2026-11-02",
+  "frases_entrenamiento": 109524,
+  "rasgos": 53490,
   "alfas": [
     {
       "alfa": 0.01,
@@ -13,29 +13,29 @@
     },
     {
       "alfa": 0.1,
-      "exactitud_validacion": 0.8913
+      "exactitud_validacion": 0.8986
     },
     {
       "alfa": 0.3,
-      "exactitud_validacion": 0.8768
+      "exactitud_validacion": 0.8986
     },
     {
       "alfa": 1.0,
-      "exactitud_validacion": 0.8768
+      "exactitud_validacion": 0.8986
     }
   ],
-  "alfa_elegido": 0.01,
+  "alfa_elegido": 0.1,
   "calibracion": {
-    "temperatura": 3.856,
-    "ece_antes": 0.0906,
-    "ece_despues": 0.0463,
-    "confianza_media_antes": 0.972,
-    "confianza_media_despues": 0.885,
-    "exactitud": 0.891
+    "temperatura": 3.329,
+    "ece_antes": 0.0713,
+    "ece_despues": 0.0257,
+    "confianza_media_antes": 0.97,
+    "confianza_media_despues": 0.887,
+    "exactitud": 0.899
   },
   "exactitud_validacion_ic95": [
-    0.891,
-    0.833,
+    0.899,
+    0.848,
     0.942
   ],
   "coincidencia_backend": 1.0

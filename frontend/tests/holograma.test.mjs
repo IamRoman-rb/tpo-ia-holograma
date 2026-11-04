@@ -62,6 +62,57 @@ const muchas = Array.from({ length: 20 }, (_, i) => ({ id: `p${i}`, x: 100, y: 3
 const apretadas = distribuirEtiquetas(muchas, opciones);
 ok(apretadas.every((l) => l.y >= opciones.arriba - 1e-9 && l.y <= opciones.abajo + 1e-9),
   'si no entran, se reparten en el alto disponible sin salirse');
+ok(lugares.every((l) => !l.compacta && l.subcolumna === 0), 'si entran, quedan completas y en una sola columna');
+
+// Muchas piezas (como el motor de 4 cilindros): nunca más juntas que la separación compacta
+const conCompactas = { ...opciones, separacionCompacta: 21 };
+const sinPisarseCon = (lista, sep) => ['izquierda', 'derecha'].every((l) => [0, 1, 2, 3].every((s) => {
+  const ys = lista.filter((p) => p.lado === l && p.subcolumna === s).map((p) => p.y).sort((a, b) => a - b);
+  return ys.every((y, i) => i === 0 || y - ys[i - 1] >= sep - 1e-9);
+}));
+const diecisiete = Array.from({ length: 17 }, (_, i) => ({ id: `q${i}`, x: 100, y: 200 + i * 5 }));
+const compactas = distribuirEtiquetas(diecisiete, conCompactas); // 16 × 48 > 520, pero 16 × 21 entra
+ok(compactas.every((l) => l.compacta && l.subcolumna === 0), 'si no entran completas, pasan a compactas (solo el nombre)');
+ok(sinPisarseCon(compactas, 21), 'las compactas tampoco se pisan');
+ok(compactas.map((l) => l.id).join() === diecisiete.map((p) => p.id).join(), 'y siguen el orden vertical de las piezas');
+
+const cuarenta = Array.from({ length: 40 }, (_, i) => ({ id: `r${i}`, x: 100, y: 300 }));
+const enDos = distribuirEtiquetas(cuarenta, conCompactas); // 39 × 21 > 520: dos subcolumnas de 20
+ok(new Set(enDos.map((l) => l.subcolumna)).size === 2, 'si ni compactas entran, se abren subcolumnas');
+ok(sinPisarseCon(enDos, 21), 'en cada subcolumna las etiquetas no se pisan');
+ok(new Set(enDos.map((l) => l.y.toFixed(3))).size === enDos.length,
+  'las subcolumnas van intercaladas: ninguna etiqueta queda a la misma altura que otra (las líneas pasan entre ellas)');
+ok(enDos.every((l) => l.y >= opciones.arriba - 1e-9 && l.y <= opciones.abajo + 1e-9), 'las subcolumnas no se salen del alto');
+
+// Cada lado con su alto: a la derecha la cámara deja menos lugar que a la izquierda
+const porLado = distribuirEtiquetas(
+  [...Array.from({ length: 12 }, (_, i) => ({ id: `i${i}`, x: 100, y: 300 })),
+    ...Array.from({ length: 12 }, (_, i) => ({ id: `d${i}`, x: 900, y: 300 }))],
+  { ...conCompactas, limites: { izquierda: { arriba: 80, abajo: 700 }, derecha: { arriba: 80, abajo: 400 } } });
+const deLado = (l) => porLado.filter((p) => p.lado === l);
+ok(deLado('izquierda').every((l) => !l.compacta) && deLado('derecha').every((l) => l.compacta),
+  'cada lado decide con su propio alto (11 × 48 entra en 620 px pero no en 320)');
+ok(deLado('derecha').every((l) => l.y <= 400 + 1e-9), 'y respeta su propio límite de abajo');
+
+// Un lado casi sin lugar (la cámara lo tapa): las piezas más cercanas al centro pasan al otro lado
+const tapado = distribuirEtiquetas(
+  Array.from({ length: 10 }, (_, i) => ({ id: `t${i}`, x: 510 + i * 40, y: 300 })),
+  { ...conCompactas, limites: { izquierda: { arriba: 80, abajo: 700 }, derecha: { arriba: 80, abajo: 100 } } });
+const derechaTapada = tapado.filter((l) => l.lado === 'derecha').map((l) => l.id);
+// 20 px de alto: una por subcolumna, dos subcolumnas
+ok(derechaTapada.length === 2, `del lado tapado quedan solo las que entran (${derechaTapada.length} de 10)`);
+ok(['t8', 't9'].every((id) => derechaTapada.includes(id)), 'y se quedan las que están más a la derecha');
+ok(sinPisarseCon(tapado, 21), 'después de pasar de lado, tampoco se pisan');
+// Ventana muy chica: no entran en ningún lado. Mejor sin etiqueta que encimadas; la elegida no se pierde.
+const chica = { ...conCompactas, limites: { izquierda: { arriba: 80, abajo: 160 }, derecha: { arriba: 80, abajo: 100 } } };
+const treinta = Array.from({ length: 30 }, (_, i) => ({ id: `z${i}`, x: 100 + i * 25, y: 300, prioridad: i === 29 }));
+const enChica = distribuirEtiquetas(treinta, chica);
+ok(enChica.length === 10, `solo se rotulan las que entran (${enChica.length} de 30: 8 a la izquierda y 2 a la derecha)`);
+ok(sinPisarseCon(enChica, 21), 'y no se pisan');
+ok(enChica.some((l) => l.id === 'z29'), 'la pieza elegida conserva su etiqueta');
+ok(distribuirEtiquetas(puntos, { ...opciones, limites: { derecha: { arriba: 80, abajo: 100 } } })
+  .every((l) => l.lado === (['a', 'b', 'c'].includes(l.id) ? 'izquierda' : 'derecha')),
+'si entran de su lado, ninguna cambia de lado');
 
 // --- 4. Del punto de la cámara a la pantalla (video a pantalla completa, espejado y recortado)
 const pantalla = { anchoVideo: 640, altoVideo: 480, anchoPantalla: 1600, altoPantalla: 900 };

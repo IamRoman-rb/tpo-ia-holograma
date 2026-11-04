@@ -73,26 +73,85 @@ export function puntosEnSuperficie(posiciones, indices, n, azar = crearAzar()) {
 /**
  * Ubica las etiquetas de las piezas en dos columnas, a la izquierda y a la derecha de la pantalla, sin que se
  * pisen. Cada pieza va a la columna de su lado y, dentro de la columna, lo más cerca posible de su altura.
- * puntos: [{ id, x, y }] en píxeles · Devuelve [{ id, lado: 'izquierda' | 'derecha', y }].
+ *
+ * Si en una columna no entran con la separación normal (nombre + descripción), pasan a compactas (solo el
+ * nombre, con separacionCompacta). Si tampoco entran así, se reparten en varias subcolumnas de ese lado,
+ * intercaladas (1.ª, 2.ª, 1.ª, …) para que cada subcolumna siga el orden vertical de las piezas.
+ *
+ * Cada lado puede tener su propio alto disponible (limites.izquierda / limites.derecha = { arriba, abajo }),
+ * porque los paneles de la pantalla no tapan lo mismo a los dos lados. Si un lado no da abasto ni con
+ * maxSubcolumnas y al otro le sobra lugar, las piezas más cercanas al centro pasan al otro lado. Las que no
+ * entran en ningún lado quedan afuera del resultado (sin etiqueta), salvo las que tienen prioridad.
+ * puntos: [{ id, x, y, prioridad? }] en píxeles
+ * Devuelve [{ id, lado: 'izquierda' | 'derecha', y, compacta, subcolumna }] (subcolumna 0 = la del borde).
  */
-export function distribuirEtiquetas(puntos, { ancho, arriba, abajo, separacion }) {
+export function distribuirEtiquetas(puntos, {
+  ancho, arriba, abajo, separacion, separacionCompacta = separacion, limites = {}, maxSubcolumnas = 2,
+}) {
+  const altos = {};
+  const disponibles = {};
+  const lados = { izquierda: [], derecha: [] };
+  for (const lado of ['izquierda', 'derecha']) {
+    altos[lado] = { arriba, abajo, ...limites[lado] };
+    disponibles[lado] = altos[lado].abajo - altos[lado].arriba;
+  }
+  for (const p of puntos) lados[p.x < ancho / 2 ? 'izquierda' : 'derecha'].push(p);
+
+  // Cuántas entran de cada lado, compactas y con todas las subcolumnas permitidas
+  const capacidad = (lado) => (disponibles[lado] < 0 ? 0
+    : (Math.floor(disponibles[lado] / separacionCompacta + 1e-9) + 1) * maxSubcolumnas);
+  // Si un lado no da abasto y el otro tiene lugar, pasan al otro lado las piezas más cercanas al centro
+  for (const [desde, hacia] of [['izquierda', 'derecha'], ['derecha', 'izquierda']]) {
+    const sobran = lados[desde].length - capacidad(desde);
+    const libres = capacidad(hacia) - lados[hacia].length;
+    if (sobran <= 0 || libres <= 0) continue;
+    lados[desde].sort((a, b) => (desde === 'izquierda' ? a.x - b.x : b.x - a.x));
+    lados[hacia].push(...lados[desde].splice(lados[desde].length - Math.min(sobran, libres)));
+  }
+
   const resultado = [];
   for (const lado of ['izquierda', 'derecha']) {
-    const columna = puntos
-      .filter((p) => (lado === 'izquierda' ? p.x < ancho / 2 : p.x >= ancho / 2))
-      .sort((a, b) => a.y - b.y)
-      .map((p) => ({ id: p.id, lado, y: Math.min(abajo, Math.max(arriba, p.y)) }));
-    // Si no entran todas, se reparten parejo en el alto disponible
-    const disponible = abajo - arriba;
-    const sep = columna.length > 1 ? Math.min(separacion, disponible / (columna.length - 1)) : separacion;
-    // De arriba hacia abajo: cada una por lo menos "sep" debajo de la anterior…
-    for (let i = 1; i < columna.length; i++) columna[i].y = Math.max(columna[i].y, columna[i - 1].y + sep);
-    // …y de abajo hacia arriba, para que la última no se salga
-    if (columna.length) columna[columna.length - 1].y = Math.min(columna[columna.length - 1].y, abajo);
-    for (let i = columna.length - 2; i >= 0; i--) columna[i].y = Math.min(columna[i].y, columna[i + 1].y - sep);
-    resultado.push(...columna);
+    const alto = altos[lado];
+    const disponible = Math.max(0, disponibles[lado]);
+    // Si ni así entran todas, se muestran las que entran (la elegida siempre) y el resto queda sin etiqueta:
+    // es mejor que encimarlas. Pasa solo en ventanas muy chicas.
+    const cuantas = Math.max(1, capacidad(lado));
+    const columna = lados[lado]
+      .sort((a, b) => Number(Boolean(b.prioridad)) - Number(Boolean(a.prioridad)))
+      .slice(0, cuantas)
+      .sort((a, b) => a.y - b.y);
+    const n = columna.length;
+    if (!n) continue;
+    const entran = (sep) => (n - 1) * sep <= disponible;
+    // Completa (nombre + descripción) solo si entran todas y hay por lo menos el alto de una etiqueta completa
+    const compacta = !entran(separacion) || disponible < separacion;
+    // Las menos subcolumnas con las que entran (en cada una van n / subcolumnas etiquetas)
+    let subcolumnas = 1;
+    while (compacta && subcolumnas < maxSubcolumnas
+      && (Math.ceil(n / subcolumnas) - 1) * separacionCompacta > disponible + 1e-9) subcolumnas++;
+    // Se apilan todas juntas con la separación dividida entre las subcolumnas y después se reparten
+    // intercaladas: dentro de cada subcolumna quedan a la separación entera, y las de subcolumnas vecinas
+    // quedan a distinta altura (así la línea de una etiqueta de afuera pasa entre dos de adentro)
+    const grupo = columna.map((p, i) => ({
+      id: p.id, lado, y: Math.min(alto.abajo, Math.max(alto.arriba, p.y)), compacta, subcolumna: i % subcolumnas,
+    }));
+    apilar(grupo, alto, (compacta ? separacionCompacta : separacion) / subcolumnas, disponible);
+    resultado.push(...grupo);
   }
   return resultado;
+}
+
+// Separa una columna (ordenada de arriba abajo) para que ninguna etiqueta pise a la siguiente
+function apilar(columna, { arriba, abajo }, separacion, disponible) {
+  if (!columna.length) return;
+  // Si aun así no entran, se reparten parejo en el alto disponible
+  const sep = columna.length > 1 ? Math.min(separacion, disponible / (columna.length - 1)) : separacion;
+  // De arriba hacia abajo: cada una por lo menos "sep" debajo de la anterior…
+  for (let i = 1; i < columna.length; i++) columna[i].y = Math.max(columna[i].y, columna[i - 1].y + sep);
+  // …y de abajo hacia arriba, para que la última no se salga
+  columna[columna.length - 1].y = Math.min(columna[columna.length - 1].y, abajo);
+  for (let i = columna.length - 2; i >= 0; i--) columna[i].y = Math.min(columna[i].y, columna[i + 1].y - sep);
+  if (columna[0].y < arriba) columna.forEach((c, i) => { c.y = arriba + i * sep; });
 }
 
 /**

@@ -1,0 +1,212 @@
+frase,accion,objeto,frase_original,objeto_original,voz,ruido_db,clave
+¿Y ahora hay algún Thumpax nuevo en el visor?,mostrar,Thumpax nuevo,y ahora hay algún támpax nuevo en el visor,támpax nuevo,es_MX-ald-medium,10,00000
+"O si montala, dale.",armar,,Oye montala dale,,es_AR-daniela-high,20,00001
+¿Por qué me mene?,desconocido,,ok mmm,,es_ES-davefx-medium,,00002
+"Enseñame un rato, por favor.",armar,,Che ensamblá todo por favor,,es_MX-ald-medium,20,00003
+"Buenas, a ver, decime la confianza recién, gracias.",consultar,,"buenas, a ver, decime la confianza recién gracias",,es_MX-ald-medium,20,00004
+"Oye, déjame ver solo el cuerpo profesional ahora.",aislar,cuerpo profesional,oye dejame ver solo el cuerpo profesional ahora,cuerpo profesional,es_ES-davefx-medium,20,00005
+"Oxacala que sí, porfa.",desmontar,,ok sacá la que sigue porfa,,es_AR-daniela-high,,00006
+"Y ahora sacala que sí, dale.",desmontar,,y ahora sacá la que sigue dale,,es_AR-daniela-high,20,00007
+"Buenas, lista superior cuando puedas.",vista,,"buenas, vista superior cuando puedas",,es_ES-davefx-medium,20,00008
+"Si te has dejado de analizar, dale.",conjunto,,che dejá de analizar dale,,es_AR-daniela-high,20,00009
+"Por favor, reinicia, porfa.",reiniciar,,por favor reiniciá porfa,,es_ES-davefx-medium,20,00010
+"Y ahora explícame el razonamiento en lo último, por favor.",consultar,,y ahora explicame el razonamiento en lo último por favor,,es_AR-daniela-high,,00011
+"Eh, quiero ver el aro exterior del telescopio solar solo rápido.",aislar,aro exterior del telescopio solar,"eh, quiero ver el aro exterior del telescopio solar solo rápido",aro exterior del telescopio solar,es_MX-ald-medium,20,00012
+"Buenas, mostrame la máquina CNC nada más, por favor.",aislar,máquina CNC,"buenas, mostrame la máquina CNC nada más por favor",máquina CNC,es_MX-ald-medium,,00013
+"Buenas, reset porfa.",reiniciar,,"buenas, reset porfa",,es_ES-davefx-medium,10,00014
+"Por favor, quiero analizar las bolas.",aislar,bolas,por favor quiero analizar las bolas,bolas,es_MX-ald-medium,,00015
+Quiero usar todos los modelos.,usar_motor,,"eh, quiero usar todos los modelos?",,es_MX-ald-medium,10,00016
+"Ahora déjalo como estaba al inicio, dale.",reiniciar,,oye dejalo como estaba al inicio dale,,es_AR-daniela-high,,00017
+"Bueno, por tal un cuarto de vuelta, gracias.",rotar,,"bueno, rotalo un cuarto de vuelta gracias",,es_ES-davefx-medium,,00018
+"Hola, ponelo de frente rápido.",vista,,"hola, ponelo de frente rápido",,es_ES-davefx-medium,20,00019
+"Che, mostrame el lente cóncava en vista explotada.",explotar,lente cóncava,Che mostrame el lente cóncava en vista explotada?,lente cóncava,es_ES-davefx-medium,,00020
+Ahora pasate a la red transformer para interpretar los pedidos.,usar_motor,,Ahora pasate a la red transformer para interpretar los pedidos,,es_AR-daniela-high,10,00021
+"Terón, armala cuando puedas.",armar,,"perdón, armala cuando puedas",,es_AR-daniela-high,,00022
+"Para la computadora, por favor.",desconocido,,apagá la computadora por favor,,es_ES-davefx-medium,20,00023
+"Holograma, el objeto, gracias.",armar,,Ahora armá el objeto gracias,,es_MX-ald-medium,10,00024
+Quiero ver el objeto completo.,conjunto,,"eh, quiero ver el objeto completo?",,es_MX-ald-medium,20,00025
+"A ver, visualiza el despiece del nivel en escuadra, gracias.",explotar,nivel en escuadra,"A ver, visualizá el despiece del nivel en escuadra gracias",nivel en escuadra,es_MX-ald-medium,,00026
+Op cuando puedas.,desconocido,,ok cuando puedas,,es_ES-davefx-medium,20,00027
+Dale con tu propio LLM rápido.,usar_motor,,dale con tu propio llm rápido,,es_ES-davefx-medium,,00028
+Y ahora que responde a Roberta.,usar_motor,,y ahora que responda roberta?,,es_ES-davefx-medium,,00029
+"Buenas, ¿y qué modelo fue recién porfa?",consultar,,"buenas, y qué modelo fue recién porfa",,es_ES-davefx-medium,,00030
+"Dale, saca la próxima de Horacios.",desmontar,,"dale, sacá la próxima gracias",,es_AR-daniela-high,,00031
+¿O qué tal la verdad es?,rotar,,ok rotala dale,,es_MX-ald-medium,10,00032
+Anda con la red neuronal para reconocer los gestos.,usar_motor,,andá con la red neuronal para reconocer los gestos,,es_MX-ald-medium,,00033
+"Disculpa, termine con esta pieza, gracias.",conjunto,,"disculpá, terminé con esta pieza gracias",,es_ES-davefx-medium,20,00034
+Poco al frente dale.,vista,,Ok de frente dale,,es_AR-daniela-high,20,00035
+"Perdón, hace aparecer los felies modernos en el visor.",mostrar,felies modernos,"perdón, hacé aparecer los ferryes modernos en el visor",ferryes modernos,es_MX-ald-medium,,00036
+"Disculpa, cantame una canción.",desconocido,,"disculpá, cantame una canción",,es_ES-davefx-medium,20,00037
+"Ori, juntalo de vuelta, porfa.",armar,,oye juntalo de vuelta porfa,,es_MX-ald-medium,,00038
+"Perdón, montalo cuando puedas.",armar,,"perdón, montalo cuando puedas",,es_ES-davefx-medium,10,00039
+"Bueno, necesito ver ese palenque de lado, gracias.",mostrar,palenque,"bueno, necesito ver ese palenque de lado gracias",palenque,es_ES-davefx-medium,10,00040
+"¿Listo? Aumentalo, por favor.",escalar,,"listo, aumentalo por favor",,es_ES-davefx-medium,,00041
+Trae media vuelta cuando puedas.,rotar,,dale media vuelta cuando puedas,,es_MX-ald-medium,10,00042
+"Mostrame una imagen 3D del filo, así lo vemos, dale.",mostrar,filo,mostrame una imagen 3d del filo así lo vemos dale,filo,es_AR-daniela-high,20,00043
+"Buenas, muéstrame las piezas de un débil.",explotar,débil,"buenas, mostrame las piezas de un débil",débil,es_ES-davefx-medium,10,00044
+"Palafiero, ver el objeto completo.",conjunto,,"hola, quiero ver el objeto completo",,es_AR-daniela-high,20,00045
+"Hola, saca un aporte gracias.",desmontar,,"hola, sacá una parte gracias",,es_MX-ald-medium,20,00046
+"Pola, pota 90 grados cuando puedas.",rotar,,"Hola, rotá 90 grados cuando puedas",,es_AR-daniela-high,,00047
+"Listo, muéstramelo desde adelante ya.",vista,,"Listo, mostrámelo desde adelante ya",,es_ES-davefx-medium,20,00048
+"Vótalo hacia la izquierda, dale.",rotar,,rotalo hacia la izquierda dale,,es_AR-daniela-high,,00049
+"Mira, quiero ver todas las piezas, porfa.",explotar,,"mirá, quiero ver todas las piezas porfa",,es_MX-ald-medium,,00050
+"A ver, sacale la siguiente parte rápido.",desmontar,,"a ver, sacale la siguiente parte rápido",,es_MX-ald-medium,20,00051
+Ahora vista explotada de la memoria de solo lectura dal.,explotar,memoria de solo lectura,Ahora vista explotada de la memoria de solo lectura dale,memoria de solo lectura,es_MX-ald-medium,10,00052
+"Buenas, analizá solamente las venas epiástricas superiores cuando puedas.",aislar,venas epiástricas superiores,"Buenas, analizá solamente las venas epigástricas superiores cuando puedas",venas epigástricas superiores,es_AR-daniela-high,20,00053
+Eche un talo de vuelta cuando puedas.,armar,,Che juntalo de vuelta cuando puedas,,es_MX-ald-medium,20,00054
+"Dale, mostrame únicamente la baranda.",aislar,baranda,"Dale, mostrame únicamente la baranda",baranda,es_ES-davefx-medium,,00055
+"Hola, ¿qué día es hoy, porfa?",desconocido,,"hola, qué día es hoy porfa",,es_ES-davefx-medium,,00056
+"Por favor, mostrame el despiece, porfa.",explotar,,Por favor mostrame el despiece porfa,,es_AR-daniela-high,10,00057
+"Bueno, reducir el tamaño rápido.",escalar,,"bueno, reducí el tamaño rápido",,es_ES-davefx-medium,10,00058
+"Buenas, giralo para la derecha cuando puedas.",rotar,,"buenas, giralo para la derecha cuando puedas",,es_ES-davefx-medium,,00059
+Empezar de cero cuando puedas.,reiniciar,,empezar de cero cuando puedas,,es_ES-davefx-medium,10,00060
+Quiero ver las piezas de un ombulado.,explotar,ombulado,quiero ver las piezas de un ungulado,ungulado,es_AR-daniela-high,,00061
+"Y ahora giralo despacio, dale.",rotar,,y ahora giralo despacio dale,,es_AR-daniela-high,20,00062
+"Bueno, ven de la luz, dale.",desconocido,,"bueno, prendé la luz dale",,es_MX-ald-medium,10,00063
+Gales cambia el modelo de 5 para entender lo que digo ya.,usar_motor,,"dale, cambiá al modelo e5 para entender lo que digo ya",,es_AR-daniela-high,10,00064
+"Por favor, velo del lado real.",vista,,por favor verlo de lado dale,,es_AR-daniela-high,10,00065
+"Buenas, vuelve a como estaba al principio.",reiniciar,,"buenas, volvé a como estaba al principio?",,es_MX-ald-medium,20,00066
+"Perdón, otra vez desde el principio, gracias.",reiniciar,,"perdón, otra vez desde el principio gracias",,es_ES-davefx-medium,,00067
+"Esperón, mostrá el conjunto, dale.",conjunto,,"perdón, mostrá el conjunto dale",,es_AR-daniela-high,10,00068
+"Mira, pedime una pizza.",desconocido,,"mirá, pedime una pizza?",,es_ES-davefx-medium,,00069
+"Chequea el ritmo, saste. Por favor.",consultar,,che qué algoritmo usaste? por favor,,es_MX-ald-medium,,00070
+"Perdón, explícame la respuesta recién ahora.",consultar,,"perdón, explicame la respuesta recién ahora",,es_MX-ald-medium,20,00071
+"Por favor, montala ahora.",armar,,por favor montala ahora,,es_ES-davefx-medium,20,00072
+"A ver, mostrame en 3D un salón de baile gris en vista superior ahora.",mostrar,salón de baile gris,"a ver, mostrame en 3d un salón de baile gris en vista superior ahora",salón de baile gris,es_ES-davefx-medium,10,00073
+"Che probando, probando.",desconocido,,che probando probando,,es_ES-davefx-medium,,00074
+"Dale, muéstramelo desde adelante ahora.",vista,,"dale, mostrámelo desde adelante ahora",,es_ES-davefx-medium,,00075
+¡Que verlo de lado!,vista,,"eh, verlo de lado",,es_ES-davefx-medium,,00076
+Reconoce los gestos con la red.,usar_motor,,reconocé los gestos con la red,,es_ES-davefx-medium,20,00077
+"Bueno, pasa a vista lateral ahora.",vista,,"bueno, pasá a vista lateral ahora",,es_ES-davefx-medium,20,00078
+Es mejor usar el intérprete entrenado para los pedidos ahora.,usar_motor,,"eh, mejor usá el intérprete entrenado para los pedidos ahora",,es_ES-davefx-medium,,00079
+"Mira, explota el tapón.",explotar,tapón,"mirá, explotá el tapón",tapón,es_AR-daniela-high,20,00080
+Mostrame los servicios públicos en vista explotada.,explotar,servicios públicos,mostrame los servicios públicos en vista explotada?,servicios públicos,es_MX-ald-medium,10,00081
+¿O cuál modelo decidió recién portar?,consultar,,ok cuál modelo decidió recién porfa,,es_ES-davefx-medium,20,00082
+"¡Eh, desmontad rápido!",desmontar,,"eh, desmontá rápido",,es_ES-davefx-medium,20,00083
+"Hola, ¿por qué lo interpretaste así, porfa?",consultar,,"hola, por qué lo interpretaste así porfa",,es_ES-davefx-medium,20,00084
+Quiero ver las piezas de una prensa hidráulica.,explotar,prensa hidráulica,quiero ver las piezas de una prensa hidráulica,prensa hidráulica,es_ES-davefx-medium,20,00085
+"Eh, pues al de cero ya.",reiniciar,,"eh, empezar de cero ya",,es_MX-ald-medium,20,00086
+"Por favor, cambia a vista superior ahora.",vista,,por favor cambiá a vista superior ahora,,es_ES-davefx-medium,10,00087
+"Hola, gíralo hacia la izquierda.",rotar,,"hola, giralo hacia la izquierda",,es_ES-davefx-medium,10,00088
+Volvé al conjunto.,conjunto,,ok volvé al conjunto,,es_MX-ald-medium,10,00089
+¡Desarmad ya!,desmontar,,desarmá ya,,es_ES-davefx-medium,10,00090
+Ocovista explotada de la sudadera rápido.,explotar,sudadera,ok vista explotada de la sudadera rápido,sudadera,es_ES-davefx-medium,,00091
+"Amplirá, porfa.",escalar,,ampliá porfa,,es_ES-davefx-medium,,00092
+Y ahora salir del análisis sale.,conjunto,,y ahora salir del análisis dale,,es_AR-daniela-high,20,00093
+"Dale, verlo de lado ya.",vista,,"dale, verlo de lado ya",,es_ES-davefx-medium,20,00094
+"Perdón, volvé a la vista inicial.",reiniciar,,"Perdón, volvé a la vista inicial?",,es_AR-daniela-high,,00095
+"Disculpa, quiero ver el objeto completo rápido.",conjunto,,"disculpá, quiero ver el objeto completo rápido",,es_ES-davefx-medium,20,00096
+"Quiero ver todo de nuevo, dale.",conjunto,,"eh, quiero ver todo de nuevo dale",,es_MX-ald-medium,10,00097
+Abrí mi desavena facial común desde el costado.,mostrar,desavena facial común,abrime esa vena facial común desde el costado,vena facial común,es_AR-daniela-high,20,00098
+"Che a Isla, el dinamómetro del pico, así la veo.",aislar,dinamómetro del pico,che aislá el dinamómetro del pico así la veo,dinamómetro del pico,es_ES-davefx-medium,,00099
+Quiero que los gestos los lea el árbol.,usar_motor,,quiero que los gestos los lea el árbol,,es_MX-ald-medium,,00100
+Cerrá el análisis y instale.,conjunto,,"dale, cerrá el análisis dale",,es_ES-davefx-medium,20,00101
+Tigre de Tasmania más grande.,mostrar,Tigre de Tasmania,tigre de tasmania más grande,tigre de tasmania,es_ES-davefx-medium,10,00102
+Odiar mal a Dalit.,armar,,oye armala dale,,es_MX-ald-medium,20,00104
+"Volvé en motor de reglas para entender lo que digo, gracias.",usar_motor,,volvé al motor de reglas para entender lo que digo gracias,,es_AR-daniela-high,20,00105
+"Disculpa, mostrame tres poteros electrónicos en vista superior, porfa.",mostrar,poteros electrónicos,"disculpá, mostrame tres porteros electrónico en vista superior porfa",porteros electrónico,es_AR-daniela-high,20,00106
+"Mostrame las partes de unos berros, porfa.",explotar,berros,mostrame las partes de unos berros porfa,berros,es_ES-davefx-medium,20,00107
+Ahora que se vea más grande ya.,escalar,,ahora que se vea más grande ya,,es_ES-davefx-medium,10,00108
+"Ola, anda con el LLM de Clouder para responder cuando puedas.",usar_motor,,"hola, andá con el llm de claude para responder cuando puedas",,es_MX-ald-medium,10,00109
+"Dale, ¿con qué motor contestaste en lo último?",consultar,,"dale, con qué motor contestaste en lo último?",,es_ES-davefx-medium,20,00110
+"Achícalo, dale.",escalar,,achicalo dale,,es_AR-daniela-high,20,00111
+"Disculpad, decime cómo interpretaste el pedido, por fa.",consultar,,"disculpá, decime cómo interpretaste el pedido porfa",,es_ES-davefx-medium,20,00112
+"Dale, dejadlo como el comienzo, por favor.",reiniciar,,"dale, dejalo como al comienzo por favor",,es_ES-davefx-medium,20,00113
+"Disculpa, despiece de la despensa, dale.",explotar,despensa,"disculpá, despiece de la despensa dale",despensa,es_ES-davefx-medium,20,00114
+Ahora explícame la respuesta rápido.,consultar,,ahora decime explicame la respuesta rápido,,es_MX-ald-medium,20,00115
+"Dale, cerrad la vista explotada.",armar,,"dale, cerrá la vista explotada",,es_ES-davefx-medium,10,00116
+Mostrame las piezas del Sanatec como un porfa.,explotar,Sanatec como,Mostrame las piezas del zanate común porfa,zanate común,es_MX-ald-medium,20,00117
+"Por favor, separá todas las piezas de la culata.",explotar,culata,por favor separá todas las piezas de la culata?,culata,es_AR-daniela-high,,00118
+¿Cómo funciona esto rápido?,desconocido,,ok cómo funciona esto rápido,,es_ES-davefx-medium,10,00119
+Mostrá el cosmonave de la Copa de Cava por separado.,aislar,cosmonave de la Copa de Cava,mostrá el cosmonave de la copa de cava por separado,cosmonave de la copa de cava,es_ES-davefx-medium,20,00120
+"O carmala, dale.",armar,,ok armala dale,,es_ES-davefx-medium,,00121
+"A ver, saca otra parte, gracias.",desmontar,,"A ver, sacá otra parte gracias",,es_ES-davefx-medium,10,00122
+"Por favor, contame, decime qué modelo respondió, dale.",consultar,,Por favor contame decime qué modelo respondió dale,,es_MX-ald-medium,20,00123
+"Disculpa, quiero estudiar la copela del domicilio.",aislar,copela del domicilio,"disculpá, quiero estudiar la copela del domicilio",copela del domicilio,es_ES-davefx-medium,20,00124
+Mostrame la compuerta de colección por partes rápido.,explotar,compuerta de colección,mostrame la compuerta de colección por partes rápido,compuerta de colección,es_AR-daniela-high,,00125
+"Che, esta gota de repuesto de helado, porfa.",mostrar,gota de repuesto,che esta bota de repuesto de lado porfa,bota de repuesto,es_AR-daniela-high,20,00126
+"Y ahora dividí 100 por 4, porfa.",desconocido,,y ahora dividí cien por cuatro porfa,,es_AR-daniela-high,20,00127
+"Perdón, probá con el modelo del lenguaje propio para responder.",usar_motor,,"perdón, probá con el modelo de lenguaje propio para responder?",,es_MX-ald-medium,20,00128
+"Bueno, otra vez desde el principio, por favor.",reiniciar,,"bueno, otra vez desde el principio por favor",,es_MX-ald-medium,10,00129
+"Oye, dale vuelta un poco ahora.",rotar,,oye dalo vuelta un poco ahora,,es_MX-ald-medium,20,00130
+Pota dale.,rotar,,rotá dale,,es_AR-daniela-high,,00131
+"Hola, mostrame las partes de una culata.",explotar,culata,"Hola, mostrame las partes de una culata",culata,es_AR-daniela-high,20,00132
+"Oye, desmóntalo, de amna, dale.",desmontar,,oye desmontalo de a una dale,,es_MX-ald-medium,10,00133
+"Mira, traducí esto al inglés, porfa.",desconocido,,"mirá, traducí esto al inglés porfa",,es_ES-davefx-medium,20,00134
+¿Y cómo elegiste la acción?,consultar,,y cómo elegiste la acción? ya,,es_MX-ald-medium,20,00135
+Poco volvé a montarlo ya.,armar,,ok volvé a montarlo ya,,es_ES-davefx-medium,10,00136
+"Cerca de otra, por favor.",desmontar,,Sacale otra por favor,,es_MX-ald-medium,,00137
+"Bueno, analiza solamente el interruptor del cacaf.",aislar,interruptor del cacaf,"bueno, analizá solamente el interruptor del carcaj",interruptor del carcaj,es_MX-ald-medium,,00138
+¿Listo? ¿Cuánta seguridad tenés? Ve 100 rápido.,consultar,,"Listo, cuánta seguridad tenés recién rápido",,es_AR-daniela-high,10,00139
+Giralo para la derecha ya.,rotar,,giralo para la derecha ya,,es_AR-daniela-high,10,00140
+"Buenas, mostrá este hipódromo visto desde Aridadora.",mostrar,hipódromo,"buenas, mostrá este hipódromo visto desde arriba ahora",hipódromo,es_AR-daniela-high,10,00141
+"Hola, presentealo por favor.",reiniciar,,"hola, resetealo por favor",,es_ES-davefx-medium,20,00142
+"A ver, centrada vista ya.",reiniciar,,"a ver, centrá la vista ya",,es_MX-ald-medium,10,00143
+Mejor usa el modelo de Depliarning para responder dale.,usar_motor,,Mejor usá el modelo de deep learning para responder dale,,es_AR-daniela-high,20,00144
+Y la hora de desarmar la banderola entera.,explotar,banderola,y ahora desarmá la banderola entera?,banderola,es_MX-ald-medium,10,00145
+¿Viste explotar de la dachaiza azul?,explotar,dachaiza azul,vista explotada de la agachadiza azul?,agachadiza azul,es_AR-daniela-high,20,00146
+Ahora dale vueltas ya.,rotar,,ahora dale vueltas ya,,es_AR-daniela-high,20,00147
+Sacá todo menos la patineta del panco aquí.,aislar,patineta del panco,sacá todo menos la patineta del pancake,patineta del pancake,es_AR-daniela-high,20,00148
+"Podés girarla, porfa.",rotar,,oye girala porfa,,es_AR-daniela-high,,00149
+"Perdón, votá a la derecha, porfa.",rotar,,"perdón, rotá a la derecha porfa",,es_ES-davefx-medium,10,00150
+"Che, mostrame tu configuración ahora.",desconocido,,che mostrame tu configuración ahora,,es_AR-daniela-high,20,00151
+Quiero ver el vaso hormiguero didáctilo del cantón solo ahora.,aislar,vaso hormiguero didáctilo del cantón,Quiero ver el oso hormiguero didáctilo del cantón solo ahora,oso hormiguero didáctilo del cantón,es_MX-ald-medium,,00152
+"Buenas, ese pedal de lembrada con correa.",mostrar,pedal de lembrada con correa,"Buenas, ese pedal del embrague con correa?",pedal del embrague con correa,es_AR-daniela-high,20,00153
+"Perdón, ambilá, dale.",escalar,,"perdón, ampliá dale",,es_AR-daniela-high,20,00154
+"Por favor, dota a la derecha.",rotar,,por favor rotá a la derecha,,es_AR-daniela-high,10,00155
+Listo de frente ahora.,vista,,"listo, de frente ahora",,es_ES-davefx-medium,10,00156
+"Ahora rescalalo al doble, gracias.",escalar,,ahora escalalo al doble gracias,,es_AR-daniela-high,20,00157
+"Perdón, tirado para la derecha, porfa.",rotar,,"perdón, giralo para la derecha porfa",,es_MX-ald-medium,,00158
+¿A quién sos?,desconocido,,"eh, quién sos",,es_AR-daniela-high,20,00159
+"O si quiero analizar el pretorio, rápido.",aislar,pretorio,Oye quiero analizar el pretorio rápido,pretorio,es_AR-daniela-high,20,00160
+"Dale, decime qué tan seguro estás en lo último.",consultar,,"dale, decime qué tan seguro estás en lo último?",,es_MX-ald-medium,20,00161
+"Mira, desarmar y quemar todo de cangrejo de mar entero porja.",explotar,quemar todo de cangrejo de mar,"mirá, desarmá el quemador de cangrejo de mar entero porfa",quemador de cangrejo de mar,es_MX-ald-medium,10,00162
+"Perdón, vista lateral, por favor.",vista,,"perdón, vista lateral por favor",,es_MX-ald-medium,,00163
+"Buenas, cerra la vista explotada por favor.",armar,,"Buenas, cerrá la vista explotada por favor",,es_ES-davefx-medium,10,00164
+"Ok, déjalo como al comienzo.",reiniciar,,Ok dejalo como al comienzo,,es_MX-ald-medium,20,00165
+Obterrá el análisis ya.,conjunto,,ok cerrá el análisis ya,,es_ES-davefx-medium,10,00166
+"Listo, resolver esta ecuación.",desconocido,,"listo, resolvé esta ecuación",,es_AR-daniela-high,20,00167
+"Perdón, volví al modelo entero, dale.",conjunto,,"perdón, volvé al modelo entero dale",,es_AR-daniela-high,10,00168
+"Listo, poné las piezas como estanchas.",armar,,"listo, poné las piezas como estaban ya",,es_AR-daniela-high,20,00169
+"Bueno, contame de tu vida cuando puedas.",desconocido,,"bueno, contame de tu vida cuando puedas",,es_MX-ald-medium,10,00170
+"Ya reducí el tamaño, dale.",escalar,,che reducí el tamaño dale,,es_AR-daniela-high,20,00171
+"Buenas, trabaja con el bayesiano para mis pedidos ya.",usar_motor,,"buenas, trabajá con el bayesiano para mis pedidos ya",,es_ES-davefx-medium,20,00172
+Dejalo como está al inicio ya.,reiniciar,,"dale, dejalo como estaba al inicio ya",,es_AR-daniela-high,10,00173
+"Hola, decime qué modelo respondió recién.",consultar,,"hola, decime qué modelo respondió recién",,es_MX-ald-medium,20,00174
+"Bueno, mostrame desde el costado.",vista,,"Bueno, mostrame desde el costado?",,es_AR-daniela-high,10,00175
+"Dale, déjame ver solo el diafragma del candelero, dale.",aislar,diafragma del candelero,"dale, dejame ver solo el diafragma del candelero dale",diafragma del candelero,es_MX-ald-medium,,00176
+"Por favor, podés usar todos los modelos para los pedidos ya.",usar_motor,,por favor podés usar todos los modelos para los pedidos ya,,es_ES-davefx-medium,20,00177
+"Listo, termina el despiece e ir al malo rápido.",armar,,"listo, terminá el despiece y armalo rápido",,es_ES-davefx-medium,20,00178
+"Dale, centra el objeto, por favor.",reiniciar,,"dale, centrá el objeto por favor",,es_ES-davefx-medium,20,00179
+Un poquito más grande ahora.,escalar,,un poquito más grande ahora,,es_AR-daniela-high,10,00180
+O usa las reglas para responder.,usar_motor,,ok usa las reglas para responder,,es_MX-ald-medium,20,00181
+Usá el MLP con los gestos gracias.,usar_motor,,usa el mlp con los gestos gracias,,es_AR-daniela-high,10,00182
+"Buenas, rótalo un cuarto de vuelta cuando puedas.",rotar,,"Buenas, rotalo un cuarto de vuelta cuando puedas",,es_AR-daniela-high,10,00183
+Volvé el modelo entero ya.,conjunto,,volvé al modelo entero ya,,es_AR-daniela-high,20,00184
+Volvé a ver el objeto entero cuando puedas.,conjunto,,volvé a ver el objeto entero cuando puedas,,es_MX-ald-medium,,00185
+Y crea las poleas desde abajo cuando puedas.,mostrar,poleas,"eh, creá las poleas desde abajo cuando puedas",poleas,es_ES-davefx-medium,,00186
+"Bueno, cargad modelo de una colcha con bodas acá, gracias.",mostrar,colcha con bodas,"bueno, cargá el modelo de una colcha con ruedas acá gracias",colcha con ruedas,es_ES-davefx-medium,20,00187
+"Perdón, puedes mostrarme el colchón de 10 centímetros desarmado.",explotar,colchón de 10 centímetros,"perdón, podés mostrarme el colchón de 10 centímetros desarmado",colchón de 10 centímetros,es_ES-davefx-medium,10,00188
+Ahora desea el guante de metal.,aislar,guante de metal,ahora aislá el guante de metal,guante de metal,es_AR-daniela-high,20,00189
+"Sepra el fenodinámico para analizarla, por favor.",aislar,fenodinámico,separá el freno aerodinámico para analizarla por favor,freno aerodinámico,es_AR-daniela-high,20,00190
+¿Qué hiciste allá?,desconocido,,Qué hiciste ayer,,es_AR-daniela-high,10,00191
+"Hola, reinicia por favor.",reiniciar,,"Hola, reiniciá por favor",,es_MX-ald-medium,20,00192
+"Por favor, mostrame el clima de mañana.",desconocido,,por favor mostrame el clima de mañana,,es_ES-davefx-medium,,00193
+"Hola, acércalo por favor.",escalar,,"hola, acercalo por favor",,es_ES-davefx-medium,10,00194
+Y ahora usa tu propio LLM para interpretar Dale.,usar_motor,,y ahora usa tu propio llm para interpretar dale,,es_AR-daniela-high,20,00195
+Mostrame por favor otra perforadora verde en vista superior rápido.,mostrar,perforadora verde,mostrame por favor otra perforadora verde en vista superior rápido,perforadora verde,es_ES-davefx-medium,20,00197
+Quiero ver las partes de un orgánulo ahora.,explotar,orgánulo,"dale, quiero ver las partes de un orgánulo ahora",orgánulo,es_AR-daniela-high,10,00198
+"Ahora, ¿cuál fue el modelo?",consultar,,ahora cuál fue el modelo,,es_AR-daniela-high,20,00199
+Ahora dime otro y un dinero de un base meta para el cliente.,mostrar,dinero de un base meta,ahora abrime otro hirudíneo de un base meta para el cliente,hirudíneo de un base meta,es_MX-ald-medium,10,00200
+"Perdón, a la mitad, por favor.",escalar,,"perdón, a la mitad por favor",,es_MX-ald-medium,10,00201
+"Hola, mostrame las piezas de un minictor rápido.",explotar,minictor,"hola, mostrame las piezas de un inyector rápido",inyector,es_AR-daniela-high,,00202
+Y ahora mostrame solo la figura del equipamiento rápido.,aislar,figura del equipamiento,Y ahora mostrame solo la figura del equipamiento rápido,figura del equipamiento,es_AR-daniela-high,20,00203
+"Perdón, activa la red neuronal para las manos.",usar_motor,,"perdón, activá la red neuronal para las manos",,es_AR-daniela-high,,00204
+"Listo, verlo desde atrás, por favor.",vista,,"listo, verlo desde atrás por favor",,es_MX-ald-medium,,00205
+"Por favor, saca la próxima cuando puedas.",desmontar,,por favor sacá la próxima cuando puedas,,es_AR-daniela-high,20,00206
+"Por favor, decime qué modelo respondió con eso rápido.",consultar,,por favor decime qué modelo respondió con eso rápido,,es_AR-daniela-high,,00207
+Hoy he acercado.,escalar,,oye acercalo,,es_MX-ald-medium,10,00208
+"Perdón, saca la próxima rápido.",desmontar,,"Perdón, sacá la próxima rápido",,es_MX-ald-medium,10,00209
+O pasa a los árboles de decisión para reconocer los gestos.,usar_motor,,ok pasá a los árboles de decisión para reconocer los gestos?,,es_ES-davefx-medium,,00210
+"Disculpa, reinicia desde el principio, dale.",reiniciar,,"disculpá, reiniciá desde el principio dale",,es_ES-davefx-medium,10,00211
+"Oye, te estaurá la vista.",reiniciar,,oye restaurá la vista?,,es_AR-daniela-high,20,00212

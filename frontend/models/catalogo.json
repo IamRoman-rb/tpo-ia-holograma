@@ -63,10 +63,182 @@
       "motor trifásico",
       "motor industrial",
       "motor con aletas",
-      "motor eléctrico industrial"
+      "motor eléctrico industrial",
+      "motor de inducción"
     ],
-    "descripcion": "Motor eléctrico con carcasa aletada, eje y base de montaje.",
+    "descripcion": "Motor de inducción trifásico: carcasa con aletas, estator bobinado, rotor de jaula, eje, rodamientos, tapas, ventilador y caja de bornes.",
     "url": "models/motor_electrico.glb",
+    "origen": "catalogo"
+  },
+  {
+    "id": "combustion_1_linea_90p0_8p6_8p6_sohc_2_no_correa_nafta",
+    "nombre": "Motor monocilíndrico",
+    "sinonimos": [
+      "motor monocilíndrico",
+      "motor de un cilindro",
+      "motor de moto chica"
+    ],
+    "descripcion": "Un solo cilindro: el motor más simple, como el de una moto chica o una cortadora de césped.",
+    "url": "models/motores/combustion_1_linea_90p0_8p6_8p6_sohc_2_no_correa_nafta.glb",
+    "origen": "catalogo"
+  },
+  {
+    "id": "combustion_3_linea_90p0_8p6_8p6_dohc_4_si_correa_nafta",
+    "nombre": "Motor de 3 cilindros en línea turbo",
+    "sinonimos": [
+      "motor de 3 cilindros",
+      "motor tricilíndrico turbo"
+    ],
+    "descripcion": "Tres cilindros en línea con turbo: chico y eficiente, como el de muchos autos actuales.",
+    "url": "models/motores/combustion_3_linea_90p0_8p6_8p6_dohc_4_si_correa_nafta.glb",
+    "origen": "catalogo"
+  },
+  {
+    "id": "combustion_4_linea_90p0_8p6_8p6_dohc_4_no_correa_nafta",
+    "nombre": "Motor de 4 cilindros en línea",
+    "sinonimos": [
+      "motor de auto",
+      "motor de 4 cilindros",
+      "motor a nafta",
+      "motor de combustión"
+    ],
+    "descripcion": "Cuatro cilindros en línea, doble árbol de levas y 16 válvulas: el motor de auto más común.",
+    "url": "models/motores/combustion_4_linea_90p0_8p6_8p6_dohc_4_no_correa_nafta.glb",
+    "origen": "catalogo"
+  },
+  {
+    "id": "combustion_4_linea_90p0_8p6_8p6_dohc_4_si_cadena_diesel",
+    "nombre": "Motor de 4 cilindros en línea turbo diésel",
+    "sinonimos": [
+      "motor diésel",
+      "motor turbodiésel",
+      "motor gasolero"
+    ],
+    "descripcion": "Cuatro cilindros diésel con turbo: inyectores en lugar de bujías.",
+    "url": "models/motores/combustion_4_linea_90p0_8p6_8p6_dohc_4_si_cadena_diesel.glb",
+    "origen": "catalogo"
+  },
+  {
+    "id": "combustion_6_linea_90p0_8p6_8p6_dohc_4_no_correa_nafta",
+    "nombre": "Motor de 6 cilindros en línea",
+    "sinonimos": [
+      "motor de 6 cilindros en línea",
+      "seis en línea"
+    ],
+    "descripcion": "Seis cilindros en línea: muy equilibrado y suave.",
+    "url": "models/motores/combustion_6_linea_90p0_8p6_8p6_dohc_4_no_correa_nafta.glb",
+    "origen": "catalogo"
+  },
+  {
+    "id": "combustion_6_v_60p0_8p6_8p6_dohc_4_no_correa_nafta",
+    "nombre": "Motor V6",
+    "sinonimos": [
+      "motor V6",
+      "V6"
+    ],
+    "descripcion": "Seis cilindros en V a 60°: dos bancos de tres.",
+    "url": "models/motores/combustion_6_v_60p0_8p6_8p6_dohc_4_no_correa_nafta.glb",
+    "origen": "catalogo"
+  },
+  {
+    "id": "combustion_8_v_90p0_8p6_8p6_dohc_4_no_correa_nafta",
+    "nombre": "Motor V8",
+    "sinonimos": [
+      "motor V8",
+      "V8",
+      "motor de 8 cilindros"
+    ],
+    "descripcion": "Ocho cilindros en V a 90°: dos bancos de cuatro, típico de autos deportivos y camionetas.",
+    "url": "models/motores/combustion_8_v_90p0_8p6_8p6_dohc_4_no_correa_nafta.glb",
+    "origen": "catalogo"
+  },
+  {
+    "id": "combustion_12_v_60p0_8p6_8p6_dohc_4_si_correa_nafta",
+    "nombre": "Motor V12 turbo",
+    "sinonimos": [
+      "motor V12",
+      "V12"
+    ],
+    "descripcion": "Doce cilindros en V con dos turbos: el de los superdeportivos.",
+    "url": "models/motores/combustion_12_v_60p0_8p6_8p6_dohc_4_si_correa_nafta.glb",
+    "origen": "catalogo"
+  },
+  {
+    "id": "combustion_4_boxer_90p0_8p6_8p6_dohc_4_no_correa_nafta",
+    "nombre": "Motor bóxer de 4 cilindros",
+    "sinonimos": [
+      "motor bóxer",
+      "motor de cilindros opuestos"
+    ],
+    "descripcion": "Cuatro cilindros horizontales y opuestos: bajo y equilibrado.",
+    "url": "models/motores/combustion_4_boxer_90p0_8p6_8p6_dohc_4_no_correa_nafta.glb",
+    "origen": "catalogo"
+  },
+  {
+    "id": "combustion_6_boxer_90p0_8p6_8p6_dohc_4_si_correa_nafta",
+    "nombre": "Motor bóxer de 6 cilindros turbo",
+    "sinonimos": [
+      "motor bóxer de 6 cilindros"
+    ],
+    "descripcion": "Seis cilindros opuestos con turbo.",
+    "url": "models/motores/combustion_6_boxer_90p0_8p6_8p6_dohc_4_si_correa_nafta.glb",
+    "origen": "catalogo"
+  },
+  {
+    "id": "combustion_7_radial_90p0_8p6_8p6_sohc_2_no_correa_nafta",
+    "nombre": "Motor radial de 7 cilindros",
+    "sinonimos": [
+      "motor radial de 7 cilindros"
+    ],
+    "descripcion": "Siete cilindros en estrella alrededor de un solo cigüeñal.",
+    "url": "models/motores/combustion_7_radial_90p0_8p6_8p6_sohc_2_no_correa_nafta.glb",
+    "origen": "catalogo"
+  },
+  {
+    "id": "combustion_9_radial_90p0_10p0_11p0_sohc_2_no_correa_nafta",
+    "nombre": "Motor radial de 9 cilindros",
+    "sinonimos": [
+      "motor radial",
+      "motor de avión",
+      "motor en estrella"
+    ],
+    "descripcion": "Nueve cilindros en estrella con hélice: el motor de los aviones de mediados del siglo XX.",
+    "url": "models/motores/combustion_9_radial_90p0_10p0_11p0_sohc_2_no_correa_nafta.glb",
+    "origen": "catalogo"
+  },
+  {
+    "id": "electrico_induccion_4p0_brida",
+    "nombre": "Motor eléctrico trifásico con brida",
+    "sinonimos": [
+      "motor trifásico con brida",
+      "motor eléctrico con brida"
+    ],
+    "descripcion": "Motor de inducción trifásico con brida de montaje.",
+    "url": "models/motores/electrico_induccion_4p0_brida.glb",
+    "origen": "catalogo"
+  },
+  {
+    "id": "electrico_continua_0p5_patas",
+    "nombre": "Motor de corriente continua",
+    "sinonimos": [
+      "motor de corriente continua",
+      "motor de continua",
+      "motor con escobillas"
+    ],
+    "descripcion": "Motor de corriente continua: imanes, inducido, colector y escobillas.",
+    "url": "models/motores/electrico_continua_0p5_patas.glb",
+    "origen": "catalogo"
+  },
+  {
+    "id": "electrico_brushless_0p3_patas",
+    "nombre": "Motor brushless",
+    "sinonimos": [
+      "motor brushless",
+      "motor sin escobillas",
+      "motor de dron"
+    ],
+    "descripcion": "Motor sin escobillas de rotor exterior, como el de los drones.",
+    "url": "models/motores/electrico_brushless_0p3_patas.glb",
     "origen": "catalogo"
   }
 ]

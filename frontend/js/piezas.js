@@ -14,6 +14,216 @@ const unitario = (a) => {
   return l > 1e-6 ? a.map((v) => v / l) : null;
 };
 
+// ---------------------------------------------------------------- qué nodos del .glb son piezas
+//
+// Los modelos propios tienen un nodo por pieza directamente bajo la escena. Los de Sketchfab (Objaverse) tienen un
+// único nodo raíz y las mallas cuelgan varios niveles más abajo: se baja por el árbol hasta un nivel que reparta las
+// mallas, respetando cómo las agrupó el autor. Misma regla en Python: contar_piezas de ml/catalogo3d/indexar.py.
+
+export const MAXIMO_PIEZAS = 80;   // más que eso, el despiece no se lee: se agrupan por cercanía
+const CUOTA_DOMINANTE = 0.9;       // un nodo con más de esta parte de las mallas del nivel se abre en sus hijos
+
+/**
+ * Nodos que son piezas. hijos(nodo): sus nodos hijos · esMalla(nodo): si el nodo mismo tiene malla.
+ * Desde los hijos de la raíz, mientras un nodo sin malla propia concentre más del 90 % de las mallas del nivel
+ * (por ejemplo, el único hijo de una cadena), se lo reemplaza por sus hijos. Los nodos sin mallas no cuentan.
+ */
+export function nivelDePiezas(raiz, hijos, esMalla) {
+  const mallas = new Map();
+  const contar = (n) => {
+    if (!mallas.has(n)) mallas.set(n, (esMalla(n) ? 1 : 0) + hijos(n).reduce((s, h) => s + contar(h), 0));
+    return mallas.get(n);
+  };
+  const conMallas = (n) => hijos(n).filter((h) => contar(h) > 0);
+  let nivel = conMallas(raiz);
+  for (;;) {
+    const total = nivel.reduce((s, n) => s + contar(n), 0);
+    const k = nivel.findIndex((n) => !esMalla(n) && contar(n) > CUOTA_DOMINANTE * total);
+    if (k < 0) return nivel;
+    nivel = [...nivel.slice(0, k), ...conMallas(nivel[k]), ...nivel.slice(k + 1)];
+  }
+}
+
+const distancia2 = (a, b) => a.reduce((s, v, k) => s + (v - b[k]) ** 2, 0);
+
+/**
+ * Agrupa piezas por cercanía de sus centros en `maximo` grupos como mucho (k-medias, arrancando por los puntos más
+ * alejados entre sí para que sea determinístico). Devuelve listas de índices, ordenadas por su primer índice.
+ */
+export function agruparPorCercania(centros, maximo = MAXIMO_PIEZAS) {
+  const n = centros.length;
+  if (n <= maximo) return centros.map((_, i) => [i]);
+  const media = [0, 1, 2].map((k) => centros.reduce((s, c) => s + c[k], 0) / n);
+  // Semillas: la más alejada del centro y después, de a una, la más alejada de las ya elegidas
+  const cercania = centros.map((c) => distancia2(c, media));
+  const semillas = [];
+  for (let j = 0; j < maximo; j++) {
+    const i = cercania.reduce((m, d, k) => (d > cercania[m] ? k : m), 0);
+    if (cercania[i] === 0 && j > 0) break; // quedan solo puntos repetidos
+    semillas.push([...centros[i]]);
+    centros.forEach((c, k) => { cercania[k] = j === 0 ? distancia2(c, centros[i]) : Math.min(cercania[k], distancia2(c, centros[i])); });
+  }
+  let asignacion = new Array(n).fill(-1);
+  const iteraciones = n > 5000 ? 15 : 50;   // miles de partes sueltas (follaje, texto): cada vuelta es n · máximo
+  for (let iter = 0; iter < iteraciones; iter++) {
+    const nueva = centros.map((c) => semillas.reduce((m, s, j) => (distancia2(c, s) < distancia2(c, semillas[m]) ? j : m), 0));
+    if (nueva.every((g, i) => g === asignacion[i])) break;
+    asignacion = nueva;
+    semillas.forEach((s, j) => {
+      const miembros = centros.filter((_, i) => asignacion[i] === j);
+      if (miembros.length) for (let k = 0; k < 3; k++) s[k] = miembros.reduce((t, c) => t + c[k], 0) / miembros.length;
+    });
+  }
+  const grupos = new Map();
+  asignacion.forEach((g, i) => { if (!grupos.has(g)) grupos.set(g, []); grupos.get(g).push(i); });
+  return [...grupos.values()];
+}
+
+// ---------------------------------------------------------------- modelos de una sola malla
+//
+// Muchos modelos de Objaverse vienen como una o dos mallas: el autor no los armó por piezas. Para que cualquier
+// objeto se pueda desarmar:
+//   1. cada malla se separa en sus partes sueltas (componentes conexas: grupos de triángulos que no se tocan entre
+//      sí). Muchas mallas "únicas" son en realidad varias piezas que no se tocan: ruedas, tapas, tornillos;
+//   2. si con eso quedan menos de MINIMO_PIEZAS, o si una parte tiene casi todo el modelo (un animal con los ojos
+//      sueltos: lo único que saldría son los ojos), esa parte se corta en SECCIONES por cercanía (k-medias de los
+//      centros de los triángulos), como un despiece por zonas.
+
+export const MINIMO_PIEZAS = 4;
+export const SECCIONES = 6;
+export const PARTE_DOMINANTE = 0.8;   // fracción de los triángulos a partir de la cual la parte más grande se corta
+
+/** Si hay que cortar la parte más grande (partes: listas de triángulos). */
+export function hayQueSeccionar(tamanos) {
+  const total = tamanos.reduce((s, n) => s + n, 0);
+  return tamanos.length < MINIMO_PIEZAS || Math.max(...tamanos) > PARTE_DOMINANTE * total;
+}
+const CELDAS = 131072;        // 2^17 por eje: la clave del vértice (x + y·2^17 + z·2^34) entra justa en 2^51
+const MUESTRA_SECCIONES = 20000;
+
+/** Índice del vértice de la esquina c del triángulo t (con o sin buffer de índices). */
+const vertice = (indices, t, c) => (indices ? indices[3 * t + c] : 3 * t + c);
+
+/**
+ * Partes sueltas de una malla. posiciones: xyz planos · indices: los de la malla o null si no tiene.
+ * Los vértices en la misma posición se unen antes: los glTF duplican vértices en las costuras de la textura, y sin
+ * unirlos una pieza se partiría por cada costura. Devuelve listas de triángulos, de la parte más grande a la más chica.
+ */
+export function componentesConexas(posiciones, indices) {
+  const nV = posiciones.length / 3;
+  const nT = (indices ? indices.length : nV) / 3;
+  const min = [Infinity, Infinity, Infinity];
+  const max = [-Infinity, -Infinity, -Infinity];
+  for (let i = 0; i < nV; i++) {
+    for (let k = 0; k < 3; k++) {
+      const v = posiciones[3 * i + k];
+      if (v < min[k]) min[k] = v;
+      if (v > max[k]) max[k] = v;
+    }
+  }
+  const escala = max.map((m, k) => (CELDAS - 1) / Math.max(m - min[k], 1e-12));
+  // Vértice -> representante (el primero en esa posición)
+  const unico = new Int32Array(nV);
+  const vistos = new Map();
+  for (let i = 0; i < nV; i++) {
+    const clave = Math.round((posiciones[3 * i] - min[0]) * escala[0])
+      + Math.round((posiciones[3 * i + 1] - min[1]) * escala[1]) * CELDAS
+      + Math.round((posiciones[3 * i + 2] - min[2]) * escala[2]) * CELDAS * CELDAS;
+    const previo = vistos.get(clave);
+    if (previo === undefined) vistos.set(clave, i);
+    unico[i] = previo ?? i;
+  }
+  // Unión-búsqueda sobre los vértices: los tres de cada triángulo quedan en el mismo conjunto
+  const padre = Int32Array.from({ length: nV }, (_, i) => i);
+  const raiz = (i) => {
+    while (padre[i] !== i) {
+      padre[i] = padre[padre[i]];
+      i = padre[i];
+    }
+    return i;
+  };
+  for (let t = 0; t < nT; t++) {
+    const a = raiz(unico[vertice(indices, t, 0)]);
+    for (const c of [1, 2]) {
+      const b = raiz(unico[vertice(indices, t, c)]);
+      if (a !== b) padre[b] = a;
+    }
+  }
+  const partes = new Map();
+  for (let t = 0; t < nT; t++) {
+    const r = raiz(unico[vertice(indices, t, 0)]);
+    if (!partes.has(r)) partes.set(r, []);
+    partes.get(r).push(t);
+  }
+  return [...partes.values()].sort((a, b) => b.length - a.length);
+}
+
+/** Centro (promedio de los centros de sus triángulos) de una lista de triángulos. */
+export function centroTriangulos(posiciones, indices, triangulos) {
+  const suma = [0, 0, 0];
+  for (const t of triangulos) {
+    for (let c = 0; c < 3; c++) {
+      const v = vertice(indices, t, c);
+      for (let k = 0; k < 3; k++) suma[k] += posiciones[3 * v + k];
+    }
+  }
+  return suma.map((s) => s / (3 * triangulos.length || 1));
+}
+
+/**
+ * Corta una parte (lista de triángulos) en k secciones por cercanía. Las semillas se eligen por puntos más
+ * alejados y las medias se ajustan con una muestra de hasta 20 mil triángulos (determinístico); después cada
+ * triángulo va a la sección más cercana. Devuelve las secciones no vacías.
+ */
+export function seccionar(posiciones, indices, triangulos, k = SECCIONES) {
+  const centro = (t) => {
+    const s = [0, 0, 0];
+    for (let c = 0; c < 3; c++) {
+      const v = vertice(indices, t, c);
+      for (let j = 0; j < 3; j++) s[j] += posiciones[3 * v + j] / 3;
+    }
+    return s;
+  };
+  const paso = Math.max(1, Math.floor(triangulos.length / MUESTRA_SECCIONES));
+  const muestra = [];
+  for (let i = 0; i < triangulos.length; i += paso) muestra.push(centro(triangulos[i]));
+  const grupos = agruparPorCercania(muestra, k);
+  const medias = grupos.map((g) => [0, 1, 2].map((j) => g.reduce((s, i) => s + muestra[i][j], 0) / g.length));
+  const secciones = medias.map(() => []);
+  for (const t of triangulos) {
+    const c = centro(t);
+    let mejor = 0;
+    medias.forEach((m, j) => { if (distancia2(c, m) < distancia2(c, medias[mejor])) mejor = j; });
+    secciones[mejor].push(t);
+  }
+  return secciones.filter((s) => s.length);
+}
+
+/**
+ * Nombres según dónde está cada pieza respecto del centro del modelo ("Sección superior izquierda"), para poder
+ * pedirlas por voz. Y es arriba y X es derecha (convención de glTF); Z positivo mira a la cámara. Si dos quedan
+ * con el mismo nombre, se numeran. prefijo: uno para todas o uno por pieza ("Pieza", "Sección").
+ */
+export function nombresPorPosicion(centros, centroModelo, tamano, prefijo = 'Pieza') {
+  const umbral = tamano * 0.08;
+  const lado = (v, positivo, negativo) => (v > umbral ? positivo : v < -umbral ? negativo : null);
+  const base = centros.map((c, i) => {
+    const pre = Array.isArray(prefijo) ? prefijo[i] : prefijo;
+    const [x, y, z] = restar(c, centroModelo);
+    const partes = [lado(y, 'superior', 'inferior'), lado(z, 'delantera', 'trasera'), lado(x, 'derecha', 'izquierda')]
+      .filter(Boolean);
+    return `${pre} ${partes.length ? partes.join(' ') : 'central'}`;
+  });
+  const total = new Map();
+  base.forEach((n) => total.set(n, (total.get(n) ?? 0) + 1));
+  const usados = new Map();
+  return base.map((n) => {
+    if (total.get(n) === 1) return n;
+    usados.set(n, (usados.get(n) ?? 0) + 1);
+    return `${n} ${usados.get(n)}`;
+  });
+}
+
 /**
  * Completa orden, dirección y distancia de desmontaje.
  * centroModelo, tamano: centro y diagonal de la caja del modelo completo.
@@ -44,6 +254,7 @@ export function prepararPiezas(datos, centroModelo, tamano) {
 
   for (const p of piezas) {
     p.fija = !Number.isFinite(p.orden);
+    p.radial = !unitario(p.direccion ?? []); // sin dirección declarada ni planificada: sale desde el centro
     const desdeCentro = restar(p.centro, centroModelo);
     p.dir = unitario(p.direccion ?? []) ?? unitario(desdeCentro) ?? [0, 1, 0];
     // Las piezas más alejadas en su dirección se alejan más: así no quedan superpuestas
@@ -51,8 +262,9 @@ export function prepararPiezas(datos, centroModelo, tamano) {
   }
 
   // Entre piezas que salen en la misma dirección, la que se saca antes queda más afuera
-  // (como en un despiece técnico: los bulones por fuera de la brida que sujetan)
-  const desmontables = piezas.filter((p) => !p.fija).sort((a, b) => a.orden - b.orden);
+  // (como en un despiece técnico: los bulones por fuera de la brida que sujetan). Las que salen desde el centro
+  // ya quedan separadas por su distancia al centro: escalonarlas, con decenas de piezas, las mandaría lejísimos.
+  const desmontables = piezas.filter((p) => !p.fija && !p.radial).sort((a, b) => a.orden - b.orden);
   for (const p of desmontables) {
     const despues = desmontables.filter((q) => q.orden > p.orden && punto(q.dir, p.dir) > 0.9).length;
     p.dist += despues * tamano * 0.15;

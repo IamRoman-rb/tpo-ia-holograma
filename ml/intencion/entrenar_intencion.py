@@ -143,7 +143,7 @@ def exactitud_objeto(interprete, filas, vectores=None):
 def main():
     from sentence_transformers import SentenceTransformer
 
-    entrenamiento = leer(AQUI / "frases_entrenamiento.csv")
+    entrenamiento = leer(AQUI / "frases_entrenamiento.csv") + leer(AQUI / "frases_objetos_ensamble.csv")
     validacion_generada = leer(AQUI / "frases_validacion_generada.csv")
     validacion = leer(RAIZ / "eval" / "frases_validacion.csv") + \
         [{"frase": f["frase"], "accion": f["accion"]} for f in leer(RAIZ / "eval" / "frases_objetos_validacion.csv")] + \

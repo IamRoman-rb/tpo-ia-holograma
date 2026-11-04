@@ -103,6 +103,7 @@ export function mostrarOrigen(nombre, origen, atribucion = null) {
   $('origen-etiqueta').textContent = {
     generado: 'Generado por IA · no apto para fabricación sin revisión',
     objaverse: 'De Objaverse (Sketchfab)',
+    parametrico: 'Armado a la medida · esquemático, con cada pieza nombrada',
   }[origen] ?? 'Del catálogo';
   const credito = $('origen-credito');
   credito.hidden = !atribucion;

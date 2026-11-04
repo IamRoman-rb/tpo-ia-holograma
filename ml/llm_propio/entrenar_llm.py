@@ -1,24 +1,23 @@
 """Ajusta un LLM abierto chico para interpretar pedidos: el LLM propio del proyecto (backend/llm_propio.py).
 
-Base: Qwen2.5-Instruct (Alibaba, licencia Apache 2.0), que ya sabe español. Dos tamaños: el de 1.500 millones
-de parámetros ("grande", el preferido: más preciso) y el de 500 millones ("chico", tres veces más rápido).
-Se ajusta con LoRA: se congelan los pesos originales y se entrenan matrices chicas que se suman a cada capa
-(8,8 millones de parámetros, 1,7 % del modelo). Al terminar se suman a los pesos y queda un modelo común.
-
+Base: Qwen2.5-Instruct, modelo abierto con soporte para espanol. Se ofrecen Qwen 0.5B, 1.5B y 7B;
+el tamano maximo se usa por defecto y requiere mucha memoria.
+Ajuste LoRA de rango 64: se congelan los pesos originales y se entrenan matrices adaptadoras en las capas lineales.
 Aprende a escribir, para cada pedido, "accion|objeto" (formato corto: en el procesador cada token cuesta
 ~70 ms; el backend lo convierte al JSON de siempre). La vista y el factor de escala los siguen sacando las
 reglas, como en el intérprete entrenado (backend/intent_modelo.py).
 
-Datos: ml/intencion/frases_entrenamiento.csv (las mismas frases del intérprete entrenado), una muestra
+Datos: ml/intencion/frases_entrenamiento.csv más ml/intencion/frases_objetos_ensamble.csv (frases específicas de objetos y
+desarmes), una muestra
 balanceada por acción: en el procesador, una pasada por las 18.800 frases lleva casi 3 horas.
 Se elige con validación (frases_validacion.csv, frases_objetos_validacion.csv y 200 frases generadas con
 objetos reservados) y se mide de punta a punta con eval/eval_intent.py --motor llm_propio.
 
 Uso (desde la raíz):
-    backend/.venv/Scripts/python ml/llm_propio/entrenar_llm.py --tamano grande   # ~4 h en CPU
+    backend/.venv/Scripts/python ml/llm_propio/entrenar_llm.py --tamano maximo  # Qwen 7B
     backend/.venv/Scripts/python ml/llm_propio/entrenar_llm.py --tamano chico    # ~80 min
 Requiere: pip install peft (solo para entrenar; el backend usa el modelo ya combinado)
-Salida: backend/modelos/llm_propio_grande/ (~3 GB) o llm_propio/ (~1 GB), que no se versionan, y
+Salida: backend/modelos/llm_propio_maximo/ (7B), llm_propio_grande/ (1.5B) o llm_propio/ (0.5B).
 ml/resultados/llm_propio_<tamaño>_reporte.json
 """
 import argparse
@@ -38,9 +37,12 @@ sys.stdout.reconfigure(encoding="utf-8")
 AQUI = Path(__file__).resolve().parent
 RAIZ = AQUI.parent.parent
 sys.path.insert(0, str(RAIZ / "backend"))
+sys.path.append(str(RAIZ / "ml"))
 import llm_propio  # noqa: E402  (formato de entrada y salida: el mismo que usa el backend)
+import pausa  # noqa: E402  (tecla P de scripts/entrenar.py: guardar y frenar)
 
-BASES = {"chico": "Qwen/Qwen2.5-0.5B-Instruct", "grande": "Qwen/Qwen2.5-1.5B-Instruct"}
+BASES = {"chico": "Qwen/Qwen2.5-0.5B-Instruct", "grande": "Qwen/Qwen2.5-1.5B-Instruct",
+         "maximo": "Qwen/Qwen2.5-7B-Instruct"}
 POR_ACCION = {"mostrar": 4000, "explotar": 2400, "aislar": 2400}   # el resto: 900 cada una (el doble desde
 OTRAS = 900                                                       # que hay 100 mil frases, con tipeo y voz)
 LOTE = 16
@@ -107,6 +109,7 @@ def main():
     r = random.Random(20261029)
 
     entrenamiento = muestra(leer(RAIZ / "ml" / "intencion" / "frases_entrenamiento.csv"), r)
+    entrenamiento += leer(RAIZ / "ml" / "intencion" / "frases_objetos_ensamble.csv")
     generadas = leer(RAIZ / "ml" / "intencion" / "frases_validacion_generada.csv")
     r.shuffle(generadas)
     validacion = {
@@ -125,7 +128,7 @@ def main():
     tok = AutoTokenizer.from_pretrained(BASE)
     modelo = AutoModelForCausalLM.from_pretrained(BASE, dtype=torch.float32)
     modelo = get_peft_model(modelo, LoraConfig(
-        r=16, lora_alpha=32, lora_dropout=0.05, task_type="CAUSAL_LM",
+        r=64, lora_alpha=128, lora_dropout=0.05, task_type="CAUSAL_LM",
         target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]))
     entrenables = sum(p.numel() for p in modelo.parameters() if p.requires_grad)
     total = sum(p.numel() for p in modelo.parameters())
@@ -135,9 +138,34 @@ def main():
     calentamiento = max(1, pasos // 20)
     plan = torch.optim.lr_scheduler.LambdaLR(opt, lambda k: min(1, (k + 1) / calentamiento)
                                              * 0.5 * (1 + math.cos(math.pi * min(k, pasos) / pasos)))
+
+    # Punto de control: solo las matrices LoRA (lo único que se entrena), el optimizador, el plan y el azar
+    punto = pausa.PuntoDeControl(f"llm_{args.tamano}{'_prueba' if args.rapido else ''}",
+                                 pausa.huella(BASE, LOTE, TASA, pasos, entrenamiento))
+    inicio, perdidas, segundos_previos = 0, [], 0.0
+    estado = punto.cargar()
+    if estado:
+        faltantes = modelo.load_state_dict(estado["lora"], strict=False)
+        if faltantes.unexpected_keys:
+            sys.exit(f"El punto de control no coincide con el modelo: {faltantes.unexpected_keys[:3]}")
+        opt.load_state_dict(estado["opt"])
+        plan.load_state_dict(estado["plan"])
+        torch.set_rng_state(estado["azar"])
+        inicio, perdidas, segundos_previos = estado["paso"], estado["perdidas"], estado["segundos"]
+        print(f"retomando desde el paso {inicio}/{pasos} ({segundos_previos / 3600:.1f} h ya entrenadas)", flush=True)
+
+    def guardar(k):
+        punto.guardar({"paso": k, "opt": opt.state_dict(), "plan": plan.state_dict(), "azar": torch.get_rng_state(),
+                       "lora": {n: p.detach() for n, p in modelo.named_parameters() if p.requires_grad},
+                       "perdidas": perdidas, "segundos": segundos_previos + time.perf_counter() - t0})
+
     modelo.train()
-    t0, perdidas = time.perf_counter(), []
-    for k in range(pasos):
+    t0 = time.perf_counter()
+    for k in range(inicio, pasos):
+        if pausa.pedida():   # entre dos pasos: nada quedó a medias
+            if k > inicio:
+                guardar(k)
+            pausa.salir()
         ids, mascara, etiquetas = lote_de_entrenamiento(tok, entrenamiento[k * LOTE:(k + 1) * LOTE])
         perdida = modelo(input_ids=ids, attention_mask=mascara, labels=etiquetas).loss
         perdida.backward()
@@ -149,9 +177,14 @@ def main():
         if k % 25 == 0 or k == pasos - 1:
             transcurrido = time.perf_counter() - t0
             print(f"  paso {k + 1}/{pasos} · pérdida {sum(perdidas[-25:]) / len(perdidas[-25:]):.3f} · "
-                  f"{transcurrido / 60:.0f} min (faltan ~{transcurrido / (k + 1) * (pasos - k - 1) / 60:.0f})",
-                  flush=True)
-    minutos = round((time.perf_counter() - t0) / 60, 1)
+                  f"{(segundos_previos + transcurrido) / 60:.0f} min "
+                  f"(faltan ~{transcurrido / (k + 1 - inicio) * (pasos - k - 1) / 60:.0f})", flush=True)
+        if punto.toca_autoguardar() and k < pasos - 1:
+            guardar(k + 1)
+    if pausa.pedida() and pasos > inicio:   # pausa durante el último paso: frena antes de combinar y evaluar
+        guardar(pasos)
+        pausa.salir()
+    minutos = round((segundos_previos + time.perf_counter() - t0) / 60, 1)
 
     # Combinar LoRA con los pesos originales y guardar en float16 (la mitad de tamaño; se carga en float32)
     modelo = modelo.merge_and_unload()
@@ -159,6 +192,7 @@ def main():
     SALIDA.mkdir(parents=True, exist_ok=True)
     modelo.to(torch.float16).save_pretrained(SALIDA)
     tok.save_pretrained(SALIDA)
+    punto.borrar()   # el modelo ya está guardado entero: el punto de control no hace falta
     tamano = sum(f.stat().st_size for f in SALIDA.iterdir()) // 2**20
     print(f"modelo -> {SALIDA.relative_to(RAIZ)} ({tamano} MB)")
 
@@ -179,7 +213,8 @@ def main():
 
     REPORTE.parent.mkdir(exist_ok=True)
     REPORTE.write_text(json.dumps({
-        "fecha": date.today().isoformat(), "tamano": args.tamano, "base": BASE, "lora": {"r": 16, "alpha": 32, "capas": "todas las lineales"},
+        "fecha": date.today().isoformat(), "tamano": args.tamano, "base": BASE,
+        "lora": {"r": 64, "alpha": 128, "capas": "todas las lineales"},
         "parametros_entrenables": entrenables, "parametros_totales": total,
         "frases_entrenamiento": len(entrenamiento), "pasos": pasos, "lote": LOTE, "tasa": TASA,
         "minutos_entrenamiento": minutos, "perdida_final": round(sum(perdidas[-25:]) / len(perdidas[-25:]), 4),

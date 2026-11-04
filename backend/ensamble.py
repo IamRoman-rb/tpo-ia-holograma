@@ -34,7 +34,7 @@ MATERIALES = {
     "goma": ((0.08, 0.08, 0.08), 0.0, 0.90),
     "pintado": ((0.10, 0.30, 0.60), 0.3, 0.50),
 }
-MAX_PIEZAS, MAX_FORMAS = 30, 12
+MAX_PIEZAS, MAX_FORMAS = 60, 16
 MEDIDA_MIN, MEDIDA_MAX, POSICION_MAX = 0.05, 300.0, 1000.0
 
 _nulo_numero = {"anyOf": [{"type": "number"}, {"type": "null"}]}
@@ -252,7 +252,7 @@ def pedir_ensamble(descripcion: str, cliente=None) -> dict:
     extra = {"betas": ["server-side-fallback-2026-07-01"], "fallbacks": "default"} if MODELO in MODELOS_CON_FALLBACK else {}
     r = cliente.beta.messages.create(
         model=MODELO,
-        max_tokens=16000,
+        max_tokens=32000,
         system=PROMPT_SISTEMA,
         messages=[{"role": "user", "content": descripcion}],
         # esfuerzo medio: diseñar la geometría de un ensamble necesita algo de razonamiento

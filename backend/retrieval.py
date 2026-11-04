@@ -92,15 +92,20 @@ class CatalogoObjaverse:
     def actualizar(self):
         """Vuelve a mirar qué modelos están bajados (después de scripts/descargar_modelos3d.py)."""
         self.bajado = np.array([(self.carpeta / f"{it['id']}.glb").exists() for it in self.items], bool)
+        # Un GLB de una sola pieza no sirve para el caso de uso de desarme. None se conserva para índices
+        # antiguos que aún no calcularon piezas; se priorizan los modelos medidos.
+        self.separables = np.array([it.get("piezas") != 1 for it in self.items], bool)
         self.variantes, self.por_palabra = [], {}
         for i, it in enumerate(self.items):
             vs = [_palabras(v) for v in [it["nombre"], *it["sinonimos"]]]
             self.variantes.append([v for v in vs if v])
-            if self.bajado[i]:
+            if self.bajado[i] and self.separables[i]:
                 for p in {p for v in vs for p in v}:
                     self.por_palabra.setdefault(p, []).append(i)
         # desempate entre modelos igual de parecidos: los que se pueden desarmar y los mejores
-        self.desempate = np.array([it["calidad"] + (1.5 if (it.get("piezas") or 0) >= 3 else 0) for it in self.items])
+        self.desempate = np.array([
+            it["calidad"] + min(2.5, 0.45 * np.log2(max(it.get("piezas") or 1, 1))) for it in self.items
+        ])
         log.info("Objaverse: %d de %d modelos bajados", int(self.bajado.sum()), len(self.items))
 
     def __len__(self):
@@ -124,12 +129,13 @@ class CatalogoObjaverse:
 
     def mejor_por_embeddings(self, q):
         """(índice, similitud) del modelo bajado con el texto más parecido a la consulta (vector normalizado)."""
-        if self.vectores is None or not len(self):
+        elegibles = self.bajado & self.separables
+        if self.vectores is None or not elegibles.any():
             return None, -1.0
         similitud = self.vectores @ q
         por_item = np.full(len(self.items), -1.0)
         np.maximum.at(por_item, self.filas_item, similitud[self.filas_texto])
-        por_item[~self.bajado] = -1.0
+        por_item[~elegibles] = -1.0
         # entre los que están a 0,02 del mejor, el de mejor desempate
         cerca = np.flatnonzero(por_item >= por_item.max() - 0.02)
         i = int(cerca[np.argmax(self.desempate[cerca])])

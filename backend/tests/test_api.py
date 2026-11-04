@@ -42,4 +42,8 @@ def test_frase_demasiado_larga(cliente):
 
 
 def test_catalogo(cliente):
-    assert len(cliente.get("/catalog").json()) == 5
+    # los 5 modelos propios y las variedades de motores (backend/motores/)
+    import motores
+    catalogo = cliente.get("/catalog").json()
+    assert len(catalogo) == 5 + len(motores.CATALOGO)
+    assert {"valvula_compuerta", "motor_electrico"} <= {it["id"] for it in catalogo}

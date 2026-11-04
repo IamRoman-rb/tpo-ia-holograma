@@ -107,8 +107,9 @@ def main():
     backend = subprocess.Popen([str(PYTHON_ENTORNO), "-m", "uvicorn", "main:app", "--app-dir", "backend",
                                 "--port", str(args.puerto_backend)]
                                + (["--reload", "--reload-dir", "backend"] if args.recargar else []), **comun)
-    frontend = subprocess.Popen([sys.executable, "-m", "http.server", str(args.puerto_frontend),
-                                 "--directory", "frontend"], **comun)
+    # Sin caché vieja: al recargar la página el navegador siempre toma los cambios del JS
+    frontend = subprocess.Popen([sys.executable, str(RAIZ / "scripts" / "servir_frontend.py"),
+                                 str(args.puerto_frontend), "frontend"], **comun)
     procesos = {"backend": backend, "frontend": frontend}
 
     threading.Thread(target=reenviar, args=(backend, "[back]", ("Loading weights", "INFO httpx", "HF_TOKEN")), daemon=True).start()

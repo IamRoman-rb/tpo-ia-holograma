@@ -44,7 +44,7 @@ def leer(ruta):
 
 
 def main():
-    entrenamiento = leer(AQUI / "frases_entrenamiento.csv")
+    entrenamiento = leer(AQUI / "frases_entrenamiento.csv") + leer(AQUI / "frases_objetos_ensamble.csv")
     validacion = [x for nombre in VALIDACION for x in leer(RAIZ / "eval" / nombre)]
     vec = CountVectorizer(analyzer=intent_bayes.rasgos, min_df=MINIMO)
     X = vec.fit_transform([f for f, _ in entrenamiento])

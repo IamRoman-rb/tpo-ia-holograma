@@ -62,17 +62,32 @@ Abrir <http://localhost:5500> y permitir el acceso a la cámara. El frontend fun
 
 ## Modelos 3D (Objaverse)
 
-Además de los modelos propios, el catálogo tiene unos 5.800 modelos de [Objaverse](https://huggingface.co/datasets/allenai/objaverse): máquinas y piezas (motores, cajas de cambios, turbinas, rodamientos…) y más de mil categorías de objetos comunes, con licencias CC BY, CC BY-SA o CC0. El visor muestra el autor y la licencia de cada uno. No se suben al repositorio; se bajan con:
+Ademas de los modelos propios, el catalogo usa modelos 3D de Objaverse: computadoras, notebooks, relojes, autos, motos, telefonos, maquinas y piezas, con licencias CC BY, CC BY-SA o CC0. La seleccion admite hasta 40 modelos por categoria, modelos de alta resolucion y un limite de 250 GB. Los modelos indexados con una sola pieza se excluyen de la busqueda. El visor muestra autor y licencia.
 
 ```bash
 python scripts/descargar_modelos3d.py
 ```
 
-Son unos 50 GB. Con `--gb 10` se bajan los mejores de cada categoría hasta ese tamaño. Se puede cortar y volver a correr: sigue donde quedó. Van a `ml/data/externo/objaverse/`; para usar otro disco, definir `HOLOGRAMA_DATOS` (por ejemplo `HOLOGRAMA_DATOS=D:/holograma`) antes de bajar y de levantar el backend. El backend busca solo entre los modelos bajados, así que el proyecto anda igual sin ellos. La selección y cómo se armó: [ml/catalogo3d/](ml/catalogo3d/seleccionar.py).
+Para ampliar el catalogo, vuelve a seleccionar modelos y a indexarlos antes de descargarlos:
+
+```bash
+python ml/catalogo3d/seleccionar.py --gb 250
+python scripts/descargar_modelos3d.py
+python ml/catalogo3d/indexar.py
+```
+
+El maximo configurado es 250 GB, ajustable con `--gb`. Se puede cortar y volver a correr: sigue donde quedo. Los archivos van a `ml/data/externo/objaverse/`; para usar otro disco, definir `HOLOGRAMA_DATOS` antes de bajar y de levantar el backend. El backend busca entre los modelos bajados.
+
+Cualquier modelo del catálogo se puede desarmar, aunque su autor no lo haya armado por piezas (`frontend/js/piezas.js`). Si el visor encuentra menos de 4 piezas en el archivo:
+
+1. Separa cada malla en sus **partes sueltas**, los grupos de triángulos que no se tocan entre sí (ruedas, tapas, tornillos). Antes une los vértices repetidos en las costuras de la textura.
+2. Si con eso no alcanza, o si una parte tiene más del 80 % del modelo, la corta en **secciones** por zonas (k-medias).
+
+Los modelos animados se congelan en su pose antes de cortarlos. Cada pieza se nombra por su lugar ("Sección superior izquierda"), así se puede pedir por voz. Medido sobre 300 modelos de una sola pieza: todos quedan con entre 4 y 80 piezas (mediana 7). Cerca de un tercio se separan en sus partes reales y el resto en secciones. Tarda una mediana de 44 ms.
 
 ## Entrenar los modelos
 
-Los modelos grandes (transformer y LLM propio) no se suben al repositorio: cada uno los entrena en su máquina con las frases que sí están versionadas (`ml/intencion/frases_entrenamiento.csv` y los sets de `eval/`). Desde la raíz:
+Los modelos grandes (transformer y LLM propio) no se suben al repositorio: cada uno los entrena en su máquina con las frases versionadas (`ml/intencion/frases_entrenamiento.csv`, `ml/intencion/frases_objetos_ensamble.csv` y los sets de `eval/`). Incluyen pedidos de computadoras, notebooks, relojes, autos, motos y teléfonos, además de sus desarmes por piezas. Desde la raíz:
 
 ```bash
 python scripts/entrenar.py --prueba
@@ -84,12 +99,28 @@ Corre cada paso en su versión mínima (unos 20 minutos) para comprobar que la m
 python scripts/entrenar.py
 ```
 
-Tarda unas 6-7 horas en CPU con el LLM de 1.5B; con `--llm chico` (0.5B) son unas 3 horas. Usa el mismo `backend/.venv` que `scripts/levantar.py` y le suma `ml/requirements-entrenamiento.txt`. La primera vez descarga PyTorch y las bases de Hugging Face, unos 10 GB entre todo.
+El entrenamiento completo usa XLM-RoBERTa large (560 M) para interpretar pedidos y Qwen 7B con LoRA r=64 para el LLM local; puede superar dos días en CPU y requiere mucha memoria. Usa el mismo `backend/.venv` que `scripts/levantar.py` y le suma `ml/requirements-entrenamiento.txt`. La primera vez descarga PyTorch y las bases de Hugging Face, decenas de GB entre todo.
 
 Opciones:
 - `--listar`: los pasos, cuánto tarda cada uno y cuáles se pueden correr en esta máquina.
 - `--solo bayes,modelo`: solo esos pasos.
-- `--desde llm`: retoma después de un corte o un error. El script imprime el comando exacto.
+- `--desde llm`: empieza en ese paso y sigue con los demás.
+
+### Entrenar en tandas (pausar y retomar)
+
+No hace falta dejar la PC dos o tres días seguidos. Mientras entrena, **apretá `P`**: termina el paso de optimización en curso, guarda dónde quedó y frena. No corta de golpe como Ctrl+C. Para seguir otro día:
+
+```bash
+python scripts/entrenar.py --continuar
+```
+
+- `--horas 8`: pausa sola después de 8 horas (por ejemplo, para entrenar solo de noche).
+- `--pausar`: pide la pausa desde otra terminal, si la del entrenamiento no recibe teclas.
+- `P` otra vez antes de que frene: cancela la pausa.
+- `--desde-cero`: descarta lo pausado y empieza de nuevo.
+- `--continuar --llm grande`: retoma con otro tamaño de LLM, por ejemplo si no alcanza la RAM para el 7B (necesita ~40 GB). Los pasos ya hechos se conservan y el LLM empieza con la base nueva.
+
+El transformer y el LLM propio, los pasos de horas, se cortan entre dos pasos de optimización. Guardan en `ml/checkpoints/` los pesos, el optimizador, el plan de la tasa, el orden de las frases y el estado del azar, así que al retomar siguen igual que si no se hubieran cortado. Cada punto de control se escribe aparte y se renombra al final: si algo falla al guardar, el anterior queda entero. También guardan solos cada hora, así que un Ctrl+C o un corte de luz pierde como mucho una hora. Los pasos cortos (bayes, modelo, evaluar, gestos) no se cortan a la mitad: terminan y el entrenamiento frena antes del siguiente. El punto de control del transformer pesa unos 7 GB y el del LLM 7B unos 2 GB. Hace falta el doble de espacio libre mientras se guarda.
 
 La salida de cada paso queda en `ml/logs/`, y los reportes en `ml/resultados/`. La evaluación no usa Claude aunque haya clave en `.env`. Los gestos se entrenan con los landmarks de HaGRID que están en el repositorio, comprimidos (`ml/data/hagrid/hagrid.csv.xz`, 44 MB; ver [ml/data/hagrid/README.md](ml/data/hagrid/README.md)). La red de gestos necesita además Node.js, para compararse con las reglas del visor.
 

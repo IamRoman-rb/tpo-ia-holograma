@@ -16,7 +16,7 @@ en inglés es la de Cap3D (Luo et al., ODC-By 1.0) y sirve para los embeddings m
 Para la evaluación (eval/eval_catalogo3d.py) se reserva un sinónimo de ~15 % de las categorías LVIS: no se usa para
 nombrar ningún modelo y después se pide con él.
 
-Uso (desde la raíz):  backend/.venv/Scripts/python ml/catalogo3d/seleccionar.py [--gb 50]
+Uso (desde la raíz):  backend/.venv/Scripts/python ml/catalogo3d/seleccionar.py [--gb 250]
 Salida: ml/catalogo3d/seleccion.csv (versionado). Los .glb se bajan con scripts/descargar_modelos3d.py.
 """
 import argparse
@@ -37,20 +37,26 @@ from dominio import DOMINIO  # noqa: E402
 from wordfreq import zipf_frequency  # noqa: E402
 
 LICENCIAS = {"by": "CC BY 4.0", "by-sa": "CC BY-SA 4.0", "cc0": "CC0 1.0"}
-MAX_MB = 30
-CARAS = (3_000, 1_500_000)    # con detalle, pero que una gráfica integrada lo pueda mostrar
-POR_CATEGORIA = {"dominio": 40, "lvis": 8}
+MAX_MB = 100
+CARAS = (3_000, 5_000_000)    # conserva modelos de alta resolución para observar piezas pequeñas
+POR_CATEGORIA = {"dominio": 40, "lvis": 40}
 RESERVA_EVAL = 0.15
 FRECUENCIA_EVAL = 2.5         # Zipf en español (wordfreq): 2,5 es una palabra rara pero conocida
 # WordNet no siempre da el nombre que se usa en Argentina, o elige otro sentido de la palabra
 NOMBRES_LVIS = {
     "car_(automobile)": ["auto", "coche", "automóvil"], "refrigerator": ["heladera", "refrigerador"],
     "washer_(automatic_washer)": ["lavarropas"], "bus_(vehicle)": ["colectivo", "ómnibus"],
-    "cellular_telephone": ["celular", "teléfono celular"], "computer_keyboard": ["teclado"],
+    "cellular_telephone": ["celular", "teléfono celular", "smartphone", "teléfono móvil"],
+    "mobile_phone": ["celular", "teléfono celular", "smartphone", "teléfono móvil"],
+    "smartphone": ["smartphone", "celular", "teléfono celular"],
+    "computer": ["computadora", "computador", "ordenador", "PC"],
+    "desktop_computer": ["computadora de escritorio", "PC de escritorio", "computador"],
+    "computer_keyboard": ["teclado"],
     "bat_(animal)": ["murciélago"], "baseball_bat": ["bate de béisbol", "bate"], "bow_(weapon)": ["arco"],
     "crane": ["grúa"], "pickup_truck": ["camioneta"], "truck": ["camión"], "motorcycle": ["moto", "motocicleta"],
     "bicycle": ["bicicleta"], "airplane": ["avión"], "television_set": ["televisor", "tele"],
-    "laptop_computer": ["notebook", "computadora portátil"], "sofa": ["sillón", "sofá"],
+    "laptop_computer": ["notebook", "laptop", "computadora portátil"], "sofa": ["sillón", "sofá"],
+    "watch": ["reloj", "reloj de pulsera"], "wristwatch": ["reloj", "reloj de pulsera"],
     "faucet": ["canilla", "grifo"], "mug": ["taza"], "trousers": ["pantalón"], "sweater": ["buzo", "suéter"],
     "seahorse": ["caballito de mar", "hipocampo"], "cash_register": ["caja registradora", "registradora"],
     "steering_wheel": ["volante", "manubrio"], "earring": ["aro", "arito", "arete"],
@@ -144,7 +150,7 @@ def nombres_wordnet(categoria):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--gb", type=float, default=50, help="tope de la descarga (se puede subir y volver a correr)")
+    ap.add_argument("--gb", type=float, default=250, help="tope del catálogo (por defecto, hasta 250 GB)")
     args = ap.parse_args()
     r = random.Random(20261029)
 

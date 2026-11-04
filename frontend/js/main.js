@@ -230,6 +230,9 @@ async function ejecutar({ accion, objeto, parametros }, id) {
       if (accion === 'explotar') visor.explotar(1);
       else visor.armarTodo();
       ui.fijarExplosion(accion === 'explotar' ? 1 : 0);
+      if (accion === 'explotar' && visor.separacion() === 'secciones') {
+        ui.mostrarEstado('Este modelo viene en una sola malla: se separó en secciones por zonas.');
+      }
       break;
     }
     case 'aislar': {
@@ -662,13 +665,57 @@ deslizador.addEventListener('pointerdown', () => visor.guardarEstado());
 deslizador.addEventListener('keydown', () => visor.guardarEstado());
 deslizador.addEventListener('input', () => visor.explotar(deslizador.value / 100));
 
+// --- mouse sobre el visor: clic = elegir pieza · arrastre = desplazarse · rueda = acercar o alejar
+// · arrastre con la rueda apretada = girar la cámara alrededor del objeto
 let inicioClic = null;
-visor.elemento.addEventListener('pointerdown', (e) => { inicioClic = [e.clientX, e.clientY]; });
+let arrastre = null; // { x, y, girar }: última posición del puntero mientras se arrastra la vista
+visor.elemento.addEventListener('pointerdown', (e) => {
+  if (e.pointerType === 'mouse' && e.button > 1) return; // el botón derecho queda libre
+  const girar = e.button === 1;
+  if (girar) e.preventDefault(); // sin el desplazamiento automático del navegador con la rueda
+  inicioClic = girar ? null : [e.clientX, e.clientY];
+  arrastre = { x: e.clientX, y: e.clientY, girar };
+  visor.elemento.setPointerCapture(e.pointerId);
+  if (girar) visor.elemento.classList.add('girando');
+});
+visor.elemento.addEventListener('mousedown', (e) => { if (e.button === 1) e.preventDefault(); });
+visor.elemento.addEventListener('pointermove', (e) => {
+  if (!arrastre) return;
+  const dx = e.clientX - arrastre.x;
+  const dy = e.clientY - arrastre.y;
+  if (arrastre.girar) {
+    visor.orbitarCamara(dx, dy);
+  } else {
+    if (!visor.elemento.classList.contains('arrastrando')) {
+      if (Math.hypot(e.clientX - inicioClic[0], e.clientY - inicioClic[1]) <= 5) return; // todavía es un clic
+      visor.elemento.classList.add('arrastrando');
+    }
+    visor.arrastrarCamara(dx, dy);
+  }
+  arrastre.x = e.clientX;
+  arrastre.y = e.clientY;
+});
+const terminarArrastre = () => {
+  arrastre = null;
+  visor.elemento.classList.remove('arrastrando', 'girando');
+};
 visor.elemento.addEventListener('pointerup', (e) => {
+  const fueArrastre = visor.elemento.classList.contains('arrastrando');
+  terminarArrastre();
   // Un clic (no un arrastre) sobre una pieza la selecciona y muestra qué es
-  if (!inicioClic || Math.hypot(e.clientX - inicioClic[0], e.clientY - inicioClic[1]) > 5) return;
+  if (!inicioClic || fueArrastre) return;
   if (visor.tienePiezas()) visor.seleccionar(visor.piezaEn(e.clientX, e.clientY));
 });
+visor.elemento.addEventListener('pointercancel', terminarArrastre);
+
+// La rueda también funciona sobre las etiquetas de las piezas, que están encima del lienzo
+const PIXELES_POR_MODO = [1, 16, innerHeight]; // deltaMode: píxeles, líneas, páginas
+addEventListener('wheel', (e) => {
+  if (e.target !== visor.elemento && !e.target.closest('#etiquetas')) return;
+  e.preventDefault(); // ni desplazar la página ni el zoom del navegador (pellizco en el touchpad)
+  const pasos = e.deltaY * PIXELES_POR_MODO[e.deltaMode];
+  visor.acercarCamara(Math.exp(pasos * 0.0015), e.clientX, e.clientY);
+}, { passive: false });
 
 document.getElementById('botones').addEventListener('click', (e) => {
   const accion = e.target.closest('button')?.dataset.accion;

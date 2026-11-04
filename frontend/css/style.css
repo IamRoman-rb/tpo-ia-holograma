@@ -322,7 +322,9 @@ body:has(#camara.grande) #catalogo { max-height: calc(100vh - min(560px, 46vw) *
 #lista-piezas li.fija { color: var(--tenue); list-style: none; margin-left: -16px; }
 #lista-piezas li.seleccionada { outline: 1px solid var(--acento); }
 #pieza-descripcion { margin: 8px 0 0; font-size: 12px; color: var(--tenue); line-height: 1.5; }
-#escena canvas { cursor: pointer; }
+#escena canvas { cursor: grab; touch-action: none; }
+#escena canvas.arrastrando { cursor: grabbing; }
+#escena canvas.girando { cursor: move; }
 
 /* Selector del clasificador de gestos (reglas o red neuronal) */
 #hud .clasificador { align-items: center; }
@@ -409,7 +411,10 @@ body:has(#camara.grande) #catalogo { max-height: calc(100vh - min(560px, 46vw) *
   transition: opacity 0.2s;
 }
 .etiqueta.derecha { text-align: right; border-left: none; border-right: 2px solid var(--color); padding: 2px 8px 2px 0; }
-.etiqueta strong { font-size: 12px; font-weight: 600; }
+.etiqueta strong { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Compacta (cuando no entran todas): solo el nombre; la descripción queda en el título y en el panel de la pieza */
+.etiqueta.compacta { padding-top: 1px; padding-bottom: 1px; }
+.etiqueta.compacta span { display: none; }
 .etiqueta span { font-size: 11px; color: #c4d6e0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .etiqueta.elegida strong { color: var(--color); }
 .etiqueta:hover, .etiqueta:focus-visible { border-color: var(--color); background: rgba(5, 9, 15, 0.35); }

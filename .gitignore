@@ -18,6 +18,8 @@ Thumbs.db
 
 # Modelos generados pesados (el catálogo precargado sí se versiona)
 backend/catalog/generated/
+# Motores generados a pedido (backend/motores/): se rehacen en milisegundos
+frontend/models/motores/a_pedido/
 *.tmp
 
 # Índices de embeddings que genera eval/eval_busqueda.py
@@ -33,9 +35,16 @@ ml/data/hagrid/*.csv
 # LLM propio ajustado (ml/llm_propio/entrenar_llm.py): ~1 GB, se regenera
 backend/modelos/llm_propio/
 backend/modelos/llm_propio_grande/
+backend/modelos/llm_propio_maximo/
 backend/modelos/transformer/
 backend/modelos/transformer_candidatos/
 backend/modelos/*_prueba/
 
 # Salida de cada paso de scripts/entrenar.py
 ml/logs/
+
+# Puntos de control de un entrenamiento pausado (ml/pausa.py): varios GB, se retoman con --continuar
+ml/checkpoints/
+
+# Configuración local de Claude Code y notas personales
+.claude/
