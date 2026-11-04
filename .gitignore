@@ -45,3 +45,6 @@ ml/logs/
 
 # Puntos de control de un entrenamiento pausado (ml/pausa.py): varios GB, se retoman con --continuar
 ml/checkpoints/
+
+# Configuración local de Claude Code y notas personales
+.claude/
