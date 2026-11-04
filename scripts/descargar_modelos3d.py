@@ -1,7 +1,7 @@
 """Baja los modelos 3D del catálogo (los .glb de Objaverse elegidos en ml/catalogo3d/seleccion.csv).
 
 Uso (desde la raíz, con cualquier Python 3.10+):
-    python scripts/descargar_modelos3d.py            # todos (~50 GB)
+    python scripts/descargar_modelos3d.py            # todos los seleccionados (hasta el tope configurado)
     python scripts/descargar_modelos3d.py --gb 10    # los mejores de cada categoría hasta 10 GB
 
 Van a HOLOGRAMA_DATOS/objaverse/glbs (por defecto ml/data/externo/, que no se versiona). Para usar otro disco:

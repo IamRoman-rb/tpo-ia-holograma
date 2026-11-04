@@ -235,11 +235,12 @@ class Modelo:
         self.piezas = {}                      # id -> {"meta": {...}, "partes": {material: [partes]}}
         self._actual = None
 
-    def pieza(self, id_, nombre, descripcion="", orden=None, direccion=None):
-        """Empieza una pieza nueva: lo que se agregue después pertenece a ella."""
+    def pieza(self, id_, nombre, descripcion="", orden=None, direccion=None, clase=None):
+        """Empieza una pieza nueva: lo que se agregue después pertenece a ella.
+        clase: el tipo de pieza sin numerar ("piston" para "Pistón 3"); es la etiqueta del reconocimiento de piezas."""
         self.piezas[id_] = {
-            "meta": {"pieza": id_, "nombre": nombre, "descripcion": descripcion,
-                     "orden": orden, "direccion": list(direccion) if direccion is not None else None},
+            "meta": {"pieza": id_, "nombre": nombre, "descripcion": descripcion, "clase": clase,
+                     "orden": orden, "direccion": [float(x) for x in direccion] if direccion is not None else None},
             "partes": defaultdict(list),
         }
         self._actual = id_

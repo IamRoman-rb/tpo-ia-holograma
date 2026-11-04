@@ -6,18 +6,39 @@ const SVG = 'http://www.w3.org/2000/svg';
 const MARGEN = 16;
 const CODO = 26;          // tramo horizontal de la línea guía, al salir de la etiqueta
 
+const ENTRE_SUBCOLUMNAS = 14; // espacio entre dos subcolumnas del mismo lado
+// Paneles fijos que las etiquetas no deben tapar: los de arriba bajan el comienzo de la columna, los de abajo
+// suben su final. Cada lado se mide aparte (abajo a la derecha está la cámara; a la izquierda, solo el catálogo).
+const OBSTACULOS = ['#hud', '#barra', '#origen', '#analisis', '#catalogo', '#camara', '#controles'];
+
 // Medidas según el ancho de la pantalla: en el teléfono, etiquetas angostas y sin descripción
 function medidas() {
   const angosta = innerWidth < 760;
-  // Mientras se analiza una pieza, su panel ocupa la esquina de arriba a la derecha
-  const analisis = document.getElementById('analisis');
-  const debajoAnalisis = analisis && !analisis.hidden && !angosta ? analisis.getBoundingClientRect().bottom + 24 : 0;
+  const ancho = angosta ? 104 : 200;
+  const H = innerHeight;
+  const limites = {};
+  for (const lado of ['izquierda', 'derecha']) {
+    // Franja de la pantalla que ocupa la columna del borde
+    const [x0, x1] = lado === 'izquierda' ? [MARGEN, MARGEN + ancho] : [innerWidth - MARGEN - ancho, innerWidth - MARGEN];
+    let arriba = angosta ? 64 : 84;
+    let abajo = H - 24;
+    for (const sel of OBSTACULOS) {
+      const el = document.querySelector(sel);
+      if (!el || el.hidden) continue;
+      const r = el.getBoundingClientRect();
+      if (!r.width || !r.height || r.right < x0 || r.left > x1) continue;
+      if (r.top + r.height / 2 < H / 2) arriba = Math.max(arriba, r.bottom + 20);
+      else abajo = Math.min(abajo, r.top - 16);
+    }
+    limites[lado] = { arriba, abajo };
+  }
   return {
-    ancho: angosta ? 104 : 200,
+    ancho,
     separacion: angosta ? 30 : 48,
-    arriba: Math.max(angosta ? 64 : 84, debajoAnalisis),
-    // Sin la cámara de fondo, abajo a la derecha está el recuadro de la cámara
-    abajo: innerHeight - (angosta ? 230 : document.body.classList.contains('holograma-ar') ? 190 : 350),
+    separacionCompacta: angosta ? 18 : 21,
+    limites,
+    // Subcolumnas hasta donde no lleguen al centro de la pantalla (donde suele estar el objeto), 3 como mucho
+    maxSubcolumnas: Math.max(1, Math.min(3, Math.floor((innerWidth / 2 - MARGEN - 60) / (ancho + ENTRE_SUBCOLUMNAS)))),
   };
 }
 
@@ -61,12 +82,19 @@ export function crearEtiquetas(raiz, { alElegir = () => {} } = {}) {
       for (const id of [...items.keys()]) if (!visibles.some((p) => p.id === id)) quitar(id);
       if (!visibles.length) return;
 
-      const { ancho, separacion, arriba, abajo } = medidas();
+      const { ancho, separacion, separacionCompacta, limites, maxSubcolumnas } = medidas();
       const W = innerWidth;
       const H = innerHeight;
       svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-      const lugares = distribuirEtiquetas(visibles.map((p) => ({ id: p.id, x: p.x * W, y: p.y * H })),
-        { ancho: W, arriba, abajo, separacion });
+      const lugares = distribuirEtiquetas(
+        visibles.map((p) => ({ id: p.id, x: p.x * W, y: p.y * H, prioridad: p.seleccionada || p.aislada })),
+        { ancho: W, arriba: 0, abajo: H, separacion, separacionCompacta, limites, maxSubcolumnas });
+      // En una ventana muy chica pueden no entrar todas: las que quedaron afuera se sacan
+      for (const id of [...items.keys()]) if (!lugares.some((l) => l.id === id)) quitar(id);
+
+      // Cuántas subcolumnas hay de cada lado: las líneas salen por afuera de la más interna
+      const subcolumnas = { izquierda: 1, derecha: 1 };
+      for (const l of lugares) subcolumnas[l.lado] = Math.max(subcolumnas[l.lado], l.subcolumna + 1);
 
       for (const l of lugares) {
         const p = visibles.find((q) => q.id === l.id);
@@ -76,20 +104,25 @@ export function crearEtiquetas(raiz, { alElegir = () => {} } = {}) {
           it.texto = texto;
           it.div.querySelector('strong').textContent = p.nombre;
           it.div.querySelector('span').textContent = p.descripcion;
-          it.div.title = p.descripcion;
+          it.div.title = `${p.nombre}: ${p.descripcion}`;
         }
         const izquierda = l.lado === 'izquierda';
-        const x = izquierda ? MARGEN : W - MARGEN - ancho;
+        // Las subcolumnas se agregan hacia el centro de la pantalla
+        const corrido = l.subcolumna * (ancho + ENTRE_SUBCOLUMNAS);
+        const x = izquierda ? MARGEN + corrido : W - MARGEN - ancho - corrido;
         it.div.style.width = `${ancho}px`;
-        it.div.style.transform = `translate(${x}px, ${l.y - 12}px)`;
+        it.div.style.transform = `translate(${x}px, ${l.y - (l.compacta ? 10 : 12)}px)`;
         it.div.classList.toggle('derecha', !izquierda);
+        it.div.classList.toggle('compacta', l.compacta);
         it.div.classList.toggle('elegida', p.seleccionada);
         it.div.style.setProperty('--color', p.color);
         it.div.style.opacity = String(Math.max(0.15, p.opacidad));
 
         // Línea guía: sale horizontal de la etiqueta y va derecho al centro de la pieza
-        const ax = izquierda ? MARGEN + ancho : W - MARGEN - ancho;
-        const codo = ax + (izquierda ? CODO : -CODO);
+        const ax = izquierda ? x + ancho : x;
+        // El tramo horizontal cruza las subcolumnas internas por el hueco entre sus etiquetas (van intercaladas)
+        const internas = (subcolumnas[l.lado] - 1 - l.subcolumna) * (ancho + ENTRE_SUBCOLUMNAS);
+        const codo = ax + (izquierda ? CODO + internas : -CODO - internas);
         const [px, py] = [p.x * W, p.y * H];
         it.linea.setAttribute('points', `${ax},${l.y} ${codo},${l.y} ${px},${py}`);
         it.linea.setAttribute('stroke', p.color);

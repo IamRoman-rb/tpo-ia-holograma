@@ -15,6 +15,7 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RAIZ / "backend"))
 
+import motores  # noqa: E402
 from geometria import (Modelo, caja, cilindro, circulo, esfera, escribir_glb, mover,  # noqa: E402
                        perfil_engranaje, prisma_anular, rot_x, rot_z, toroide)
 
@@ -96,30 +97,6 @@ def rodamiento():
     return m
 
 
-def motor():
-    m = Modelo({"carcasa": ((0.10, 0.30, 0.60), 0.3, 0.5), "acero": ACERO, "base": HIERRO,
-                "cobre": ((0.72, 0.42, 0.20), 0.9, 0.35)})
-    m.pieza("caja_bornes", "Caja de bornes", "Caja de conexiones eléctricas del motor.", 1, ARRIBA)
-    m.agregar("carcasa", mover(caja(0.35, 0.25, 0.35), (0, 0.62, 0)))
-    m.pieza("tapa_trasera", "Tapa trasera", "Escudo del lado del ventilador; sostiene un rodamiento.", 2, IZQUIERDA)
-    m.agregar("carcasa", mover(cilindro(0.5, 0.15), (-0.72, 0, 0), HORIZ_X))
-    m.pieza("tapa_delantera", "Tapa delantera", "Escudo del lado del eje; sostiene el otro rodamiento.", 3, DERECHA)
-    m.agregar("carcasa", mover(cilindro(0.5, 0.15), (0.72, 0, 0), HORIZ_X))
-    m.pieza("rotor", "Rotor y eje", "Parte que gira: el bobinado del rotor y el eje de salida.", 4, DERECHA)
-    m.agregar("cobre", mover(cilindro(0.38, 1.1), R=HORIZ_X))
-    m.agregar("acero", mover(cilindro(0.07, 1.7, 24), (0.25, 0, 0), HORIZ_X))
-    m.pieza("base", "Base de montaje", "Patas para fijar el motor.", 5, ABAJO)
-    m.agregar("base", mover(caja(1.0, 0.1, 0.9), (0, -0.75, 0)))
-    for x in (-0.35, 0.35):
-        m.agregar("base", mover(caja(0.15, 0.25, 0.7), (x, -0.6, 0)))
-    m.pieza("carcasa", "Carcasa", "Estator con aletas de refrigeración. Queda fija.")
-    m.agregar("carcasa", mover(prisma_anular(circulo(0.55), 0.4, 1.3), R=HORIZ_X))
-    for k in range(16):
-        a = 2 * math.pi * k / 16
-        m.agregar("carcasa", mover(caja(1.1, 0.12, 0.04), (0, 0.6 * math.cos(a), 0.6 * math.sin(a)), rot_x(a)))
-    return m
-
-
 CATALOGO = [
     ("valvula_compuerta", valvula, "Válvula de compuerta",
      ["válvula", "valvula de acero", "llave de paso", "válvula industrial", "válvula con volante"],
@@ -133,10 +110,26 @@ CATALOGO = [
     ("rodamiento_bolas", rodamiento, "Rodamiento de bolas",
      ["rodamiento", "ruleman", "rulemán", "cojinete", "balero"],
      "Rodamiento rígido de una hilera de bolas."),
-    ("motor_electrico", motor, "Motor eléctrico",
-     ["motor", "motor trifásico", "motor industrial", "motor con aletas", "motor eléctrico industrial"],
-     "Motor eléctrico con carcasa aletada, eje y base de montaje."),
+    ("motor_electrico", lambda: motores.generar(motores.TRIFASICO), "Motor eléctrico",
+     ["motor", "motor trifásico", "motor industrial", "motor con aletas", "motor eléctrico industrial",
+      "motor de inducción"],
+     "Motor de inducción trifásico: carcasa con aletas, estator bobinado, rotor de jaula, eje, rodamientos, "
+     "tapas, ventilador y caja de bornes."),
 ]
+
+
+def motores_del_catalogo():
+    """Las variedades de motores (backend/motores/): cada pieza con nombre, en frontend/models/motores/."""
+    filas = []
+    for parametros, sinonimos, descripcion in motores.CATALOGO:
+        id_ = motores.identificador(parametros)
+        ruta = motores.CARPETA / f"{id_}.glb"
+        ruta.unlink(missing_ok=True)   # se rehace siempre, por si cambió el generador
+        _, url = motores.glb_para(parametros, motores.CARPETA)
+        filas.append({"id": id_, "nombre": motores.nombre(parametros), "sinonimos": sinonimos,
+                      "descripcion": descripcion, "url": url, "origen": "catalogo"})
+        print(f"motores/{ruta.name[:40]:40s} {ruta.stat().st_size / 1024:7.1f} KB")
+    return filas
 
 
 def main():
@@ -149,6 +142,7 @@ def main():
         indice.append({"id": id_, "nombre": nombre, "sinonimos": sinonimos, "descripcion": descripcion,
                        "url": f"models/{id_}.glb", "origen": "catalogo"})
         print(f"{ruta.name:28s} {ruta.stat().st_size / 1024:7.1f} KB · {len(modelo.piezas)} piezas")
+    indice += motores_del_catalogo()
     # Conservar los modelos generados por IA que ya estaban en el catálogo
     ruta_indice = SALIDA / "catalogo.json"
     if ruta_indice.exists():

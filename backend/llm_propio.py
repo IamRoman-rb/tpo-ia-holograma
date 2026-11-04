@@ -1,11 +1,9 @@
-"""LLM propio: Qwen2.5-Instruct (licencia Apache 2.0) ajustado por el equipo para interpretar pedidos.
+"""LLM propio: Qwen2.5-Instruct ajustado por el equipo para interpretar pedidos.
 
-Corre en el equipo, sin internet ni costo por pedido. Se entrena con ml/llm_propio/entrenar_llm.py en dos
-tamaños: "grande" (1.500 millones de parámetros, backend/modelos/llm_propio_grande/, ~3 GB) y "chico" (500
-millones, backend/modelos/llm_propio/, ~1 GB); ninguno se versiona. Se usa el grande si está (es más preciso),
-salvo que LLM_PROPIO=chico pida el rápido. Escribe "accion|objeto" (un formato corto, porque en el
-procesador cada token tarda ~70 ms); la vista y el factor de escala los sacan las reglas, como en el
-intérprete entrenado. La confianza es la probabilidad que el modelo le dio a las palabras de la acción.
+Corre en el equipo, sin internet ni costo por pedido. Tiene tres tamanos: "maximo" (Qwen 7B,
+backend/modelos/llm_propio_maximo/), "grande" (1.5B) y "chico" (0.5B). Se usa el de mayor tamano
+instalado; LLM_PROPIO permite elegir otro. Escribe "accion|objeto"; la vista y el factor de escala los
+sacan las reglas. La confianza es la probabilidad que el modelo le dio a las palabras de la accion.
 """
 import math
 import os
@@ -18,7 +16,8 @@ from typing import get_args
 
 from schemas import Accion
 
-RUTAS = {"grande": Path(__file__).parent / "modelos" / "llm_propio_grande",
+RUTAS = {"maximo": Path(__file__).parent / "modelos" / "llm_propio_maximo",
+         "grande": Path(__file__).parent / "modelos" / "llm_propio_grande",
          "chico": Path(__file__).parent / "modelos" / "llm_propio"}
 
 
@@ -26,7 +25,8 @@ def _ruta_elegida():
     pedido = (os.getenv("LLM_PROPIO") or "").lower()
     if pedido in RUTAS:
         return RUTAS[pedido]
-    return next((r for r in RUTAS.values() if (r / "config.json").exists()), RUTAS["chico"])
+    return next((RUTAS[k] for k in ("maximo", "grande", "chico") if (RUTAS[k] / "config.json").exists()),
+                RUTAS["chico"])
 
 
 RUTA_MODELO = _ruta_elegida()

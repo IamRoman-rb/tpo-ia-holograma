@@ -1,0 +1,50 @@
+frase,accion,objeto,origen
+"mostrame un motor V8",mostrar,"motor V8",curada
+"quiero ver un motor diésel",mostrar,"motor diésel",curada
+"mostrame un motor bóxer",mostrar,"motor bóxer",curada
+"quiero ver un motor radial de avión",mostrar,"motor radial de avión",curada
+"mostrame un motor eléctrico trifásico",mostrar,"motor eléctrico trifásico",curada
+"quiero ver un motor brushless",mostrar,"motor brushless",curada
+"mostrame un motor de cuatro cilindros",mostrar,"motor de cuatro cilindros",curada
+"mostrame las piezas del motor diésel",explotar,"motor diésel",curada
+"quiero ver el despiece de un motor V8",explotar,"motor V8",curada
+"desarmá el motor bóxer completo",explotar,"motor bóxer",curada
+"separá todas las piezas del motor radial",explotar,"motor radial",curada
+"mostrame el motor eléctrico brushless desarmado",explotar,"motor eléctrico brushless",curada
+"abrí el despiece del motor turbodiésel",explotar,"motor turbodiésel",curada
+"sacá la próxima pieza del motor",desmontar,,curada
+"desmontá una pieza más",desmontar,,curada
+"armá de nuevo el motor",armar,,curada
+"mostrame solo el pistón",aislar,pistón,curada
+"aislá el árbol de levas",aislar,"árbol de levas",curada
+"analizá el inyector",aislar,inyector,curada
+"volvé al conjunto del motor",conjunto,,curada
+"mostrame una computadora de escritorio",mostrar,"computadora de escritorio",curada
+"quiero ver una PC gamer abierta",mostrar,"PC gamer",curada
+"mostrame el despiece de una computadora",explotar,computadora,curada
+"separá las piezas de una PC gamer",explotar,"PC gamer",curada
+"mostrame la placa madre de la computadora",aislar,"placa madre",curada
+"quiero ver una notebook",mostrar,notebook,curada
+"mostrame una notebook desarmada",explotar,notebook,curada
+"separá las partes de una laptop",explotar,laptop,curada
+"mostrame solo la batería de la notebook",aislar,"batería de la notebook",curada
+"quiero ver un reloj mecánico",mostrar,"reloj mecánico",curada
+"mostrame el mecanismo de un reloj por piezas",explotar,"reloj mecánico",curada
+"desarmá un reloj de pulsera",explotar,"reloj de pulsera",curada
+"aislá las agujas del reloj",aislar,"agujas del reloj",curada
+"mostrame un auto",mostrar,auto,curada
+"quiero ver un automóvil por dentro",mostrar,automóvil,curada
+"mostrame todas las piezas de un auto",explotar,auto,curada
+"abrí el despiece de un automóvil",explotar,automóvil,curada
+"mostrame el motor de un auto",mostrar,"motor de auto",curada
+"quiero ver una moto",mostrar,moto,curada
+"mostrame una motocicleta por partes",explotar,motocicleta,curada
+"desarmá una moto completa",explotar,moto,curada
+"aislá la rueda delantera de la moto",aislar,"rueda delantera de la moto",curada
+"mostrame un teléfono celular",mostrar,"teléfono celular",curada
+"quiero ver un smartphone",mostrar,smartphone,curada
+"mostrame el despiece de un teléfono",explotar,teléfono,curada
+"separá las partes de un celular",explotar,celular,curada
+"aislá la cámara del teléfono",aislar,"cámara del teléfono",curada
+"mostrame un objeto con sus componentes separados",explotar,,curada
+"quiero ver cómo está armado un aparato electrónico",explotar,"aparato electrónico",curada

@@ -4,8 +4,8 @@ Para cada modelo de ml/catalogo3d/seleccion.csv:
   - nombre y sinónimos en español (los busca el ranking por palabras de backend/retrieval.py);
   - embeddings de los nombres en español y la descripción de Cap3D en inglés, con el mismo modelo
     de embeddings que el resto del catálogo (multilingüe: una consulta en español encuentra un texto en inglés);
-  - cuántas piezas separables tiene (nodos con malla del .glb), si ya está bajado: entre modelos parecidos se prefiere
-    el que se puede desarmar.
+  - cuántas piezas separables tiene (las que ve el visor: el primer nivel del árbol de nodos con dos o más hijos con
+    mallas, hasta 80), si ya está bajado: entre modelos parecidos se prefiere el que se puede desarmar.
 Los textos repetidos (los nombres de una categoría) se codifican una sola vez.
 
 Uso (desde la raíz, después de scripts/descargar_modelos3d.py):  backend/.venv/Scripts/python ml/catalogo3d/indexar.py
@@ -31,8 +31,42 @@ SALIDA_INDICE = RAIZ / "backend" / "catalog" / "objaverse_indice.npz"
 LARGO_DESCRIPCION = 300
 
 
+# Igual que frontend/js/piezas.js (nivelDePiezas): más de 80 piezas, el visor las agrupa por cercanía
+MAXIMO_PIEZAS = 80
+CUOTA_DOMINANTE = 0.9
+
+
+def contar_piezas(gltf):
+    """Piezas que ve el visor. Los modelos de Sketchfab tienen un único nodo raíz y las mallas cuelgan varios niveles
+    más abajo: desde las raíces de la escena, mientras un nodo sin malla propia concentre más del 90 % de las mallas
+    del nivel (por ejemplo, el único hijo de una cadena), se lo reemplaza por sus hijos."""
+    nodos = gltf.get("nodes", [])
+    mallas = {}
+
+    def contar(i):  # mallas del nodo y sus descendientes (un .glb con ciclos termina en RecursionError)
+        if i not in mallas:
+            mallas[i] = ("mesh" in nodos[i]) + sum(contar(h) for h in nodos[i].get("children", []))
+        return mallas[i]
+
+    def con_mallas(ids):
+        return [i for i in ids if contar(i) > 0]
+
+    escenas = gltf.get("scenes", [])
+    if not escenas:
+        return 0
+    nivel = con_mallas(escenas[gltf.get("scene", 0)].get("nodes", []))
+    while True:
+        total = sum(contar(i) for i in nivel)
+        k = next((k for k, i in enumerate(nivel) if "mesh" not in nodos[i] and contar(i) > CUOTA_DOMINANTE * total),
+                 None)
+        if k is None:
+            return min(len(nivel), MAXIMO_PIEZAS)
+        nivel = nivel[:k] + con_mallas(nodos[nivel[k]].get("children", [])) + nivel[k + 1:]
+
+
 def piezas_glb(ruta):
-    """Nodos con malla del .glb (lee solo el bloque JSON del encabezado). None si no está o no se puede leer."""
+    """Piezas separables que ve el visor (contar_piezas; lee solo el bloque JSON del encabezado).
+    None si no está, no se puede leer o no tiene mallas."""
     try:
         with open(ruta, "rb") as f:
             magia, _, _ = struct.unpack("<4sII", f.read(12))
@@ -40,8 +74,8 @@ def piezas_glb(ruta):
             if magia != b"glTF" or tipo != b"JSON":
                 return None
             gltf = json.loads(f.read(largo))
-        return sum(1 for n in gltf.get("nodes", []) if "mesh" in n) or None
-    except (OSError, struct.error, ValueError):
+        return contar_piezas(gltf) or None
+    except (OSError, struct.error, ValueError, IndexError, KeyError, RecursionError):
         return None
 
 

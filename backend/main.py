@@ -16,6 +16,7 @@ from fastapi.staticfiles import StaticFiles  # noqa: E402
 import generate3d  # noqa: E402
 from generate3d import GeneracionFallida, GeneracionNoDisponible, generar  # noqa: E402
 import intent_modelo  # noqa: E402
+import motores  # noqa: E402
 from intent import interpretar  # noqa: E402
 from retrieval import CARPETA_GLBS, URL_GLBS, buscar_similar, catalogo, listar_catalogo, recargar  # noqa: E402
 from safety import LimiteFrecuencia, fuera_de_dominio, validar_intencion  # noqa: E402
@@ -104,7 +105,8 @@ def motores_instalados():
     import llm_propio
     ruta_llm = llm_propio.RUTA_MODELO
     return {
-        "llm_propio": ("Qwen 1.5B" if ruta_llm.name.endswith("grande") else "Qwen 0.5B")
+        "llm_propio": ("Qwen 7B" if ruta_llm.name.endswith("maximo") else
+                       "Qwen 1.5B" if ruta_llm.name.endswith("grande") else "Qwen 0.5B")
         if (ruta_llm / "config.json").exists() else None,
         "transformer": (intent_transformer.RUTA_MODELO / "interprete.json").exists(),
         "modelo": intent_modelo.RUTA_MODELO.exists(),
@@ -154,6 +156,13 @@ async def reconocer_voz(request: Request, activacion: bool = False):
 def obtener_objeto(p: Pedido, request: Request):
     _controlar_frecuencia(request)
     t0 = time.perf_counter()
+    # Un motor con características ("motor V8 turbo", "motor trifásico de 10 kW") se arma a la medida, con todas
+    # sus piezas nombradas para desarmarlo (backend/motores/)
+    if parametros := motores.pedido(p.frase):
+        id_, url = motores.glb_para(parametros)
+        return {"id": id_, "nombre": motores.nombre(parametros), "modelo_url": url, "origen": "parametrico",
+                "similitud": 1.0, "metodo": "generador de motores",
+                "tiempo_ms": round((time.perf_counter() - t0) * 1000)}
     similar = buscar_similar(p.frase)
     if similar:
         if similar["modelo_url"].startswith(URL_GLBS):   # lo sirve el backend, no el frontend

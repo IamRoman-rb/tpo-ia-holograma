@@ -8,13 +8,21 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { crearHistorial } from './historial.js';
 import { areaSuperficie, colorPieza, crearAzar, puntosEnSuperficie } from './holograma.js';
 import {
-  desplazamiento, encuadreAislada, nombreMaterial, prepararPiezas, siguienteParaDesmontar, textoMedidas,
-  ultimaDesmontada,
+  MAXIMO_PIEZAS, MINIMO_PIEZAS, SECCIONES, agruparPorCercania, centroTriangulos, componentesConexas, desplazamiento,
+  encuadreAislada, hayQueSeccionar, nivelDePiezas, nombreMaterial, nombresPorPosicion, prepararPiezas, seccionar,
+  siguienteParaDesmontar, textoMedidas, ultimaDesmontada,
 } from './piezas.js';
 
 export const ESCALA_MIN = 0.2;   // mismos límites que backend/safety.py
 export const ESCALA_MAX = 5;
 const DISTANCIA_CAMARA = 4;
+// Navegación con el mouse: la cámara orbita alrededor de un centro; se acerca o se aleja (rueda),
+// se desplaza (arrastre) y gira (arrastre con la rueda apretada)
+const DISTANCIA_MIN = 0.6;
+const DISTANCIA_MAX = 25;
+const LIMITE_DESPLAZAMIENTO = 20; // hasta dónde se puede alejar el centro de la vista, para no perderse
+const ELEVACION_MIN = -0.25;      // apenas por debajo del horizonte: más abajo se vería la grilla desde atrás
+const ELEVACION_MAX = 1.45;       // casi desde arriba (83°), sin dar vuelta la cámara
 const RAPIDEZ_SUAVIZADO = 14;   // más alto = sigue a la mano más rápido
 const RAPIDEZ_PIEZAS = 6;       // el desmontaje es más lento, para que se vea el recorrido
 const COLOR_SELECCION = new THREE.Color(0x2bd4ff);
@@ -44,8 +52,18 @@ function texturaPunto() {
 export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = null, estilo: estiloInicial = 'solido' } = {}) {
   const escena = new THREE.Scene();
   const camara = new THREE.PerspectiveCamera(50, contenedor.clientWidth / contenedor.clientHeight, 0.1, 100);
-  camara.position.set(0, 0.3, DISTANCIA_CAMARA);
-  camara.lookAt(0, 0, 0);
+  // Vista de la cámara: mira al centro desde una distancia y dos ángulos. La actual sigue al objetivo
+  // con suavizado, como el pivote. Al empezar: de frente y un poco desde arriba, como antes.
+  const vistaInicial = {
+    centro: new THREE.Vector3(), distancia: Math.hypot(DISTANCIA_CAMARA, 0.3),
+    azimut: 0, elevacion: Math.atan2(0.3, DISTANCIA_CAMARA),
+  };
+  const copiarVista = (v) => ({ ...v, centro: v.centro.clone() });
+  const vistaObjetivo = copiarVista(vistaInicial);
+  const vistaActual = copiarVista(vistaInicial);
+  // Cámara auxiliar ubicada en la vista objetivo: los cálculos del mouse se hacen donde va a quedar la cámara
+  const camaraGuia = camara.clone();
+  ubicarCamara(camara, vistaActual);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(devicePixelRatio);
@@ -66,7 +84,7 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = 
   contraluz.position.set(-3, 2, -4);
   escena.add(contraluz);
 
-  const grilla = new THREE.GridHelper(8, 32, 0x2bd4ff, 0x16475a);
+  const grilla = new THREE.GridHelper(40, 160, 0x2bd4ff, 0x16475a); // amplia: se puede recorrer con el mouse
   grilla.position.y = -1.3;
   grilla.material.transparent = true;
   grilla.material.opacity = 0.35;
@@ -84,6 +102,7 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = 
 
   // Piezas del modelo actual: { id, nombre, descripcion, fija, dir, dist, obj, base, actual, libre, ... }
   let piezas = [];
+  let separacion = null;         // si las piezas las separó el visor: 'partes' (sueltas) o 'secciones' (cortes)
   let objetivosPiezas = [];      // 0 = montada · 1 = desmontada (puede ser intermedio: vista explotada)
   let seleccionada = null;
   let apuntada = null;           // pieza bajo el cursor de la mano
@@ -108,8 +127,38 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = 
   const reloj = new THREE.Clock();
   const raycaster = new THREE.Raycaster();
 
-  function anchoAltoVista() {
-    const alto = 2 * DISTANCIA_CAMARA * Math.tan(THREE.MathUtils.degToRad(camara.fov / 2));
+  function ubicarCamara(cam, v) {
+    const c = Math.cos(v.elevacion);
+    cam.position.set(Math.sin(v.azimut) * c, Math.sin(v.elevacion), Math.cos(v.azimut) * c)
+      .multiplyScalar(v.distancia).add(v.centro);
+    cam.lookAt(v.centro);
+    cam.updateMatrixWorld();
+  }
+
+  function guiaEnObjetivo() {
+    camaraGuia.projectionMatrix.copy(camara.projectionMatrix);
+    camaraGuia.projectionMatrixInverse.copy(camara.projectionMatrixInverse);
+    ubicarCamara(camaraGuia, vistaObjetivo);
+    return camaraGuia;
+  }
+
+  // Derecha y arriba de la pantalla, en coordenadas del mundo
+  function ejesPantalla(cam = camara) {
+    return {
+      derecha: new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 0),
+      arriba: new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 1),
+    };
+  }
+
+  function limitarVista() {
+    const l = LIMITE_DESPLAZAMIENTO;
+    vistaObjetivo.centro.clampScalar(-l, l);
+    vistaObjetivo.elevacion = THREE.MathUtils.clamp(vistaObjetivo.elevacion, ELEVACION_MIN, ELEVACION_MAX);
+  }
+
+  // Tamaño de la vista en el plano del centro, a la distancia actual de la cámara
+  function anchoAltoVista(distancia = vistaActual.distancia) {
+    const alto = 2 * distancia * Math.tan(THREE.MathUtils.degToRad(camara.fov / 2));
     return { ancho: alto * camara.aspect, alto };
   }
 
@@ -139,6 +188,9 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = 
   renderer.setAnimationLoop(() => {
     const dt = reloj.getDelta();
     const a = 1 - Math.exp(-dt * RAPIDEZ_SUAVIZADO);
+    vistaActual.centro.lerp(vistaObjetivo.centro, a);
+    for (const k of ['distancia', 'azimut', 'elevacion']) vistaActual[k] += (vistaObjetivo[k] - vistaActual[k]) * a;
+    ubicarCamara(camara, vistaActual);
     pivote.position.lerp(objetivo.pos, a);
     pivote.rotation.x += (objetivo.rotX - pivote.rotation.x) * a;
     pivote.rotation.y += (objetivo.rotY - pivote.rotation.y) * a;
@@ -248,11 +300,183 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = 
     return radioArmado / radio;
   }
 
-  // Lee las piezas del .glb: cada hijo de la escena con metadatos (extras → userData) es una pieza
-  function leerPiezas(raiz, caja) {
+  // Lee las piezas del .glb. En los modelos propios, cada hijo de la escena con metadatos (extras → userData) es una
+  // pieza; en los de Objaverse, las del nivel que elige nivelDePiezas, agrupadas por cercanía si son más de 80.
+  // asociaciones (gltf.parser.associations) distingue los nodos del glTF de las primitivas de una malla.
+  function elegirPiezas(raiz, asociaciones) {
+    const esNodo = (o) => asociaciones?.get(o)?.nodes !== undefined;
+    const esMalla = (o) => o.isMesh || asociaciones?.get(o)?.meshes !== undefined;
+    const elegidas = nivelDePiezas(raiz, (o) => o.children.filter(esNodo), esMalla);
+    // Pocas piezas y sin metadatos de desarme (un modelo que el autor no armó por piezas): se separa la malla
+    const disenado = elegidas.some((o) => o.userData.pieza !== undefined || o.userData.orden !== undefined);
+    if (elegidas.length < MINIMO_PIEZAS && !disenado) {
+      const separadas = separarMallas(raiz);
+      if (separadas) return separadas;
+    }
+    if (elegidas.length <= MAXIMO_PIEZAS) return elegidas;
+    const centros = elegidas.map((o) => new THREE.Box3().setFromObject(o).getCenter(new THREE.Vector3()).toArray());
+    return agruparPorCercania(centros).map((indices, k) => {
+      if (indices.length === 1) return elegidas[indices[0]];
+      const grupo = new THREE.Group();
+      grupo.name = `Grupo ${k + 1} (${indices.length} partes)`;
+      raiz.add(grupo);
+      for (const i of indices) grupo.attach(elegidas[i]);
+      return grupo;
+    });
+  }
+
+  // Posiciones xyz planas (sirve también con atributos intercalados o cuantizados)
+  function posicionesDe(geometria) {
+    const a = geometria.attributes.position;
+    const xyz = new Float32Array(a.count * 3);
+    for (let i = 0; i < a.count; i++) {
+      xyz[3 * i] = a.getX(i);
+      xyz[3 * i + 1] = a.getY(i);
+      xyz[3 * i + 2] = a.getZ(i);
+    }
+    return xyz;
+  }
+
+  // Una malla nueva con solo esos triángulos de la original (mismo material, mismo lugar). Los vértices se copian
+  // compactos: así la caja de cada pieza es la suya y no la de la malla entera.
+  function mallaParcial(malla, triangulos) {
+    const g = malla.geometry;
+    const indices = g.index?.array ?? null;
+    const nuevo = new Int32Array(g.attributes.position.count).fill(-1);
+    const viejos = [];
+    const indice = new Uint32Array(triangulos.length * 3);
+    let k = 0;
+    for (const t of triangulos) {
+      for (let c = 0; c < 3; c++) {
+        const v = indices ? indices[3 * t + c] : 3 * t + c;
+        if (nuevo[v] < 0) { nuevo[v] = viejos.length; viejos.push(v); }
+        indice[k++] = nuevo[v];
+      }
+    }
+    const geometria = new THREE.BufferGeometry();
+    for (const [nombre, a] of Object.entries(g.attributes)) {
+      const intercalado = a.isInterleavedBufferAttribute;
+      const fuente = intercalado ? a.data.array : a.array;
+      const paso = intercalado ? a.data.stride : a.itemSize;
+      const desde = intercalado ? a.offset : 0;
+      const datos = new fuente.constructor(viejos.length * a.itemSize);
+      viejos.forEach((v, i) => {
+        for (let j = 0; j < a.itemSize; j++) datos[i * a.itemSize + j] = fuente[v * paso + desde + j];
+      });
+      geometria.setAttribute(nombre, new THREE.BufferAttribute(datos, a.itemSize, a.normalized));
+    }
+    geometria.setIndex(new THREE.BufferAttribute(viejos.length < 65536 ? Uint16Array.from(indice) : indice, 1));
+    const parte = new THREE.Mesh(geometria, malla.material);
+    parte.position.copy(malla.position);
+    parte.quaternion.copy(malla.quaternion);
+    parte.scale.copy(malla.scale);
+    malla.parent.add(parte);
+    return parte;
+  }
+
+  // Separa las mallas del modelo en partes sueltas y, si son pocas, corta la más grande en secciones
+  // (componentesConexas y seccionar de piezas.js). Las piezas resultantes reemplazan a las mallas originales.
+  // Devuelve las piezas nuevas, o null si no se pudo separar en más de una.
+  // Los modelos animados (huesos o deformaciones) se congelan en su pose: una malla fija con los vértices donde
+  // los deja el esqueleto. El visor no reproduce animaciones, así que se ve igual, y ya se puede cortar.
+  function congelarPose(malla) {
+    const geometria = malla.geometry.clone();
+    geometria.morphAttributes = {};
+    if (malla.isSkinnedMesh) {
+      const p = geometria.attributes.position;
+      const xyz = new Float32Array(p.count * 3);
+      const v = new THREE.Vector3();
+      for (let i = 0; i < p.count; i++) {
+        malla.applyBoneTransform(i, v.fromBufferAttribute(p, i));   // queda en coordenadas de la malla
+        xyz.set([v.x, v.y, v.z], 3 * i);
+      }
+      geometria.setAttribute('position', new THREE.BufferAttribute(xyz, 3));
+      geometria.deleteAttribute('skinIndex');
+      geometria.deleteAttribute('skinWeight');
+      geometria.computeVertexNormals();
+    }
+    const fija = new THREE.Mesh(geometria, malla.material);
+    fija.name = malla.name;
+    fija.position.copy(malla.position);
+    fija.quaternion.copy(malla.quaternion);
+    fija.scale.copy(malla.scale);
+    malla.parent.add(fija);
+    malla.removeFromParent();
+    return fija;
+  }
+
+  function separarMallas(raiz) {
+    const originales = [];
+    raiz.traverse((o) => { if (o.isMesh && !Array.isArray(o.material)) originales.push(o); });
+    const mallas = originales.map((o) => (o.isSkinnedMesh || o.geometry.morphAttributes?.position ? congelarPose(o) : o));
+    let partes = [];   // { malla, triangulos, tipo: 'Pieza' (suelta) | 'Sección' (corte), centro (en el mundo) }
+    const datos = new Map();
+    for (const malla of mallas) {
+      const xyz = posicionesDe(malla.geometry);
+      const indices = malla.geometry.index?.array ?? null;
+      datos.set(malla, { xyz, indices });
+      for (const triangulos of componentesConexas(xyz, indices)) partes.push({ malla, triangulos, tipo: 'Pieza' });
+    }
+    if (partes.length && hayQueSeccionar(partes.map((p) => p.triangulos.length))) {
+      const mayor = partes.reduce((a, b) => (b.triangulos.length > a.triangulos.length ? b : a));
+      const { xyz, indices } = datos.get(mayor.malla);
+      const secciones = seccionar(xyz, indices, mayor.triangulos, SECCIONES)
+        .map((triangulos) => ({ malla: mayor.malla, triangulos, tipo: 'Sección' }));
+      partes = [...partes.filter((p) => p !== mayor), ...secciones];
+      separacion = 'secciones';
+    } else {
+      separacion = 'partes';
+    }
+    if (partes.length < 2) {
+      separacion = null;
+      return null;
+    }
+    for (const p of partes) {
+      const { xyz, indices } = datos.get(p.malla);
+      p.centro = p.malla.localToWorld(new THREE.Vector3(...centroTriangulos(xyz, indices, p.triangulos))).toArray();
+    }
+    // Más de 80 partes sueltas (tornillos, hojas, letras): se juntan por cercanía antes de crear las mallas
+    const grupos = agruparPorCercania(partes.map((p) => p.centro));
+    const caja = new THREE.Box3().setFromObject(raiz);
+    const centroModelo = caja.getCenter(new THREE.Vector3()).toArray();
+    const centros = grupos.map((g) => [0, 1, 2].map((k) => g.reduce((s, i) => s + partes[i].centro[k], 0) / g.length));
+    const nombres = nombresPorPosicion(centros, centroModelo, caja.getSize(new THREE.Vector3()).length() || 1,
+      grupos.map((g) => partes[g[0]].tipo));
+    const piezasNuevas = grupos.map((g, j) => {
+      // Una malla parcial por cada malla original que aporta triángulos a este grupo
+      const porMalla = new Map();
+      for (const i of g) {
+        const { malla, triangulos } = partes[i];
+        if (!porMalla.has(malla)) porMalla.set(malla, []);
+        porMalla.get(malla).push(triangulos);
+      }
+      // (flat y no push(...): una parte puede tener millones de triángulos y desbordar la pila)
+      const trozos = [...porMalla].map(([malla, listas]) => mallaParcial(malla, listas.flat()));
+      let pieza = trozos[0];
+      if (trozos.length > 1) {
+        pieza = new THREE.Group();
+        raiz.add(pieza);
+        for (const t of trozos) pieza.attach(t);
+      }
+      pieza.name = nombres[j];
+      return pieza;
+    });
+    for (const malla of mallas) malla.removeFromParent();
+    return piezasNuevas;
+  }
+
+  function leerPiezas(raiz, caja, asociaciones) {
     const centro = caja.getCenter(new THREE.Vector3()).toArray();
     const tamano = caja.getSize(new THREE.Vector3()).length() || 1;
-    const datos = raiz.children.map((obj, i) => {
+    const elegidas = elegirPiezas(raiz, asociaciones);
+    // El desplazamiento de desmontaje está en coordenadas del modelo: las piezas que estaban más abajo en el árbol
+    // pasan a colgar de la escena, sin moverse en el mundo
+    for (const obj of elegidas) if (obj.parent !== raiz) raiz.attach(obj);
+    const ids = new Set();
+    const datos = elegidas.map((obj, i) => {
+      let id = obj.userData.pieza ?? (obj.name || `pieza_${i + 1}`);
+      while (ids.has(id)) id = `${id}_${i + 1}`;
+      ids.add(id);
       const cajaPieza = new THREE.Box3().setFromObject(obj);
       const t = cajaPieza.getSize(new THREE.Vector3());
       // Cada pieza con materiales propios, para poder resaltarla sin afectar a las demás
@@ -265,8 +489,8 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = 
       });
       return {
         obj,
-        id: obj.userData.pieza ?? obj.name ?? `pieza_${i + 1}`,
-        nombre: obj.userData.nombre ?? obj.name ?? `Pieza ${i + 1}`,
+        id,
+        nombre: obj.userData.nombre ?? (obj.name || `Pieza ${i + 1}`),
         descripcion: obj.userData.descripcion ?? '',
         orden: obj.userData.orden,
         direccion: obj.userData.direccion,
@@ -331,7 +555,8 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = 
       // Centrar y llevar a un tamaño comparable, sin importar las unidades del archivo
       modelo.updateMatrixWorld(true);
       const caja = new THREE.Box3().setFromObject(modelo);
-      piezas = leerPiezas(modelo, caja);
+      separacion = null;
+      piezas = leerPiezas(modelo, caja, gltf.parser.associations);
       objetivosPiezas = piezas.map(() => 0);
       // Estilo holograma: un color por pieza (o uno solo si el modelo no está armado por piezas)
       let areaModelo = 0;
@@ -376,9 +601,59 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = 
 
     // dx, dy en fracción de pantalla (positivo = derecha / arriba)
     desplazar(dx, dy) {
+      // Se mueve en el plano de la pantalla (la cámara puede estar girada) y no sale de la vista
       const { ancho, alto } = anchoAltoVista();
-      objetivo.pos.x = THREE.MathUtils.clamp(objetivo.pos.x + dx * ancho, -ancho / 2, ancho / 2);
-      objetivo.pos.y = THREE.MathUtils.clamp(objetivo.pos.y + dy * alto, -alto / 2, alto / 2);
+      const { derecha, arriba } = ejesPantalla();
+      objetivo.pos.addScaledVector(derecha, dx * ancho).addScaledVector(arriba, dy * alto);
+      const relativa = objetivo.pos.clone().sub(vistaObjetivo.centro);
+      const x = relativa.dot(derecha);
+      const y = relativa.dot(arriba);
+      objetivo.pos
+        .addScaledVector(derecha, THREE.MathUtils.clamp(x, -ancho / 2, ancho / 2) - x)
+        .addScaledVector(arriba, THREE.MathUtils.clamp(y, -alto / 2, alto / 2) - y);
+    },
+
+    // ------------------------------------------------- navegación con el mouse
+
+    /**
+     * Acerca (factor < 1) o aleja (factor > 1) la cámara hacia el punto de la pantalla bajo el mouse:
+     * ese punto queda quieto, como en un mapa. xCliente, yCliente en píxeles de la ventana.
+     */
+    acercarCamara(factor, xCliente, yCliente) {
+      const d = vistaObjetivo.distancia;
+      const nueva = THREE.MathUtils.clamp(d * factor, DISTANCIA_MIN, DISTANCIA_MAX);
+      if (nueva === d) return;
+      const guia = guiaEnObjetivo();
+      const r = renderer.domElement.getBoundingClientRect();
+      const ndc = new THREE.Vector3(((xCliente - r.left) / r.width) * 2 - 1, -((yCliente - r.top) / r.height) * 2 + 1, 0.5);
+      const rayo = ndc.unproject(guia).sub(guia.position).normalize();
+      const frente = vistaObjetivo.centro.clone().sub(guia.position).normalize();
+      // Punto bajo el mouse en el plano del centro (perpendicular a la mirada): todo se acerca hacia él
+      const punto = guia.position.clone().addScaledVector(rayo, d / rayo.dot(frente));
+      vistaObjetivo.centro.sub(punto).multiplyScalar(nueva / d).add(punto);
+      vistaObjetivo.distancia = nueva;
+      limitarVista();
+    },
+
+    /** Desplaza la vista siguiendo un arrastre del mouse (en píxeles): lo que está abajo del mouse lo acompaña. */
+    arrastrarCamara(dxPx, dyPx) {
+      const { alto } = anchoAltoVista(vistaObjetivo.distancia);
+      const porPixel = alto / renderer.domElement.clientHeight;
+      const { derecha, arriba } = ejesPantalla(guiaEnObjetivo());
+      vistaObjetivo.centro.addScaledVector(derecha, -dxPx * porPixel).addScaledVector(arriba, dyPx * porPixel);
+      limitarVista();
+    },
+
+    /**
+     * Gira la cámara alrededor del centro de la vista siguiendo un arrastre (en píxeles):
+     * a los costados da la vuelta alrededor del objeto; arriba y abajo lo muestra desde más arriba o más abajo.
+     * Cruzar todo el ancho de la pantalla = una vuelta.
+     */
+    orbitarCamara(dxPx, dyPx) {
+      const radPorPixel = (2 * Math.PI) / renderer.domElement.clientWidth;
+      vistaObjetivo.azimut -= dxPx * radPorPixel;
+      vistaObjetivo.elevacion += dyPx * radPorPixel;
+      limitarVista();
     },
 
     // dx, dy en radianes (positivo = el frente del objeto va a la derecha / arriba)
@@ -407,6 +682,7 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = 
 
     // Vuelve a la vista inicial con el objeto armado
     reiniciar() {
+      Object.assign(vistaObjetivo, copiarVista(vistaInicial));
       objetivo.pos.set(0, 0, 0);
       objetivo.rotX = 0;
       objetivo.rotY = 0;
@@ -418,6 +694,7 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = 
     // ---------------------------------------------------------------- piezas
 
     tienePiezas: () => piezas.length > 1,
+    separacion: () => separacion,
 
     hayPiezasAfuera: () => piezas.some(estaAfuera),
 
@@ -511,7 +788,8 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = 
       // El desplazamiento en pantalla se lleva a las coordenadas del modelo (que puede estar girado y escalado)
       modelo.updateMatrixWorld(true);
       const origen = modelo.localToWorld(p.obj.position.clone());
-      const destino = origen.clone().add(new THREE.Vector3(dx * ancho, dy * alto, 0));
+      const { derecha, arriba } = ejesPantalla();
+      const destino = origen.clone().addScaledVector(derecha, dx * ancho).addScaledVector(arriba, dy * alto);
       p.libre.add(modelo.worldToLocal(destino).sub(modelo.worldToLocal(origen)));
       avisarPiezas();
     },

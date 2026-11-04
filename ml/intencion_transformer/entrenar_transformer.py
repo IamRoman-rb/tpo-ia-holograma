@@ -7,7 +7,8 @@ Candidatos, del más chico al más grande (se elige con validación; a igual res
   - mDeBERTa-v3 (microsoft/mdeberta-v3-base, 280 M): atención desenredada, multilingüe;
   - XLM-RoBERTa large (FacebookAI/xlm-roberta-large, 560 M): RoBERTa multilingüe, 100 idiomas.
 (El RoBERTa large del Plan TL en español ya no publica sus pesos en Hugging Face.)
-Datos: una muestra balanceada de ml/intencion/frases_entrenamiento.csv (todas las acciones, incluidos los
+Datos: una muestra balanceada de ml/intencion/frases_entrenamiento.csv más ml/intencion/frases_objetos_ensamble.csv
+(todas las acciones, incluidos los
 comandos de los modelos), 2 épocas, AdamW con calentamiento y caída lineal, pérdida = entropía de la acción +
 entropía BIO. Al final se calibra una temperatura con validación (eval/estadistica.py).
 Validación: frases_validacion.csv, frases_objetos_validacion.csv (objeto exacto), frases_comandos_validacion.csv
@@ -36,7 +37,9 @@ AQUI = Path(__file__).resolve().parent
 RAIZ = AQUI.parent.parent
 sys.path.insert(0, str(RAIZ / "backend"))
 sys.path.insert(0, str(RAIZ / "eval"))
+sys.path.append(str(RAIZ / "ml"))
 import intent_modelo  # noqa: E402
+import pausa  # noqa: E402  (tecla P de scripts/entrenar.py: guardar y frenar)
 import intent_transformer as it  # noqa: E402
 from estadistica import ajustar_temperatura, con_temperatura, ece  # noqa: E402
 
@@ -141,12 +144,38 @@ def entrenar(nombre, base, entrenamiento, acciones, rapido=False, epocas=EPOCAS)
     plan = get_linear_schedule_with_warmup(opt, max(1, pasos // 10), pasos)
     perdida_ce = torch.nn.CrossEntropyLoss(ignore_index=-100)
     print(f"\n== {nombre} ({base}): {parametros / 1e6:.0f} M parámetros · {pasos} pasos de {LOTE}", flush=True)
+
+    # Punto de control: todos los pesos (el ajuste es completo), el optimizador, el plan, el orden de las frases
+    # en la época actual y el estado del azar, para seguir exactamente donde quedó
+    punto = pausa.PuntoDeControl(f"transformer_{nombre}{'_prueba' if rapido else ''}",
+                                 pausa.huella(base, LOTE, TASAS[nombre], pasos, entrenamiento, acciones))
+    orden, r = list(range(len(entrenamiento))), random.Random(0)
+    inicio, perdidas, segundos_previos = 0, [], 0.0
+    estado = punto.cargar()
+    if estado:
+        red.load_state_dict(estado["red"])
+        opt.load_state_dict(estado["opt"])
+        plan.load_state_dict(estado["plan"])
+        torch.set_rng_state(estado["azar_torch"])
+        r.setstate(estado["azar_orden"])
+        orden, inicio, perdidas, segundos_previos = estado["orden"], estado["paso"], estado["perdidas"], estado["segundos"]
+        print(f"  retomando desde el paso {inicio}/{pasos} ({segundos_previos / 3600:.1f} h ya entrenadas)", flush=True)
+
+    def guardar(k):
+        punto.guardar({"paso": k, "red": red.state_dict(), "opt": opt.state_dict(), "plan": plan.state_dict(),
+                       "azar_torch": torch.get_rng_state(), "azar_orden": r.getstate(), "orden": orden,
+                       "perdidas": perdidas, "segundos": segundos_previos + time.perf_counter() - t0})
+
     red.train()
-    t0, perdidas, r = time.perf_counter(), [], random.Random(0)
-    for k in range(pasos):
+    t0 = time.perf_counter()
+    for k in range(inicio, pasos):
+        if pausa.pedida():   # entre dos pasos: nada quedó a medias
+            if k > inicio:
+                guardar(k)
+            pausa.salir()
         if k % pasos_epoca == 0:
-            r.shuffle(entrenamiento)
-        filas = entrenamiento[(k % pasos_epoca) * LOTE:(k % pasos_epoca + 1) * LOTE]
+            r.shuffle(orden)
+        filas = [entrenamiento[i] for i in orden[(k % pasos_epoca) * LOTE:(k % pasos_epoca + 1) * LOTE]]
         ids, mascara, accion, bio = lote(tok, filas, acciones)
         logits_accion, logits_bio = red(ids, mascara)
         perdida = perdida_ce(logits_accion, accion) + perdida_ce(logits_bio.reshape(-1, 3), bio.reshape(-1))
@@ -158,8 +187,10 @@ def entrenar(nombre, base, entrenamiento, acciones, rapido=False, epocas=EPOCAS)
         perdidas.append(perdida.item())
         if k % 50 == 0 or k == pasos - 1:
             t = time.perf_counter() - t0
-            print(f"  paso {k + 1}/{pasos} · pérdida {np.mean(perdidas[-50:]):.3f} · {t / 60:.0f} min "
-                  f"(faltan ~{t / (k + 1) * (pasos - k - 1) / 60:.0f})", flush=True)
+            print(f"  paso {k + 1}/{pasos} · pérdida {np.mean(perdidas[-50:]):.3f} · {(segundos_previos + t) / 60:.0f} min "
+                  f"(faltan ~{t / (k + 1 - inicio) * (pasos - k - 1) / 60:.0f})", flush=True)
+        if punto.toca_autoguardar() and k < pasos - 1:
+            guardar(k + 1)
     destino = TEMPORAL / nombre
     if destino.exists():
         shutil.rmtree(destino)
@@ -171,7 +202,9 @@ def entrenar(nombre, base, entrenamiento, acciones, rapido=False, epocas=EPOCAS)
     (destino / "interprete.json").write_text(json.dumps({
         "base": base, "nombre": nombre, "acciones": acciones, "parametros": parametros, "temperatura": 1.0,
         "etiquetas": it.ETIQUETAS, "fecha": date.today().isoformat()}, ensure_ascii=False, indent=2), encoding="utf-8")
-    return destino, parametros, round((time.perf_counter() - t0) / 60, 1), round(float(np.mean(perdidas[-50:])), 4)
+    punto.borrar()   # el candidato ya está guardado entero en TEMPORAL
+    return (destino, parametros, round((segundos_previos + time.perf_counter() - t0) / 60, 1),
+            round(float(np.mean(perdidas[-50:])), 4))
 
 
 def main():
@@ -182,9 +215,11 @@ def main():
     args = ap.parse_args()
     torch.set_num_threads(max(1, torch.get_num_threads()))
     r = random.Random(20261030)
-    todas = leer(RAIZ / "ml" / "intencion" / "frases_entrenamiento.csv")
+    todas = leer(RAIZ / "ml" / "intencion" / "frases_entrenamiento.csv") + \
+        leer(RAIZ / "ml" / "intencion" / "frases_objetos_ensamble.csv")
     acciones = sorted({f["accion"] for f in todas})
     entrenamiento = muestra(todas, r)
+    entrenamiento += leer(RAIZ / "ml" / "intencion" / "frases_objetos_ensamble.csv")
     generadas = leer(RAIZ / "ml" / "intencion" / "frases_validacion_generada.csv")
     r.shuffle(generadas)
     conjuntos = {
@@ -197,10 +232,34 @@ def main():
         conjuntos = {k: (v[:10], o) for k, (v, o) in conjuntos.items()}
     print(f"{len(entrenamiento)} frases de entrenamiento · {len(acciones)} acciones")
 
+    # Qué candidatos ya se entrenaron o evaluaron en una sesión anterior que se pausó (ml/checkpoints/)
+    ruta_progreso = pausa.CARPETA / f"transformer_progreso{'_prueba' if args.rapido else ''}.json"
+    huella = pausa.huella(args.epocas, entrenamiento, acciones, conjuntos)
+    progreso = {"huella": huella, "entrenados": {}, "evaluados": {}}
+    if ruta_progreso.exists():
+        anterior = json.loads(ruta_progreso.read_text(encoding="utf-8"))
+        if anterior.get("huella") == huella:
+            progreso = anterior
+
     tabla = []
     for nombre in args.candidatos.split(","):
-        destino, parametros, minutos, perdida = entrenar(nombre, CANDIDATOS[nombre], entrenamiento, acciones, args.rapido,
-                                                         args.epocas)
+        if nombre in progreso["evaluados"]:
+            print(f"\n== {nombre}: ya entrenado y evaluado en una sesión anterior", flush=True)
+            tabla.append(progreso["evaluados"][nombre])
+            continue
+        if pausa.pedida():
+            pausa.salir()
+        hecho = progreso["entrenados"].get(nombre)
+        if hecho and (TEMPORAL / nombre / "interprete.safetensors").exists():
+            print(f"\n== {nombre}: ya entrenado en una sesión anterior; falta evaluarlo", flush=True)
+            destino, parametros, minutos, perdida = TEMPORAL / nombre, hecho["parametros"], hecho["minutos"], hecho["perdida"]
+        else:
+            destino, parametros, minutos, perdida = entrenar(nombre, CANDIDATOS[nombre], entrenamiento, acciones,
+                                                             args.rapido, args.epocas)
+            progreso["entrenados"][nombre] = {"parametros": parametros, "minutos": minutos, "perdida": perdida}
+            pausa.escribir_json(ruta_progreso, progreso)
+        if pausa.pedida():   # la evaluación no se corta a la mitad: si hay pausa, frena antes
+            pausa.salir()
         interprete = it.InterpreteTransformer(destino)
         t0 = time.perf_counter()
         resultados, logits, etiquetas = evaluar(interprete, conjuntos)
@@ -213,6 +272,7 @@ def main():
                 "ms_por_frase": round(ms), "temperatura": round(T, 3),
                 "ece_antes": round(ece(antes.max(1), acierto), 4), "ece_despues": round(ece(despues.max(1), acierto), 4)}
         tabla.append(fila)
+        progreso["evaluados"][nombre] = fila
         config = json.loads((destino / "interprete.json").read_text(encoding="utf-8"))
         (destino / "interprete.json").write_text(json.dumps({**config, "temperatura": round(T, 4),
                                                              "puntaje_validacion": fila["puntaje"]}, indent=2,
@@ -222,6 +282,7 @@ def main():
                                                         if v["accion_y_objeto_exacto"] is not None else ""))
         print(f"  puntaje {fila['puntaje']:.4f} · {fila['ms_por_frase']} ms por frase · temperatura {T:.2f} "
               f"(ECE {fila['ece_antes']:.3f} → {fila['ece_despues']:.3f})", flush=True)
+        pausa.escribir_json(ruta_progreso, progreso)   # después de escribir la temperatura en interprete.json
 
     # El mejor en validación; a igual puntaje (0,2 puntos), el más grande. El que ya está instalado (de una
     # corrida anterior) también compite: solo se reemplaza si el nuevo le gana.
@@ -239,6 +300,7 @@ def main():
         shutil.copytree(TEMPORAL / mejor["nombre"], SALIDA)
         shutil.rmtree(TEMPORAL)
     print(f"\nelegido: {mejor['nombre']} ({mejor['base']}) -> {SALIDA.relative_to(RAIZ)}")
+    ruta_progreso.unlink(missing_ok=True)   # la corrida terminó: no queda nada por retomar
     if args.rapido:   # no pisa el reporte del instalado
         shutil.rmtree(TEMPORAL, ignore_errors=True)
         print("(--rapido: no se instala ni se escribe el reporte)")

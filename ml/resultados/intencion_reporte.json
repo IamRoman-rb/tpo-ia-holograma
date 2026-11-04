@@ -1,7 +1,7 @@
 {
-  "fecha": "2026-10-28",
+  "fecha": "2026-11-02",
   "frases": {
-    "entrenamiento": 20000,
+    "entrenamiento": 109524,
     "validacion_accion": 138,
     "validacion_objeto_generadas": 1400,
     "validacion_objeto_a_mano": 55,
@@ -11,115 +11,115 @@
     {
       "embeddings": "paraphrase-multilingual-MiniLM-L12-v2",
       "cabezal": "logistica_balanceada",
-      "exactitud_validacion": 0.8623,
-      "f1_validacion": 0.8734,
+      "exactitud_validacion": 0.9348,
+      "f1_validacion": 0.9611,
       "exactitud_prueba": 0.8421,
-      "segundos": 1.5
+      "segundos": 15.0
     },
     {
       "embeddings": "paraphrase-multilingual-MiniLM-L12-v2",
       "cabezal": "logistica",
-      "exactitud_validacion": 0.8768,
-      "f1_validacion": 0.888,
-      "exactitud_prueba": 0.8421,
-      "segundos": 2.4
+      "exactitud_validacion": 0.942,
+      "f1_validacion": 0.9496,
+      "exactitud_prueba": 0.8684,
+      "segundos": 13.9
     },
     {
       "embeddings": "paraphrase-multilingual-MiniLM-L12-v2",
       "cabezal": "mlp_256",
-      "exactitud_validacion": 0.913,
-      "f1_validacion": 0.9185,
+      "exactitud_validacion": 0.9493,
+      "f1_validacion": 0.9575,
       "exactitud_prueba": 0.8421,
-      "segundos": 6.5
+      "segundos": 46.7
     },
     {
       "embeddings": "paraphrase-multilingual-MiniLM-L12-v2",
       "cabezal": "mlp_512_256",
-      "exactitud_validacion": 0.8986,
-      "f1_validacion": 0.9019,
-      "exactitud_prueba": 0.8684,
-      "segundos": 17.7
+      "exactitud_validacion": 0.9493,
+      "f1_validacion": 0.9542,
+      "exactitud_prueba": 0.8421,
+      "segundos": 96.3
     },
     {
       "embeddings": "intfloat/multilingual-e5-small",
       "cabezal": "logistica_balanceada",
-      "exactitud_validacion": 0.942,
-      "f1_validacion": 0.9429,
+      "exactitud_validacion": 0.9493,
+      "f1_validacion": 0.9601,
       "exactitud_prueba": 0.8421,
-      "segundos": 1.0
+      "segundos": 9.2
     },
     {
       "embeddings": "intfloat/multilingual-e5-small",
       "cabezal": "logistica",
-      "exactitud_validacion": 0.9348,
-      "f1_validacion": 0.9365,
+      "exactitud_validacion": 0.9493,
+      "f1_validacion": 0.9535,
       "exactitud_prueba": 0.8421,
-      "segundos": 2.0
+      "segundos": 12.4
     },
     {
       "embeddings": "intfloat/multilingual-e5-small",
       "cabezal": "mlp_256",
-      "exactitud_validacion": 0.942,
-      "f1_validacion": 0.9491,
-      "exactitud_prueba": 0.8421,
-      "segundos": 12.2
+      "exactitud_validacion": 0.9275,
+      "f1_validacion": 0.9308,
+      "exactitud_prueba": 0.8684,
+      "segundos": 46.1
     },
     {
       "embeddings": "intfloat/multilingual-e5-small",
       "cabezal": "mlp_512_256",
-      "exactitud_validacion": 0.9275,
-      "f1_validacion": 0.9301,
-      "exactitud_prueba": 0.8421,
-      "segundos": 21.7
+      "exactitud_validacion": 0.9493,
+      "f1_validacion": 0.9511,
+      "exactitud_prueba": 0.8947,
+      "segundos": 137.1
     }
   ],
   "comparacion_objeto": [
     {
       "etiquetador": "rasgos",
-      "objeto_exacto_generadas": 0.9907,
+      "objeto_exacto_generadas": 0.9943,
       "objeto_exacto_a_mano": 0.9636,
-      "segundos": 2.7
+      "segundos": 15.9
     },
     {
       "etiquetador": "contexto_logistica",
-      "objeto_exacto_generadas": 0.8229,
+      "objeto_exacto_generadas": 0.8657,
       "objeto_exacto_a_mano": 0.8909,
-      "segundos": 3.5
+      "segundos": 26.3
     },
     {
       "etiquetador": "combinado_logistica",
       "objeto_exacto_generadas": 0.9857,
       "objeto_exacto_a_mano": 0.9818,
-      "segundos": 6.1
+      "segundos": 42.3
     },
     {
       "etiquetador": "contexto_mlp_256",
-      "objeto_exacto_generadas": 0.9707,
+      "objeto_exacto_generadas": 0.9857,
       "objeto_exacto_a_mano": 0.9818,
-      "segundos": 50.0
+      "segundos": 434.3
     },
     {
       "etiquetador": "combinado_mlp_256",
-      "objeto_exacto_generadas": 0.9893,
+      "objeto_exacto_generadas": 0.9921,
       "objeto_exacto_a_mano": 0.9818,
-      "segundos": 52.7
+      "segundos": 450.3
     },
     {
       "etiquetador": "contexto_mlp_512",
-      "objeto_exacto_generadas": 0.9757,
+      "objeto_exacto_generadas": 0.9871,
       "objeto_exacto_a_mano": 0.9818,
-      "segundos": 168.2
+      "segundos": 712.0
     },
     {
       "etiquetador": "combinado_mlp_512",
-      "objeto_exacto_generadas": 0.99,
+      "objeto_exacto_generadas": 0.9936,
       "objeto_exacto_a_mano": 0.9818,
-      "segundos": 170.9
+      "segundos": 727.9
     }
   ],
   "elegido": {
     "embeddings": "intfloat/multilingual-e5-small",
-    "cabezal": "mlp_256",
+    "cabezal": "logistica_balanceada",
     "etiquetador": "combinado_mlp_512"
   }
 }

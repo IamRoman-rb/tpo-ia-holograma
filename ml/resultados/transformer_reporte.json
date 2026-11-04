@@ -1,7 +1,7 @@
 {
-  "fecha": "2026-10-29",
-  "frases_entrenamiento": 10200,
-  "epocas": 1.0,
+  "fecha": "2026-11-02",
+  "frases_entrenamiento": 20449,
+  "epocas": 2,
   "lote": 16,
   "candidatos": [
     {
@@ -35,35 +35,35 @@
       "nombre": "xlmr",
       "base": "FacebookAI/xlm-roberta-large",
       "parametros": 559906832,
-      "minutos": 52.7,
-      "perdida_final": 0.019,
+      "minutos": 210.0,
+      "perdida_final": 0.0131,
       "validacion": {
         "validacion": {
           "frases": 59,
-          "accion": 0.9322,
+          "accion": 0.9831,
           "accion_y_objeto_exacto": null
         },
         "objetos_validacion": {
           "frases": 55,
-          "accion": 0.9818,
+          "accion": 1.0,
           "accion_y_objeto_exacto": 0.9818
         },
         "comandos_validacion": {
           "frases": 24,
-          "accion": 0.9583,
+          "accion": 1.0,
           "accion_y_objeto_exacto": null
         },
         "generadas_objetos_reservados": {
           "frases": 300,
           "accion": 0.9967,
-          "accion_y_objeto_exacto": 0.9833
+          "accion_y_objeto_exacto": 0.9933
         }
       },
-      "puntaje": 0.9639,
-      "ms_por_frase": 127,
-      "temperatura": 1.385,
-      "ece_antes": 0.0128,
-      "ece_despues": 0.0082
+      "puntaje": 0.9896,
+      "ms_por_frase": 121,
+      "temperatura": 1.608,
+      "ece_antes": 0.0049,
+      "ece_despues": 0.0037
     },
     {
       "nombre": "instalado",
@@ -72,5 +72,5 @@
       "puntaje": 0.9859
     }
   ],
-  "elegido": "instalado"
+  "elegido": "xlmr"
 }
