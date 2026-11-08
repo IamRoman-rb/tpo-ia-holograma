@@ -21,14 +21,35 @@
 
   <nav id="barra" aria-label="Vista">
     <button type="button" data-barra="holograma" aria-pressed="true" title="Piezas en colores neón con aristas y puntos, o materiales del modelo (H)">Holograma</button>
-    <button type="button" data-barra="fondo" aria-pressed="false" title="Video de la cámara a pantalla completa detrás del holograma (C)">Cámara de fondo</button>
     <button type="button" data-barra="etiquetas" aria-pressed="true" title="Nombres de las piezas con líneas guía">Etiquetas</button>
     <button type="button" data-barra="despiece" title="Abrir o cerrar el despiece (también la victoria sin pieza elegida)">Despiece</button>
     <button type="button" data-barra="paneles" aria-pressed="false" title="Mostrar el panel de piezas sobre la cámara">Paneles</button>
+    <button type="button" data-barra="catalogo" aria-pressed="false" title="Mostrar u ocultar la lista de modelos (C)">Catálogo</button>
     <button type="button" data-barra="actividad" aria-pressed="false" title="Actividad de la red neuronal y del LLM en vivo (L)">Actividad IA</button>
-    <a class="vista-aparte" href="red.html" target="holograma-red" title="Abrir en otra pestaña cómo funciona la red neuronal de gestos, capa por capa">Red neuronal ↗</a>
-    <a class="vista-aparte" href="llm.html" target="holograma-llm" title="Abrir en otra pestaña el recorrido de cada pedido: voz, motores, consenso y validación">LLM ↗</a>
+    <button type="button" data-barra="ia" class="vista-aparte" aria-pressed="false" title="Recuadro con la red neuronal y el LLM en tiempo real (N)">Red y LLM</button>
+    <button type="button" data-barra="ajustes" aria-pressed="false" aria-label="Ajustes (K)" title="Sensibilidad de los gestos, disposiciones y modo presentación (K)">⚙</button>
   </nav>
+
+  <section id="ajustes" aria-label="Ajustes" hidden></section>
+  <p id="aviso-presentacion" role="status" hidden>Modo presentación · <kbd>P</kbd> o <kbd>Esc</kbd> para salir</p>
+
+  <section id="ia-vivo" class="mediano" aria-label="Red neuronal y LLM en tiempo real" hidden>
+    <header class="ia-cabecera" title="Arrastrá para moverlo · doble clic: volver a su lugar">
+      <div class="ia-pestanas" role="tablist" aria-label="Vista">
+        <button type="button" role="tab" data-ia="red" aria-selected="true">Red neuronal</button>
+        <button type="button" role="tab" data-ia="llm" aria-selected="false">LLM</button>
+      </div>
+      <span class="ia-punto" aria-hidden="true"></span>
+      <button type="button" data-ia-accion="achicar" aria-label="Achicar el recuadro" title="Achicar">−</button>
+      <button type="button" data-ia-accion="agrandar" aria-label="Agrandar el recuadro" title="Agrandar">+</button>
+      <a id="ia-aparte" href="red.html" target="holograma-red" aria-label="Abrir en otra pestaña" title="Abrir en otra pestaña">↗</a>
+      <button type="button" data-ia-accion="cerrar" aria-label="Quitar el recuadro" title="Quitar (N)">✕</button>
+    </header>
+    <div class="ia-cuerpo">
+      <iframe data-ia="red" title="Red neuronal en tiempo real"></iframe>
+      <iframe data-ia="llm" title="LLM en tiempo real" hidden></iframe>
+    </div>
+  </section>
 
   <section id="actividad" aria-label="Actividad de la IA" hidden></section>
 
@@ -71,6 +92,7 @@
     <p class="analisis-etiqueta">Analizando una pieza</p>
     <h2 id="analisis-nombre"></h2>
     <p id="analisis-descripcion"></p>
+    <p id="analisis-reconocida" class="analisis-ayuda" hidden></p>
     <dl>
       <dt>Material</dt><dd id="analisis-material"></dd>
       <dt>Medidas</dt><dd id="analisis-medidas"></dd>
@@ -92,7 +114,7 @@
   </aside>
 
   <section id="camara" aria-label="Cámara y detección de manos" data-estado="iniciando">
-    <header class="camara-cabecera">
+    <header class="camara-cabecera" title="Arrastrá para moverla · doble clic: volver a su lugar">
       <span class="camara-punto" aria-hidden="true"></span>
       <strong id="camara-titulo">Cámara</strong>
       <span id="camara-fps"></span>
@@ -122,7 +144,8 @@
     <dl>
       <dt>Señalar</dt><dd>Mover el cursor; apuntar un momento a una pieza la elige</dd>
       <dt>Pellizco</dt><dd>Tomar y mover el objeto; sobre la pieza elegida, sacarla sola</dd>
-      <dt>Palma abierta</dt><dd>Rotar siguiendo la mano</dd>
+      <dt>Palma abierta</dt><dd>Desplazarse por el espacio, como arrastrando con el mouse</dd>
+      <dt>Dos palmas abiertas</dt><dd>Rotar el objeto siguiendo las manos; si las soltás girando rápido, sigue girando y frena solo</dd>
       <dt>Pellizco con las dos manos</dt><dd>Separar para agrandar, juntar para achicar</dd>
       <dt>Victoria (V)</dt><dd>Analizar la pieza elegida; sin pieza elegida, abrir o cerrar el despiece</dd>
       <dt>Puño</dt><dd>Salir del análisis o reiniciar la vista</dd>
@@ -149,7 +172,10 @@
       <dt>M</dt><dd>Manos libres: escucha siempre y atiende lo que empieza con «holograma» (también el botón de los auriculares)</dd>
       <dt>J</dt><dd>Respuestas habladas: encender o apagar</dd>
       <dt>H</dt><dd>Estilo holograma o materiales del modelo</dd>
-      <dt>C</dt><dd>Cámara de fondo a pantalla completa o en su recuadro</dd>
+      <dt>C</dt><dd>Mostrar u ocultar el catálogo</dd>
+      <dt>N</dt><dd>Recuadro con la red neuronal y el LLM en tiempo real</dd>
+      <dt>K</dt><dd>Ajustes: sensibilidad de los gestos, disposiciones guardadas y modo presentación</dd>
+      <dt>P</dt><dd>Modo presentación: solo el holograma (y los recuadros que elijas en Ajustes)</dd>
       <dt>L</dt><dd>Actividad de la red neuronal y del LLM en vivo</dd>
       <dt>D</dt><dd>Métricas de depuración</dd>
     </dl>

@@ -22,6 +22,7 @@ bajados con scripts/descargar_modelos3d.py. Los pasos son los mismos; en cada un
 modelos están armados para desarmarse) y Objaverse después. Entre modelos de Objaverse igual de parecidos gana el que
 tiene más piezas separables y mejor calidad.
 """
+import re
 import functools
 import hashlib
 import json
@@ -71,6 +72,31 @@ def _variantes(item):
 def _palabras(texto):
     ps = [p for p in normalizar(texto).replace(".", " ").replace(",", " ").split() if p not in RELLENO]
     return [p[:-1] if len(p) > 4 and p.endswith("s") else p for p in ps]  # plural simple
+
+
+# Categorías de Objaverse cuyas piezas sabe nombrar el reconocimiento de piezas (frontend/js/reconocer_piezas.js,
+# entrenado con motores generados): de combustión, eléctricos o cualquiera de los dos. Los motores de avión
+# (casi todos a reacción), las turbinas y las locomotoras quedan afuera: sus piezas no se parecen a las que aprendió.
+FAMILIA_PIEZAS = {
+    "dominio:motor de auto": "combustion", "dominio:bloque de motor": "combustion", "dominio:motor radial": "combustion",
+    "dominio:motor eléctrico": "electrico", "dominio:servomotor": "electrico",
+    "dominio:motor": "motor", "lvis:motor": "motor",
+}
+
+
+ES_MOTOR = re.compile(r"\b(engines?|motors?|motor(es)?|v\d{1,2}|boxer|cilindros?|cylinders?)\b", re.I)
+NO_ES_MOTOR = re.compile(r"\b(rocket|jet|turbofan|turbine|train|locomotive|hovercraft|vehicle|car|ship|boat|"
+                         r"spaceship|sci-?fi|motorcycle|scooter)\b", re.I)
+
+
+def familia_de_piezas(categoria, texto=""):
+    """'combustion', 'electrico', 'motor' o None (el visor deja las piezas nombradas por su lugar).
+    texto: nombre original y descripción del modelo. Con la categoría genérica ("motor") hace falta que el texto
+    diga que es un motor y no un vehículo entero: esa categoría también junta trenes, aerodeslizadores y cohetes."""
+    familia = FAMILIA_PIEZAS.get(categoria)
+    if familia == "motor" and (not ES_MOTOR.search(texto or "") or NO_ES_MOTOR.search(texto or "")):
+        return None
+    return familia
 
 
 class CatalogoObjaverse:
@@ -145,7 +171,9 @@ class CatalogoObjaverse:
         it = self.items[i]
         return {"id": it["id"], "nombre": it["nombre"], "modelo_url": f"{URL_GLBS}/{it['id']}.glb",
                 "similitud": round(sim, 3), "metodo": metodo, "origen": "objaverse", "piezas": it.get("piezas"),
-                "atribucion": it["atribucion"]}
+                "atribucion": it["atribucion"],
+                "reconocer_piezas": familia_de_piezas(it.get("categoria"),
+                                                      f"{it.get('nombre_original', '')} {it.get('descripcion', '')}")}
 
 
 class Catalogo:

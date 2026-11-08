@@ -3,24 +3,29 @@ import { iniciarManos } from './hands.js';
 import { crearOverlay } from './overlay.js';
 import { iniciarSimulacion } from './simulador.js';
 import { crearClasificador, UMBRALES } from './gestures.js';
-import { aVista, crearControles } from './controles.js';
+import { crearControles } from './controles.js';
 import { crearVisor } from './viewer.js';
 import { crearEtiquetas } from './etiquetas.js';
-import { camaraAPantalla } from './holograma.js';
 import { crearActividad } from './actividad.js';
 import { crearPanelActividad } from './panel_actividad.js';
+import { crearRecuadroIA } from './ia_vivo.js';
+import { hacerArrastrable } from './arrastrable.js';
+import { AJUSTES_POR_DEFECTO, crearPanelAjustes } from './ajustes.js';
 import { cargarCatalogo, buscarLocal } from './catalogo.js';
 import { interpretarPedido, pedirObjeto, salud, transcribir } from './api.js';
 import { CLASIFICADOR_DE_MOTOR, nombreMotor, respuestaComando } from './motores.js';
 import * as ui from './ui.js';
 import * as metricas from './metricas.js';
 import { cargarMlp } from './mlp.js';
+import { cargarRed } from './reconocer_piezas.js';
 import { cargarArbol, textoCamino } from './arbol.js';
 import { crearFiltroManos } from './kalman.js';
 import { aVector, normalizar } from './normalize.js';
 import { crearVoz, decir, escucharMicrofono, puedeReconocerLocal, reconocimientoDisponible } from './voz.js';
 
-const UMBRAL_CONFIANZA = 0.8;      // sección 7.3, flujo 1
+// Sensibilidad de los gestos, umbral de confianza (sección 7.3, flujo 1: 80 % por defecto), inercia y modo
+// presentación: los cambia el panel de ajustes (ajustes.js), que los carga de este navegador al abrir el visor
+let ajustesVisor = structuredClone(AJUSTES_POR_DEFECTO);
 const PASO_ROTACION = Math.PI / 12;
 const PASO_ESCALA = 1.15;
 
@@ -33,10 +38,9 @@ const recordar = (clave, valor) => {
 };
 
 // Modo holograma: piezas de colores con aristas y puntos y etiquetas con líneas guía, sobre el fondo oscuro con
-// la cámara en su recuadro. Opcional ("Cámara de fondo"): el video a pantalla completa detrás, con las manos
-// dibujadas encima (como realidad aumentada).
+// la cámara en su recuadro.
 let modoHolograma = preferencia('holograma', 'si') === 'si';
-let camaraDeFondo = preferencia('camara-fondo', 'no') === 'si';
+let verCatalogo = preferencia('catalogo', 'no') === 'si';
 let conEtiquetas = preferencia('etiquetas', 'si') === 'si';
 const etiquetas = crearEtiquetas(document.getElementById('etiquetas'), {
   alElegir: (id) => {
@@ -92,14 +96,7 @@ const EVENTOS_GESTO = {
   confirmar: () => { if (!ui.confirmarPendiente()) ui.mostrarEstado('no hay nada para confirmar'); },
   deshacer: (hecho) => ui.mostrarEstado(hecho ? 'cambio deshecho' : 'no hay nada para deshacer'),
 };
-// Con el video a pantalla completa, el cursor va exactamente donde se ve la punta del dedo
-function aPantalla(p) {
-  if (!document.body.classList.contains('holograma-ar')) return aVista(p);
-  return camaraAPantalla(p, {
-    anchoVideo: lienzo.width, altoVideo: lienzo.height, anchoPantalla: innerWidth, altoPantalla: innerHeight,
-  });
-}
-const controles = crearControles(visor, { alEvento: (tipo, datos) => EVENTOS_GESTO[tipo]?.(datos), aPantalla });
+const controles = crearControles(visor, { alEvento: (tipo, datos) => EVENTOS_GESTO[tipo]?.(datos), ajustes: () => ajustesVisor });
 
 // Clasificador de gestos: reglas, red neuronal (sección 5.2) o árbol de decisión. Se recuerda la elección en este
 // navegador; también se elige por voz ("usá el árbol para los gestos").
@@ -136,13 +133,31 @@ let pedidoDeVozActual = null;
 
 let ultimoModelo = { origen: null, t: 0 }; // para medir la latencia del pedido
 
-async function mostrarModelo(url, nombre, origen, id, atribucion = null) {
+async function mostrarModelo(url, nombre, origen, id, atribucion = null, familiaPiezas = null) {
   ui.mostrarEstado('cargando modelo…');
   await visor.cargarModelo(url);
   ultimoModelo = { origen, t: performance.now() };
   ui.mostrarOrigen(nombre, origen, atribucion);
   ui.marcarSeleccionado(id);
   ui.mostrarEstado('listo');
+  if (familiaPiezas) nombrarPiezasPorForma(familiaPiezas);
+}
+
+// Un motor de Objaverse trae sus piezas sin nombre ("Sección superior"): la red de reconocimiento de piezas
+// (reconocer_piezas.js) las nombra por su forma. Corre después de mostrar el modelo, sin demorarlo.
+async function nombrarPiezasPorForma(familia) {
+  try {
+    const red = await cargarRed();
+    ui.mostrarEstado('reconociendo las piezas por su forma…');
+    const r = await visor.reconocerPiezas(red, familia);
+    if (!r) return;                                 // mientras tanto se cargó otro modelo
+    ui.mostrarEstado(r.nombradas
+      ? `Reconocí ${r.nombradas} de ${r.total} piezas por su forma (son estimaciones: tocá una para ver la confianza).`
+      : 'No reconocí con seguridad ninguna pieza: quedan nombradas por su lugar.');
+  } catch (e) {
+    console.error(e);
+    ui.mostrarEstado('listo');
+  }
 }
 
 // Plan B sin backend: búsqueda por palabras en el catálogo local
@@ -174,7 +189,7 @@ async function cargarObjeto(objeto, id) {
     if (id !== pedidoActual) return false;
     // Un modelo recién generado se suma a la lista del catálogo
     if (r.origen === 'generado') await refrescarCatalogo().catch(console.error);
-    await mostrarModelo(r.modelo_url, r.nombre, r.origen, r.id, r.atribucion);
+    await mostrarModelo(r.modelo_url, r.nombre, r.origen, r.id, r.atribucion, r.reconocer_piezas);
     if (id === pedidoDeVozActual) {
       mostrarEstadoVoz('listo', vozLocal ? 'Objeto actualizado.' : 'Objeto actualizado. Reactivando escucha…');
     }
@@ -753,17 +768,22 @@ let fps = 0;
 // el objeto (la simulación ya trae su propio ruido controlado y no se filtra)
 const filtroManos = crearFiltroManos();
 
+// Los 63 números normalizados de una mano, redondeados (para mandarlos a red.html)
+const vectorMano = (mano, aspecto) => aVector(normalizar(mano, aspecto)).map((v) => Math.round(v * 1000) / 1000);
+
 function alDetectar(manosDetectadas, info) {
   const t0 = performance.now();
   const manos = info.simulacion ? manosDetectadas : filtroManos.filtrar(manosDetectadas, info.lados ?? [], t0);
   const r = (info.simulacion ? clasificarSimulacion : clasificar)(manos, info.aspecto);
   // Por debajo del umbral el gesto se muestra pero no se aplica
-  const aplicado = r.confianza >= UMBRAL_CONFIANZA ? r.gesto : 'ninguno';
+  const aplicado = r.confianza >= ajustesVisor.umbral ? r.gesto : 'ninguno';
+  // modo: lo que los controles aplicaron de verdad (una palma desplaza, dos palmas rotan): se muestra en el panel
+  // de gestos y sobre la cámara
+  const modo = controles(aplicado, manos, performance.now(), r.porMano);
   overlay.dibujar(manos, info.lados ?? [], r, aplicado, {
-    simulacion: info.simulacion, holograma: document.body.classList.contains('holograma-ar'), zoom: visor.escala(),
+    simulacion: info.simulacion, zoom: visor.escala(), modo,
   });
-  ui.mostrarGesto(r.gesto, r.confianza, UMBRAL_CONFIANZA);
-  controles(aplicado, manos);
+  ui.mostrarGesto(r.gesto, r.confianza, ajustesVisor.umbral, modo);
   // Procesamiento del fotograma: detección de MediaPipe + clasificación + dibujo + controles
   const msCuadro = performance.now() - t0 + (info.msProcesamiento ?? 0);
   metricas.registrar(info.simulacion ? 'fotograma_simulado' : 'fotograma', msCuadro);
@@ -775,9 +795,12 @@ function alDetectar(manosDetectadas, info) {
   }
   actividad.publicar({
     tipo: 'cuadro', metodo: info.simulacion ? 'reglas' : metodoGestos, simulacion: Boolean(info.simulacion),
-    // Los puntos de la primera mano, normalizados: red.html los pasa por la red y el árbol para dibujarlos
-    puntos: manos[0] ? aVector(normalizar(manos[0], info.aspecto)).map((v) => Math.round(v * 1000) / 1000) : null,
-    gesto: r.gesto, confianza: r.confianza, aplicado, umbral: UMBRAL_CONFIANZA, porMano: r.porMano ?? [],
+    // Los puntos normalizados de cada mano (hasta dos) y de qué lado es: red.html pasa cada una por la red y el
+    // árbol y dibuja una red por mano. "puntos" (la primera) queda por compatibilidad.
+    puntos: manos[0] ? vectorMano(manos[0], info.aspecto) : null,
+    puntosManos: manos.slice(0, 2).map((m) => vectorMano(m, info.aspecto)),
+    lados: (info.lados ?? []).slice(0, 2),
+    gesto: r.gesto, confianza: r.confianza, aplicado, umbral: ajustesVisor.umbral, porMano: r.porMano ?? [],
     manos: manos.length, ms: msCuadro, fps, metricas: r.metricas?.[0] ?? null, umbralesReglas: UMBRALES,
     clasesRed: (metodoGestos === 'arbol' ? arbol : mlp)?.clases,
     red: red && metodoGestos === 'mlp'
@@ -785,6 +808,12 @@ function alDetectar(manosDetectadas, info) {
     arbol: red && metodoGestos === 'arbol'
       ? { clases: arbol.clases, umbral: arbol.umbral, probabilidades: red.probabilidades, camino: red.camino,
         texto: textoCamino(red.camino, r.porMano?.[0] ?? r.gesto), profundidad: arbol.profundidad } : null,
+    // Lo mismo para cada mano (hasta dos), para el panel de actividad con las dos manos a la vista
+    redes: r.red && metodoGestos === 'mlp'
+      ? r.red.slice(0, 2).map((x) => ({ probabilidades: x.probabilidades, activaciones: x.activaciones })) : null,
+    arboles: r.red && metodoGestos === 'arbol'
+      ? r.red.slice(0, 2).map((x, i) => ({ probabilidades: x.probabilidades, texto: textoCamino(x.camino, r.porMano?.[i] ?? r.gesto) }))
+      : null,
   });
   ui.mostrarDepuracion(r, info, metricas.lineasResumen());
 
@@ -794,14 +823,23 @@ function alDetectar(manosDetectadas, info) {
   ui.mostrarFps(fps, info.msProcesamiento);
 }
 
+// El lienzo de las manos tiene la misma resolución que el video
+function ajustarLienzo({ ancho, alto }) {
+  if (lienzo.width !== ancho || lienzo.height !== alto) {
+    lienzo.width = ancho;
+    lienzo.height = alto;
+  }
+}
+
 async function encenderCamara() {
   detenerSimulacion?.();
   detenerSimulacion = null;
   overlay.limpiar();
   ui.mostrarCamara('iniciando');
   try {
-    tamanoVideo = await iniciarManos(video, alDetectar);
-    actualizarModo();
+    ajustarLienzo(await iniciarManos(video, alDetectar, {
+      alCorte: (motivo) => ui.mostrarCamara('error', `${motivo} Tocá «Reintentar» o usá los botones o el teclado.`),
+    }));
     ui.mostrarCamara('activa');
   } catch (err) {
     console.error(err);
@@ -813,8 +851,7 @@ async function encenderCamara() {
 }
 
 function simular() {
-  tamanoVideo = { ancho: 640, alto: 480 };
-  actualizarModo();
+  ajustarLienzo({ ancho: 640, alto: 480 });
   ui.mostrarCamara('simulacion');
   detenerSimulacion = iniciarSimulacion(alDetectar);
 }
@@ -826,36 +863,126 @@ document.getElementById('camara-detener').addEventListener('click', () => {
   detenerSimulacion = null;
   overlay.limpiar();
   controles('ninguno', []);
-  ui.mostrarGesto('ninguno', 0, UMBRAL_CONFIANZA);
+  ui.mostrarGesto('ninguno', 0, ajustesVisor.umbral);
   ui.mostrarCamara('error', 'Simulación detenida. Podés reintentar con la cámara o simular de nuevo.');
 });
-document.getElementById('camara-tamano').addEventListener('click', ui.alternarTamanoCamara);
+document.getElementById('camara-tamano').addEventListener('click', () => ui.alternarTamanoCamara());
 
-// --- modo holograma; con "Cámara de fondo", el video es el fondo de toda la pantalla si está activa (o simulada)
-let tamanoVideo = { ancho: 640, alto: 480 };
-const RESOLUCION_HOLOGRAMA = 2; // el lienzo de las manos se agranda para que el trazo no se vea borroso
-
+// --- modo holograma y catálogo (oculto salvo que se pida)
 function actualizarModo() {
-  const estado = document.getElementById('camara').dataset.estado;
-  const ar = modoHolograma && camaraDeFondo && (estado === 'activa' || estado === 'simulacion');
   document.body.classList.toggle('holograma', modoHolograma);
-  document.body.classList.toggle('holograma-ar', ar);
+  document.body.classList.toggle('ver-catalogo', verCatalogo);
   visor.fijarEstilo(modoHolograma ? 'holograma' : 'solido');
-  visor.mostrarGrilla(!ar);
   etiquetas.fijarActivas(modoHolograma && conEtiquetas);
-  const f = ar ? RESOLUCION_HOLOGRAMA : 1;
-  if (lienzo.width !== tamanoVideo.ancho * f || lienzo.height !== tamanoVideo.alto * f) {
-    lienzo.width = tamanoVideo.ancho * f;
-    lienzo.height = tamanoVideo.alto * f;
-  }
   for (const [clave, activo] of [['holograma', modoHolograma], ['etiquetas', modoHolograma && conEtiquetas],
-    ['fondo', modoHolograma && camaraDeFondo]]) {
+    ['catalogo', verCatalogo]]) {
     document.querySelector(`[data-barra="${clave}"]`).setAttribute('aria-pressed', String(activo));
   }
   document.querySelector('[data-barra="etiquetas"]').disabled = !modoHolograma;
-  document.querySelector('[data-barra="fondo"]').disabled = !modoHolograma;
 }
-new MutationObserver(actualizarModo).observe(document.getElementById('camara'), { attributeFilter: ['data-estado'] });
+
+// Recuadro "Red y LLM" en tiempo real (se quita, se achica y se agranda)
+const recuadroIA = crearRecuadroIA(document.getElementById('ia-vivo'), {
+  preferencia,
+  recordar,
+  alCambiar: (ver) => document.querySelector('[data-barra="ia"]').setAttribute('aria-pressed', String(ver)),
+});
+
+// El HUD deja lugar a la barra, el recuadro de IA se ubica debajo del HUD y el panel de piezas a su derecha:
+// se miden de verdad porque su ancho cambia con el texto, la ventana y lo que arrastre el usuario
+const raizCss = document.documentElement.style;
+const medirPaneles = () => {
+  raizCss.setProperty('--ancho-barra', `${document.getElementById('barra').offsetWidth}px`);
+  raizCss.setProperty('--alto-hud', `${document.getElementById('hud').offsetHeight}px`);
+  raizCss.setProperty('--ancho-ia', `${document.getElementById('ia-vivo').offsetWidth}px`);
+};
+const observadorPaneles = new ResizeObserver(medirPaneles);
+for (const id of ['barra', 'hud', 'ia-vivo']) observadorPaneles.observe(document.getElementById(id));
+
+// La cámara y el recuadro de la red y el LLM se acomodan arrastrándolos por la cabecera (doble clic: a su lugar)
+const arrastrables = {};
+for (const [id, asa] of [['camara', '.camara-cabecera'], ['ia-vivo', '.ia-cabecera']]) {
+  const caja = document.getElementById(id);
+  arrastrables[id] = hacerArrastrable(caja, caja.querySelector(asa), { clave: `posicion-${id}`, preferencia, recordar });
+}
+
+// --- disposiciones: cómo están acomodados los recuadros y qué se ve, para guardarlo y volver a eso
+const camaraGrande = () => document.getElementById('camara').classList.contains('grande');
+function capturarDisposicion() {
+  return {
+    camara: arrastrables.camara.posicion(),
+    camaraGrande: camaraGrande(),
+    ia: { ...recuadroIA.estado(), posicion: arrastrables['ia-vivo'].posicion() },
+    catalogo: verCatalogo,
+    etiquetas: conEtiquetas,
+  };
+}
+function aplicarDisposicion(d) {
+  if (!d) return;
+  // Primero el tamaño y después la posición: así la posición se ajusta a la pantalla con el tamaño final
+  ui.alternarTamanoCamara(Boolean(d.camaraGrande));
+  arrastrables.camara.fijar(d.camara);
+  recuadroIA.aplicar(d.ia);
+  arrastrables['ia-vivo'].fijar(d.ia?.posicion);
+  if (typeof d.catalogo === 'boolean') { verCatalogo = d.catalogo; recordar('catalogo', verCatalogo ? 'si' : 'no'); }
+  if (typeof d.etiquetas === 'boolean') { conEtiquetas = d.etiquetas; recordar('etiquetas', conEtiquetas ? 'si' : 'no'); }
+  actualizarModo();
+  ui.mostrarEstado('disposición aplicada');
+}
+function reiniciarDisposicion() {
+  ui.alternarTamanoCamara(false);
+  arrastrables.camara.reiniciar();
+  recuadroIA.aplicar({ tamano: 'mediano' });
+  arrastrables['ia-vivo'].reiniciar();
+}
+
+// --- modo presentación: solo el holograma (y la cámara o la red y el LLM, si se eligió en ajustes)
+let iaAbiertaParaPresentar = false;   // el recuadro estaba cerrado y se abrió solo para la presentación
+let avisoPresentacion = null;
+const enPresentacion = () => document.body.classList.contains('presentacion');
+function actualizarClasesPresentacion() {
+  document.body.classList.toggle('pres-camara', ajustesVisor.presentacion.camara);
+  document.body.classList.toggle('pres-ia', ajustesVisor.presentacion.ia);
+}
+function alternarPresentacion(activar = !enPresentacion()) {
+  if (activar === enPresentacion()) return;
+  document.body.classList.toggle('presentacion', activar);
+  actualizarClasesPresentacion();
+  if (activar) {
+    mostrarAjustes(false);
+    iaAbiertaParaPresentar = ajustesVisor.presentacion.ia && !recuadroIA.visible();
+    if (iaAbiertaParaPresentar) recuadroIA.mostrar(true);
+  } else if (iaAbiertaParaPresentar) {
+    recuadroIA.mostrar(false);
+    iaAbiertaParaPresentar = false;
+  }
+  const aviso = document.getElementById('aviso-presentacion');
+  aviso.hidden = !activar;
+  aviso.classList.remove('desvanecer');
+  clearTimeout(avisoPresentacion);
+  if (activar) avisoPresentacion = setTimeout(() => aviso.classList.add('desvanecer'), 2500);
+}
+
+// --- panel de ajustes
+const raizAjustes = document.getElementById('ajustes');
+function mostrarAjustes(ver = raizAjustes.hidden) {
+  raizAjustes.hidden = !ver;
+  document.querySelector('[data-barra="ajustes"]').setAttribute('aria-pressed', String(ver));
+}
+const panelAjustes = crearPanelAjustes(raizAjustes, {
+  preferencia,
+  recordar,
+  capturar: capturarDisposicion,
+  aplicar: aplicarDisposicion,
+  reiniciarDisposicion,
+  alCambiar: (a) => {
+    ajustesVisor = a;
+    if (enPresentacion()) actualizarClasesPresentacion();
+  },
+  alPresentacion: () => alternarPresentacion(true),
+  alCerrar: () => mostrarAjustes(false),
+});
+ajustesVisor = panelAjustes.ajustes();
 
 const ACCIONES_BARRA = {
   holograma: () => {
@@ -863,11 +990,12 @@ const ACCIONES_BARRA = {
     recordar('holograma', modoHolograma ? 'si' : 'no');
     actualizarModo();
   },
-  fondo: () => {
-    camaraDeFondo = !camaraDeFondo;
-    recordar('camara-fondo', camaraDeFondo ? 'si' : 'no');
+  catalogo: () => {
+    verCatalogo = !verCatalogo;
+    recordar('catalogo', verCatalogo ? 'si' : 'no');
     actualizarModo();
   },
+  ia: () => recuadroIA.mostrar(),
   etiquetas: () => {
     conEtiquetas = !conEtiquetas;
     recordar('etiquetas', conEtiquetas ? 'si' : 'no');
@@ -882,15 +1010,29 @@ const ACCIONES_BARRA = {
     document.querySelector('[data-barra="paneles"]').setAttribute('aria-pressed', String(ver));
   },
   actividad: () => alternarActividad(),
+  ajustes: () => mostrarAjustes(),
 };
 document.getElementById('barra').addEventListener('click', (e) => {
   const accion = e.target.closest('button')?.dataset.barra;
   if (accion) ACCIONES_BARRA[accion]();
 });
+// P entra o sale del modo presentación; Esc también sale (antes que su otro uso: volver al conjunto)
+addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.key === 'p' || e.key === 'P') {
+    e.stopImmediatePropagation();
+    alternarPresentacion();
+  } else if (e.key === 'Escape' && enPresentacion()) {
+    e.stopImmediatePropagation();
+    alternarPresentacion(false);
+  }
+}, true);
 addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'k' || e.key === 'K') ACCIONES_BARRA.ajustes();
   if (e.key === 'h' || e.key === 'H') ACCIONES_BARRA.holograma();
-  if ((e.key === 'c' || e.key === 'C') && modoHolograma) ACCIONES_BARRA.fondo();
+  if (e.key === 'c' || e.key === 'C') ACCIONES_BARRA.catalogo();
+  if (e.key === 'n' || e.key === 'N') ACCIONES_BARRA.ia();
   if (e.key === 'l' || e.key === 'L') ACCIONES_BARRA.actividad();
 });
 

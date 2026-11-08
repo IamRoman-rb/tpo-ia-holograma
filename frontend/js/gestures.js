@@ -112,8 +112,11 @@ export function crearClasificador({ mlp = null, modelo = mlp } = {}) {
     // Filtra los cambios de un solo fotograma, que son la principal fuente de falsos positivos.
     historial.push(crudo);
     if (historial.length > UMBRALES.ventana) historial.shift();
+    // Con una sola mano a la vista, los votos de "dos manos" de los cuadros anteriores no cuentan: el gesto que
+    // sale tiene que poder hacerse con las manos que hay (si no, los controles buscarían una mano que ya no está)
+    const posibles = manos.length >= 2 ? historial : historial.filter((g) => g !== 'escala_dos_manos');
     const votos = {};
-    for (const g of historial) votos[g] = (votos[g] ?? 0) + 1;
+    for (const g of posibles) votos[g] = (votos[g] ?? 0) + 1;
     const [gesto, n] = Object.entries(votos).sort((a, b) => b[1] - a[1])[0];
 
     return { gesto, confianza: n / UMBRALES.ventana, crudo, porMano, metricas, red };

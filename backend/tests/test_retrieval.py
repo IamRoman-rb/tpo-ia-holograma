@@ -35,3 +35,18 @@ def test_embeddings(tmp_path):
     assert cat.buscar("mesa") is None and cat.buscar("silla") is None
     assert cat.buscar("balero")["id"] == "rodamiento_bolas"   # sinónimo: lo resuelven las palabras
     assert (tmp_path / "index.json").exists()
+
+
+def test_familia_de_piezas():
+    """Solo los motores cuyas piezas sabe nombrar el reconocimiento de piezas (frontend/js/reconocer_piezas.js)."""
+    from retrieval import familia_de_piezas
+    assert familia_de_piezas("dominio:bloque de motor") == "combustion"
+    assert familia_de_piezas("dominio:motor eléctrico") == "electrico"
+    assert familia_de_piezas("dominio:motor", "CAT G3512B Gas Petroleum Engine") == "motor"
+    # la categoría genérica también junta vehículos enteros: hace falta que el modelo diga que es un motor
+    assert familia_de_piezas("dominio:motor", "Dieselpunk hovercraft") is None
+    assert familia_de_piezas("dominio:motor", "Basic Rocket Engine") is None
+    assert familia_de_piezas("dominio:motor", "Three Cylinder Motorcycle Engine") is None
+    # aviones a reacción, turbinas, locomotoras y todo lo que no es un motor: las piezas quedan nombradas por su lugar
+    for otra in ("dominio:motor de avión", "dominio:turbina", "dominio:locomotora", "dominio:computadora", None):
+        assert familia_de_piezas(otra) is None

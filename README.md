@@ -85,6 +85,10 @@ Cualquier modelo del catálogo se puede desarmar, aunque su autor no lo haya arm
 
 Los modelos animados se congelan en su pose antes de cortarlos. Cada pieza se nombra por su lugar ("Sección superior izquierda"), así se puede pedir por voz. Medido sobre 300 modelos de una sola pieza: todos quedan con entre 4 y 80 piezas (mediana 7). Cerca de un tercio se separan en sus partes reales y el resto en secciones. Tarda una mediana de 44 ms.
 
+**Reconocimiento de piezas de motores** (`ml/piezas/`, `frontend/js/reconocer_piezas.js`). En los motores de Objaverse, una red mira la forma de cada pieza y su lugar en el conjunto y le pone nombre: pistón, biela, cigüeñal, cárter, rotor… Es una PointNet chica entrenada con 1.200 motores generados por código (45 clases, contando "otro"), con giros, estiramientos, piezas que faltan y piezas que no son del motor. Con familias de motores que no vio (5 en línea, V10, bóxer de 2, radial de 5 y eléctricos de 1,5 a 3 kW) acierta el **98,1 %** de las piezas. Corre en el navegador, en 150 a 550 ms por modelo, y da las mismas probabilidades que PyTorch.
+
+Con modelos reales rinde mucho menos, porque sus piezas son trozos arbitrarios del archivo y no piezas limpias. Por eso solo nombra una pieza si la red tiene por lo menos 80 % de confianza y no más piezas de una clase que las que puede tener un motor (un cigüeñal, un cárter, hasta 12 pistones). El resto queda con su nombre por lugar. En el panel de análisis se aclara que el nombre es una estimación y con qué confianza. Solo se aplica a las categorías de motores de auto, bloques, radiales, eléctricos y servomotores, y a "motor" si el modelo dice ser un motor; los nombres puestos por el autor del modelo no se tocan. **No está medido con modelos reales**: no hay motores de Objaverse etiquetados, y en una revisión a ojo de 6 motores nombró de 1 a 4 piezas por modelo con nombres plausibles, pero en un V8 animado nombró 12 bielas. Se reentrena con `python scripts/entrenar.py --solo piezas` (unos 12 minutos).
+
 ## Entrenar los modelos
 
 Los modelos grandes (transformer y LLM propio) no se suben al repositorio: cada uno los entrena en su máquina con las frases versionadas (`ml/intencion/frases_entrenamiento.csv`, `ml/intencion/frases_objetos_ensamble.csv` y los sets de `eval/`). Incluyen pedidos de computadoras, notebooks, relojes, autos, motos y teléfonos, además de sus desarmes por piezas. Desde la raíz:
@@ -139,7 +143,8 @@ El guion de los 15 minutos, la demo paso a paso y las respuestas a las preguntas
 | Gesto | Acción |
 |---|---|
 | Pellizco (pulgar + índice) | Tomar y mover el objeto |
-| Palma abierta | Rotar siguiendo la mano |
+| Palma abierta | Desplazarse por el espacio (como arrastrar con el clic izquierdo) |
+| Las dos palmas abiertas | Rotar el objeto siguiendo las manos (un tercio del cuadro de la cámara = una vuelta); si se sueltan girando rápido, el objeto sigue girando y frena solo |
 | Pellizco con las dos manos | Separar para agrandar, juntar para achicar |
 | Señalar (solo el índice) | Mover el cursor; apuntar 0,8 s a una pieza la elige |
 | Pellizco sobre la pieza elegida | Sacar solo esa pieza y moverla |
@@ -148,13 +153,28 @@ El guion de los 15 minutos, la demo paso a paso y las respuestas a las preguntas
 | Pulgar arriba | Confirmar un pedido |
 | Pulgar abajo | Deshacer el último cambio |
 
+El panel de gestos y el recuadro de la cámara muestran lo que está haciendo la mano: «Palma · desplazar» (con flechas sobre la palma), «Dos palmas · rotar» (con un aro que gira entre las manos), «Pellizco · mover», etc.
+
 Los gestos los reconoce una red neuronal (MLP) entrenada con fotos reales de miles de personas, o las reglas geométricas: se elige en el panel de la izquierda (**Clasificador**).
 
 ### Holograma
 
-Con el botón **Holograma** (o la tecla `H`) activado, que es lo que viene por defecto, el objeto se dibuja como un holograma sobre el fondo oscuro, con la cámara en su recuadro abajo a la derecha. Cada pieza tiene su color neón y se ve con sus aristas, una nube de puntos y un relleno tenue. A los costados aparecen etiquetas con el nombre y la función de cada pieza, con una línea guía hasta ella; al tocar una etiqueta se elige esa pieza. El catálogo pasa a ser una fila de pestañas abajo. **Paneles** muestra el panel de piezas y **Despiece** abre o cierra la vista explotada. Apagando **Holograma** se vuelve a la vista de estudio, con los materiales del modelo.
+Con el botón **Holograma** (o la tecla `H`) activado, que es lo que viene por defecto, el objeto se dibuja como un holograma sobre el fondo oscuro, con la cámara en su recuadro abajo a la derecha. Cada pieza tiene su color neón y se ve con sus aristas, una nube de puntos y un relleno tenue. A los costados aparecen etiquetas con el nombre y la función de cada pieza, con una línea guía hasta ella; al tocar una etiqueta se elige esa pieza. El catálogo está oculto: **Catálogo** (o la tecla `C`) lo muestra como una fila de pestañas abajo. **Paneles** muestra el panel de piezas y **Despiece** abre o cierra la vista explotada. Apagando **Holograma** se vuelve a la vista de estudio, con los materiales del modelo.
 
-**Cámara de fondo** (o la tecla `C`, apagado por defecto) pone el video de la cámara a pantalla completa detrás del holograma: el esqueleto de la mano se dibuja sobre la mano real, el cursor de señalar queda en la punta del índice, al rotar con la palma aparece un aro y al escalar con las dos manos se ve el zoom.
+### Ajustes y modo presentación
+
+**⚙** en la barra (o la tecla `K`) abre los ajustes, que se recuerdan en el navegador:
+
+- **Sensibilidad** de rotar (dos palmas), desplazarse (una palma) y escalar (dos pellizcos), de 0,3× a 3×, y el **umbral de confianza** de los gestos (50 % a 95 %, 80 % por defecto).
+- **Inercia al rotar**: encendida o apagada.
+- **Disposiciones**: guardar con un nombre cómo están acomodados la cámara y el recuadro de la red y el LLM (posición, tamaño, pestaña, qué se ve) y volver a eso con **Aplicar**. **Volver todo a su lugar** deja todo como al principio.
+- **Modo presentación** (o la tecla `P`): oculta toda la interfaz y deja el holograma, con la cámara o el recuadro de la red y el LLM si se eligieron. Los gestos y la voz siguen andando. Se sale con `P` o `Esc`.
+
+### Red neuronal y LLM en tiempo real
+
+El recuadro **Red y LLM** (o la tecla `N`), abierto por defecto debajo del panel de gestos, muestra en vivo las vistas [red.html](frontend/red.html) (la red de gestos capa por capa con la mano de la cámara; con las dos manos a la vista, una red por mano, cada una en su color, y qué hace el visor con las dos juntas; los puntos de la mano en ámbar son los que más pesan en la decisión, y arriba de cada red dice en cuáles se fija) y [llm.html](frontend/llm.html) (el recorrido de cada pedido), cada una en su pestaña. **−** y **+** lo achican y agrandan (tres tamaños), la esquina de abajo a la derecha se arrastra para darle cualquier tamaño, **↗** abre la vista en otra pestaña y **✕** lo quita. Recuerda la pestaña, el tamaño y si estaba abierto.
+
+Este recuadro y el de la cámara se acomodan donde quieras arrastrándolos por su cabecera; la posición se recuerda y nunca quedan fuera de la pantalla. Doble clic en la cabecera los devuelve a su lugar. En el teléfono tienen un lugar fijo.
 
 ### Actividad de la IA en vivo
 
@@ -243,6 +263,7 @@ node frontend/tests/piezas.test.mjs      # orden y recorrido del desarmado, aná
 node frontend/tests/mlp.test.mjs         # el MLP en JavaScript da lo mismo que en Python
 node frontend/tests/voz.test.mjs         # pedidos por voz (con un reconocimiento falso)
 node frontend/tests/holograma.test.mjs   # nube de puntos, etiquetas a los costados y dedo en la pantalla
+node frontend/tests/reconocer_piezas.test.mjs   # reconocimiento de piezas: mismas cuentas que en Python
 python -m pytest ml                      # la normalización de Python coincide con la del navegador (entorno de ml/)
 cd backend && python -m pytest tests     # pruebas del backend (con el entorno virtual activo)
 python eval/eval_intent.py               # aciertos de intención: reglas vs. LLM (desde la raíz)

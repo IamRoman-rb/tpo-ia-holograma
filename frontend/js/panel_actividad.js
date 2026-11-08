@@ -57,10 +57,15 @@ export function crearPanelActividad(raiz, { enVentana = false, alAbrirVentana = 
     </header>
     <section class="act-seccion">
       <h3><span class="act-metodo">Gestos</span><span class="act-estado"></span></h3>
+      <p class="act-mano" data-mano="0" hidden></p>
       <canvas class="act-capas" width="380" height="176" aria-label="Activaciones de la red neuronal"></canvas>
       <div class="act-reglas" hidden></div>
       <p class="act-camino" hidden></p>
       <div class="act-probs" role="list"></div>
+      <p class="act-mano segunda" data-mano="1" hidden></p>
+      <canvas class="act-capas act-capas-2" width="380" height="176" aria-label="Activaciones de la red con la segunda mano" hidden></canvas>
+      <p class="act-camino act-camino-2" hidden></p>
+      <div class="act-probs act-probs-2" role="list" hidden></div>
       <canvas class="act-linea" width="380" height="18" aria-label="Gesto aplicado en los últimos segundos"></canvas>
       <p class="act-nota">Esperando la cámara (o la simulación de manos)…</p>
     </section>
@@ -76,31 +81,32 @@ export function crearPanelActividad(raiz, { enVentana = false, alAbrirVentana = 
 
   const lienzo = $('.act-capas');
   const ctx = lienzo.getContext('2d');
+  const lienzo2 = $('.act-capas-2');
+  const ctx2 = lienzo2.getContext('2d');
   const linea = $('.act-linea');
   const ctxLinea = linea.getContext('2d');
   const historia = [];
   const pedidos = new Map(); // id → { li, t0, terminado }
   let ultimo = null;         // último cuadro recibido (se dibuja en el próximo requestAnimationFrame)
   let pendiente = false;
-  let filasProbs = [];
+  const filasProbs = new Map();   // contenedor de barras → sus filas (una lista por mano)
 
   // ---------------------------------------------------------------- gestos
 
-  function armarProbs(clases) {
-    const cont = $('.act-probs');
+  function armarProbs(clases, cont) {
     cont.innerHTML = clases.map((c) => `
       <div class="act-prob" role="listitem" data-clase="${escapar(c)}">
         <span>${escapar(NOMBRES[c] ?? c)}</span>
         <div class="act-barra"><i style="background:${COLORES[c] ?? '#2bd4ff'}"></i><b></b></div>
         <em>—</em>
       </div>`).join('');
-    filasProbs = [...cont.children].map((f) => ({ f, i: f.querySelector('i'), b: f.querySelector('b'), em: f.querySelector('em') }));
+    filasProbs.set(cont, [...cont.children].map((f) => ({ f, i: f.querySelector('i'), b: f.querySelector('b'), em: f.querySelector('em') })));
     cont.dataset.clases = clases.join(',');
   }
 
-  function probs(clases, valores, umbral, ganadora) {
-    if ($('.act-probs').dataset.clases !== clases.join(',')) armarProbs(clases);
-    filasProbs.forEach(({ f, i, b, em }, k) => {
+  function probs(clases, valores, umbral, ganadora, cont = $('.act-probs')) {
+    if (cont.dataset.clases !== clases.join(',')) armarProbs(clases, cont);
+    filasProbs.get(cont).forEach(({ f, i, b, em }, k) => {
       const v = valores?.[k] ?? 0;
       i.style.width = `${(v * 100).toFixed(1)}%`;
       b.style.left = umbral != null ? `${umbral * 100}%` : '';
@@ -129,8 +135,10 @@ export function crearPanelActividad(raiz, { enVentana = false, alAbrirVentana = 
 
   // Cada capa como una grilla de celdas: el brillo es la activación de la neurona (normalizada por capa).
   // Las líneas unen las neuronas más activas de capas vecinas: muestran por dónde "pasa" la señal.
-  function dibujarRed(activaciones, probabilidades, clases) {
-    const [W, H] = nitido(lienzo, ctx, 380, 176);
+  function dibujarRed(activaciones, probabilidades, clases, destino = lienzo, contexto = ctx, color = [43, 212, 255]) {
+    const ctx = contexto;
+    const rgb = color.join(', ');
+    const [W, H] = nitido(destino, ctx, 380, 176);
     ctx.clearRect(0, 0, W, H);
     const capas = formas(activaciones, W, H);
     const ultima = capas.length - 1;
@@ -153,7 +161,7 @@ export function crearPanelActividad(raiz, { enVentana = false, alAbrirVentana = 
         const cx = x + col * lado;
         const cy = y0 + fila * lado;
         const a = salida ? v : v / maximo;
-        ctx.fillStyle = salida ? (COLORES[clases[n]] ?? '#2bd4ff') : `rgba(43, 212, 255, ${0.08 + 0.92 * a})`;
+        ctx.fillStyle = salida ? (COLORES[clases[n]] ?? '#2bd4ff') : `rgba(${rgb}, ${0.08 + 0.92 * a})`;
         ctx.globalAlpha = salida ? 0.25 + 0.75 * a : 1;
         if (salida) {
           ctx.beginPath();
@@ -187,7 +195,7 @@ export function crearPanelActividad(raiz, { enVentana = false, alAbrirVentana = 
       const hasta = top(celdas[k + 1], k + 1 === ultima ? 2 : 6);
       for (const a of desde) {
         for (const b of hasta) {
-          ctx.strokeStyle = `rgba(43, 212, 255, ${0.35 * a.a * b.a})`;
+          ctx.strokeStyle = `rgba(${rgb}, ${0.35 * a.a * b.a})`;
           ctx.beginPath();
           ctx.moveTo(a.x, a.y);
           ctx.lineTo(b.x, b.y);
@@ -233,6 +241,25 @@ export function crearPanelActividad(raiz, { enVentana = false, alAbrirVentana = 
     $('.act-reglas').hidden = conRed || conArbol;
     $('.act-camino').hidden = !conArbol;
     $('.act-probs').hidden = !(conRed || conArbol); // las reglas no dan probabilidades: se ven sus métricas
+
+    // Dos manos con la red o el árbol: cada una con su dibujo y sus probabilidades (la segunda en violeta)
+    const porMano = conRed ? m.redes : conArbol ? m.arboles : null;
+    const dos = (porMano?.length ?? 0) >= 2;
+    const LADOS = { derecha: 'Mano derecha', izquierda: 'Mano izquierda' };
+    raiz.querySelectorAll('.act-mano').forEach((el, i) => {
+      el.hidden = !dos;
+      if (dos) el.textContent = `${LADOS[m.lados?.[i]] ?? `Mano ${i + 1}`} · ${NOMBRES[m.porMano?.[i]] ?? m.porMano?.[i] ?? '—'}`;
+    });
+    lienzo2.hidden = !(dos && conRed);
+    $('.act-camino-2').hidden = !(dos && conArbol);
+    $('.act-probs-2').hidden = !dos;
+    if (dos && conRed) {
+      dibujarRed(m.redes[1].activaciones, m.redes[1].probabilidades, m.red?.clases ?? m.clasesRed, lienzo2, ctx2, [167, 123, 255]);
+      probs(m.red?.clases ?? m.clasesRed, m.redes[1].probabilidades, m.red?.umbral, m.porMano?.[1], $('.act-probs-2'));
+    } else if (dos && conArbol) {
+      $('.act-camino-2').textContent = `Camino: ${m.arboles[1].texto}`;
+      probs(m.clasesRed ?? [], m.arboles[1].probabilidades, m.arbol?.umbral ?? null, m.porMano?.[1], $('.act-probs-2'));
+    }
 
     if (conArbol) {
       // El árbol no tiene activaciones: se muestra la cadena de preguntas que llevó a la hoja

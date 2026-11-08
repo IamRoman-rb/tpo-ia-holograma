@@ -8,8 +8,8 @@ const CODO = 26;          // tramo horizontal de la línea guía, al salir de la
 
 const ENTRE_SUBCOLUMNAS = 14; // espacio entre dos subcolumnas del mismo lado
 // Paneles fijos que las etiquetas no deben tapar: los de arriba bajan el comienzo de la columna, los de abajo
-// suben su final. Cada lado se mide aparte (abajo a la derecha está la cámara; a la izquierda, solo el catálogo).
-const OBSTACULOS = ['#hud', '#barra', '#origen', '#analisis', '#catalogo', '#camara', '#controles'];
+// suben su final. Cada lado se mide aparte (abajo a la derecha está la cámara; arriba a la izquierda, el recuadro de la red y el LLM).
+const OBSTACULOS = ['#hud', '#barra', '#ia-vivo', '#origen', '#analisis', '#catalogo', '#camara', '#controles'];
 
 // Medidas según el ancho de la pantalla: en el teléfono, etiquetas angostas y sin descripción
 function medidas() {
@@ -25,6 +25,8 @@ function medidas() {
     for (const sel of OBSTACULOS) {
       const el = document.querySelector(sel);
       if (!el || el.hidden) continue;
+      if (el.id === 'camara' && document.body.classList.contains('presentacion')
+        && !document.body.classList.contains('pres-camara')) continue; // transparente en el modo presentación
       const r = el.getBoundingClientRect();
       if (!r.width || !r.height || r.right < x0 || r.left > x1) continue;
       if (r.top + r.height / 2 < H / 2) arriba = Math.max(arriba, r.bottom + 20);

@@ -3,7 +3,7 @@
 
 export const CLASES = [
   { id: 'pellizco', nombre: 'Pellizco', descripcion: 'Pulgar e índice juntos. En el visor: tomar y mover el objeto.' },
-  { id: 'palma_abierta', nombre: 'Palma abierta', descripcion: 'Mano abierta frente a la cámara. En el visor: rotar.' },
+  { id: 'palma_abierta', nombre: 'Palma abierta', descripcion: 'Mano abierta frente a la cámara. En el visor: desplazarse (con las dos manos abiertas, rotar).' },
   { id: 'puño', nombre: 'Puño', descripcion: 'Mano cerrada. En el visor: reiniciar la vista.' },
   { id: 'señalar', nombre: 'Señalar', descripcion: 'Índice extendido y el resto de los dedos cerrados. En el visor: apuntar y elegir una pieza.' },
   { id: 'pulgar_arriba', nombre: 'Pulgar arriba', descripcion: 'Puño con el pulgar hacia arriba. En el visor: confirmar.' },

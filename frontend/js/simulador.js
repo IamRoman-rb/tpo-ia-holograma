@@ -12,7 +12,9 @@ const FPS = 30;
 // Guion que se repite: cada tramo dura `seg` segundos y devuelve las manos para t ∈ [0, 1]
 const GUION = [
   { seg: 1.5, manos: () => [] },
-  { seg: 4, manos: (t) => [mano('palma_abierta', 0.5 + 0.18 * Math.sin(t * 2 * Math.PI), 0.85)] },
+  // Dos palmas: rotar el objeto; una palma: desplazarse por el espacio (ida y vuelta)
+  { seg: 4, manos: (t) => dosPalmas(0.5 + 0.12 * Math.sin(t * 2 * Math.PI), 0.85) },
+  { seg: 2, manos: (t) => [mano('palma_abierta', 0.5 + 0.1 * Math.sin(t * 2 * Math.PI), 0.85)] },
   { seg: 3.5, manos: (t) => [mano('pellizco', 0.5 + 0.12 * Math.cos(t * 2 * Math.PI), 0.82 + 0.06 * Math.sin(t * 2 * Math.PI))] },
   { seg: 1, manos: () => [] },
   {
@@ -26,7 +28,7 @@ const GUION = [
   { seg: 1, manos: () => [] },
   { seg: 1.5, manos: () => [mano('puño', 0.5, 0.8)] },
   // Piezas: señalar recorriendo el objeto, quedarse sobre el volante (lo elige), pellizcarlo y sacarlo,
-  // analizarlo con la victoria, girarlo con la palma, volver con el puño y reiniciar con otro puño.
+  // analizarlo con la victoria, girarlo con las dos palmas, volver con el puño y reiniciar con otro puño.
   // Con la válvula del catálogo, el volante queda arriba al centro de la pantalla.
   { seg: 2, manos: (t) => [mano('señalar', 0.46 + 0.12 * t, 0.88)] },
   { seg: 1.3, manos: () => [mano('señalar', 0.58, 0.88)] },
@@ -34,7 +36,7 @@ const GUION = [
   { seg: 2, manos: (t) => [mano('pellizco', 0.58 - 0.12 * t, 0.75 - 0.14 * t)] },
   { seg: 0.6, manos: () => [] },
   { seg: 1.5, manos: () => [mano('victoria', 0.5, 0.85)] },
-  { seg: 2.5, manos: (t) => [mano('palma_abierta', 0.5 + 0.15 * Math.sin(t * 2 * Math.PI), 0.85)] },
+  { seg: 2.5, manos: (t) => dosPalmas(0.5 + 0.1 * Math.sin(t * 2 * Math.PI), 0.85) },
   { seg: 1.5, manos: () => [mano('puño', 0.5, 0.8)] },
   { seg: 0.8, manos: () => [] },
   { seg: 1.5, manos: () => [mano('puño', 0.5, 0.8)] },
@@ -44,6 +46,8 @@ const DURACION = GUION.reduce((s, g) => s + g.seg, 0);
 function mano(pose, x, y, espejo = false) {
   return { puntos: aImagen(POSES[pose], TAMANO, x, y, { espejo, ruido: RUIDO }), x };
 }
+// Las dos palmas abiertas, una a cada lado de x (espejadas, como las manos reales)
+const dosPalmas = (x, y) => [mano('palma_abierta', x - 0.17, y, true), mano('palma_abierta', x + 0.17, y, false)];
 
 /** Manos (y su lado) en el segundo `seg` del guion. */
 export function manosEn(seg) {
