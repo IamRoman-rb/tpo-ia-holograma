@@ -25,15 +25,42 @@
   </header>
 
   <main class="vista-contenido vista-red">
-    <section class="tarjeta">
-      <h2>La red en vivo <small id="red-resumen" class="tenue"></small></h2>
-      <canvas id="lienzo-red" class="red-lienzo" aria-label="Diagrama de la red neuronal con las activaciones de cada capa"></canvas>
-      <div class="red-leyenda">
-        <span><i style="background:#2bd4ff"></i>neurona activa (más brillo = más activación)</span>
-        <span><i style="background:linear-gradient(90deg,#2bd4ff,#3dffb0)"></i>conexión que más aporta (activación × peso)</span>
-        <span><i style="background:#ffb84d"></i>umbral de confianza</span>
-      </div>
-    </section>
+    <!-- Columna izquierda: la red, el gráfico en el tiempo y el árbol, uno debajo del otro. La derecha crece
+         con la segunda mano y cada columna se estira por su cuenta (sin huecos). -->
+    <div class="columna-red">
+      <section class="tarjeta">
+        <h2>La red en vivo <small id="red-resumen" class="tenue"></small></h2>
+        <!-- Con dos manos a la vista, la misma red (los mismos pesos) se aplica a cada una: se dibuja una red por mano -->
+        <p id="red-combinada" class="red-combinada" hidden></p>
+        <div class="redes" id="redes">
+          <figure class="red-mano" data-mano="0">
+            <figcaption id="red-mano-0" hidden></figcaption>
+            <canvas id="lienzo-red" class="red-lienzo" aria-label="Diagrama de la red neuronal con las activaciones de cada capa"></canvas>
+          </figure>
+          <figure class="red-mano" data-mano="1" hidden>
+            <figcaption id="red-mano-1"></figcaption>
+            <canvas id="lienzo-red-2" class="red-lienzo" aria-label="La misma red neuronal aplicada a la segunda mano"></canvas>
+          </figure>
+        </div>
+        <div class="red-leyenda">
+          <span><i style="background:#2bd4ff"></i>neurona activa (más brillo = más activación)</span>
+          <span><i style="background:linear-gradient(90deg,#2bd4ff,#3dffb0)"></i>conexión que más aporta (activación × peso)</span>
+          <span><i style="background:#ffb84d;height:9px;width:9px;border-radius:50%"></i>punto de la mano que más pesa en la decisión (más grande = más peso)</span>
+          <span id="leyenda-mano-2" hidden><i style="background:linear-gradient(90deg,#a77bff,#ff4fd8)"></i>lo mismo, en la segunda mano</span>
+          <span><i style="background:#ffb84d"></i>umbral de confianza</span>
+        </div>
+      </section>
+
+
+      <section class="tarjeta">
+        <h2>Probabilidades en el tiempo <small class="tenue">últimos 8 segundos</small><span class="selector-mano" hidden role="group" aria-label="Mano"><button type="button" data-mano="0" aria-pressed="true">Mano 1</button><button type="button" data-mano="1" aria-pressed="false">Mano 2</button></span></h2>
+        <canvas id="historia" style="aspect-ratio: 16 / 5" aria-label="Probabilidad de cada gesto en los últimos segundos"></canvas>
+      </section>
+      <section class="tarjeta">
+        <h2>Árbol de decisión <small class="tenue" id="arbol-resumen"></small><span class="selector-mano" hidden role="group" aria-label="Mano"><button type="button" data-mano="0" aria-pressed="true">Mano 1</button><button type="button" data-mano="1" aria-pressed="false">Mano 2</button></span></h2>
+        <ol class="camino" id="camino"><li class="vacio" style="display:block">Mostrá una mano a la cámara (o activá la simulación en el visor).</li></ol>
+      </section>
+    </div>
 
     <aside style="display:grid;gap:16px">
       <section class="tarjeta" aria-live="polite">
@@ -42,10 +69,17 @@
           <canvas id="anillo" class="anillo" width="92" height="92" aria-hidden="true"></canvas>
           <div><strong id="gesto">—</strong><span class="tenue" id="gesto-detalle">Sin manos a la vista</span></div>
         </div>
+        <div class="gesto-grande segunda-mano" id="gesto-grande-2" hidden>
+          <canvas id="anillo-2" class="anillo" width="92" height="92" aria-hidden="true"></canvas>
+          <div><strong id="gesto-2">—</strong><span class="tenue" id="gesto-detalle-2"></span></div>
+        </div>
       </section>
       <section class="tarjeta">
         <h2>Probabilidades <small class="tenue">salida de la softmax</small></h2>
+        <h3 class="sub-mano" id="probabilidades-titulo" hidden></h3>
         <div class="barras" id="probabilidades"></div>
+        <h3 class="sub-mano segunda" id="probabilidades-titulo-2" hidden></h3>
+        <div class="barras" id="probabilidades-2" hidden></div>
       </section>
       <section class="tarjeta">
         <h2>Tres modelos, la misma mano</h2>
@@ -53,15 +87,6 @@
         <p class="tenue" style="margin-top:8px;font-size:12.5px">Resaltado: el que está usando el visor. Se elige en el visor o por voz: «usá el árbol para los gestos».</p>
       </section>
     </aside>
-
-    <section class="tarjeta">
-      <h2>Probabilidades en el tiempo <small class="tenue">últimos 8 segundos</small></h2>
-      <canvas id="historia" style="aspect-ratio: 16 / 5" aria-label="Probabilidad de cada gesto en los últimos segundos"></canvas>
-    </section>
-    <section class="tarjeta">
-      <h2>Árbol de decisión <small class="tenue" id="arbol-resumen"></small></h2>
-      <ol class="camino" id="camino"><li class="vacio" style="display:block">Mostrá una mano a la cámara (o activá la simulación en el visor).</li></ol>
-    </section>
 
     <section class="tarjeta ancho">
       <h2>Arquitectura <small class="tenue" id="arquitectura-origen"></small></h2>

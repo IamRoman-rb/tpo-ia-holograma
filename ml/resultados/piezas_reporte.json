@@ -1,0 +1,330 @@
+{
+ "fecha": "2026-11-03",
+ "motores": 1200,
+ "copias": 3,
+ "epocas": 30,
+ "puntos_por_pieza": 256,
+ "clases": 45,
+ "piezas_entrenamiento": 85178,
+ "piezas_prueba": 24749,
+ "familias_prueba": [
+  "boxer 2",
+  "linea 5",
+  "radial 5",
+  "v 10",
+  "eléctricos de 1.5 a 3.0 kW"
+ ],
+ "validacion_acierto": 0.987,
+ "umbral_confianza": 0.8,
+ "prueba_acierto": 0.981,
+ "prueba_nombradas": 0.96,
+ "prueba_acierto_nombradas": 0.983,
+ "prueba_otro_nombradas_como_pieza": 0.078,
+ "por_clase": {
+  "alternador": {
+   "piezas": 426,
+   "acierto": 0.951,
+   "nombradas": 1.0
+  },
+  "anillo_retencion": {
+   "piezas": 26,
+   "acierto": 1.0,
+   "nombradas": 1.0
+  },
+  "arbol_de_levas": {
+   "piezas": 980,
+   "acierto": 0.997,
+   "nombradas": 1.0
+  },
+  "base": {
+   "piezas": 24,
+   "acierto": 1.0,
+   "nombradas": 1.0
+  },
+  "biela": {
+   "piezas": 2928,
+   "acierto": 0.998,
+   "nombradas": 0.999
+  },
+  "bloque": {
+   "piezas": 548,
+   "acierto": 1.0,
+   "nombradas": 1.0
+  },
+  "bomba_aceite": {
+   "piezas": 415,
+   "acierto": 0.995,
+   "nombradas": 1.0
+  },
+  "bomba_agua": {
+   "piezas": 408,
+   "acierto": 0.998,
+   "nombradas": 1.0
+  },
+  "bujia": {
+   "piezas": 1965,
+   "acierto": 0.99,
+   "nombradas": 0.999
+  },
+  "caja_bornes": {
+   "piezas": 47,
+   "acierto": 1.0,
+   "nombradas": 1.0
+  },
+  "carcasa": {
+   "piezas": 60,
+   "acierto": 1.0,
+   "nombradas": 1.0
+  },
+  "carter": {
+   "piezas": 431,
+   "acierto": 0.981,
+   "nombradas": 0.984
+  },
+  "chaveta": {
+   "piezas": 49,
+   "acierto": 1.0,
+   "nombradas": 1.0
+  },
+  "ciguenal": {
+   "piezas": 555,
+   "acierto": 0.989,
+   "nombradas": 1.0
+  },
+  "cilindro": {
+   "piezas": 681,
+   "acierto": 1.0,
+   "nombradas": 1.0
+  },
+  "colector": {
+   "piezas": 17,
+   "acierto": 0.941,
+   "nombradas": 1.0
+  },
+  "correa_distribucion": {
+   "piezas": 415,
+   "acierto": 0.959,
+   "nombradas": 0.993
+  },
+  "cubreventilador": {
+   "piezas": 46,
+   "acierto": 1.0,
+   "nombradas": 1.0
+  },
+  "culata": {
+   "piezas": 1358,
+   "acierto": 0.961,
+   "nombradas": 0.973
+  },
+  "eje": {
+   "piezas": 87,
+   "acierto": 1.0,
+   "nombradas": 1.0
+  },
+  "escobilla": {
+   "piezas": 30,
+   "acierto": 1.0,
+   "nombradas": 1.0
+  },
+  "estator": {
+   "piezas": 71,
+   "acierto": 0.986,
+   "nombradas": 1.0
+  },
+  "filtro_aceite": {
+   "piezas": 424,
+   "acierto": 0.998,
+   "nombradas": 1.0
+  },
+  "helice": {
+   "piezas": 131,
+   "acierto": 1.0,
+   "nombradas": 1.0
+  },
+  "iman": {
+   "piezas": 50,
+   "acierto": 1.0,
+   "nombradas": 1.0
+  },
+  "inyector": {
+   "piezas": 970,
+   "acierto": 0.999,
+   "nombradas": 1.0
+  },
+  "junta_culata": {
+   "piezas": 677,
+   "acierto": 0.985,
+   "nombradas": 0.999
+  },
+  "motor_arranque": {
+   "piezas": 430,
+   "acierto": 1.0,
+   "nombradas": 1.0
+  },
+  "multiple_admision": {
+   "piezas": 674,
+   "acierto": 0.88,
+   "nombradas": 0.964
+  },
+  "multiple_escape": {
+   "piezas": 825,
+   "acierto": 0.952,
+   "nombradas": 0.988
+  },
+  "patas": {
+   "piezas": 22,
+   "acierto": 1.0,
+   "nombradas": 1.0
+  },
+  "piston": {
+   "piezas": 2960,
+   "acierto": 0.988,
+   "nombradas": 0.996
+  },
+  "polea_ciguenal": {
+   "piezas": 421,
+   "acierto": 1.0,
+   "nombradas": 1.0
+  },
+  "poleas_distribucion": {
+   "piezas": 431,
+   "acierto": 1.0,
+   "nombradas": 1.0
+  },
+  "portaescobillas": {
+   "piezas": 14,
+   "acierto": 0.929,
+   "nombradas": 1.0
+  },
+  "rodamiento": {
+   "piezas": 143,
+   "acierto": 1.0,
+   "nombradas": 1.0
+  },
+  "rotor": {
+   "piezas": 90,
+   "acierto": 0.967,
+   "nombradas": 1.0
+  },
+  "tapa_de_valvulas": {
+   "piezas": 695,
+   "acierto": 0.967,
+   "nombradas": 0.996
+  },
+  "tapa_delantera": {
+   "piezas": 193,
+   "acierto": 0.922,
+   "nombradas": 0.995
+  },
+  "tapa_trasera": {
+   "piezas": 63,
+   "acierto": 0.905,
+   "nombradas": 1.0
+  },
+  "turbo": {
+   "piezas": 261,
+   "acierto": 0.946,
+   "nombradas": 0.992
+  },
+  "valvulas": {
+   "piezas": 2261,
+   "acierto": 0.999,
+   "nombradas": 1.0
+  },
+  "ventilador": {
+   "piezas": 48,
+   "acierto": 1.0,
+   "nombradas": 1.0
+  },
+  "volante_de_inercia": {
+   "piezas": 424,
+   "acierto": 1.0,
+   "nombradas": 1.0
+  },
+  "otro": {
+   "piezas": 975,
+   "acierto": 0.907,
+   "nombradas": 0.078
+  }
+ },
+ "confusiones_frecuentes": [
+  {
+   "real": "multiple_admision",
+   "predicha": "multiple_escape",
+   "veces": 36
+  },
+  {
+   "real": "multiple_admision",
+   "predicha": "tapa_de_valvulas",
+   "veces": 35
+  },
+  {
+   "real": "alternador",
+   "predicha": "filtro_aceite",
+   "veces": 21
+  },
+  {
+   "real": "bujia",
+   "predicha": "chaveta",
+   "veces": 18
+  },
+  {
+   "real": "piston",
+   "predicha": "culata",
+   "veces": 18
+  },
+  {
+   "real": "multiple_escape",
+   "predicha": "tapa_de_valvulas",
+   "veces": 17
+  },
+  {
+   "real": "culata",
+   "predicha": "bomba_agua",
+   "veces": 16
+  },
+  {
+   "real": "multiple_escape",
+   "predicha": "multiple_admision",
+   "veces": 15
+  },
+  {
+   "real": "tapa_delantera",
+   "predicha": "tapa_trasera",
+   "veces": 15
+  },
+  {
+   "real": "turbo",
+   "predicha": "bomba_agua",
+   "veces": 14
+  },
+  {
+   "real": "culata",
+   "predicha": "turbo",
+   "veces": 13
+  },
+  {
+   "real": "otro",
+   "predicha": "valvulas",
+   "veces": 12
+  },
+  {
+   "real": "tapa_de_valvulas",
+   "predicha": "multiple_admision",
+   "veces": 11
+  },
+  {
+   "real": "culata",
+   "predicha": "piston",
+   "veces": 11
+  },
+  {
+   "real": "otro",
+   "predicha": "carter",
+   "veces": 11
+  }
+ ],
+ "modelos_reales": "pendiente: no hay modelos de Objaverse etiquetados; se revisan a ojo en el visor",
+ "segundos": 694,
+ "umbral_validacion": 0.3
+}

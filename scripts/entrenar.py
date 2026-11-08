@@ -97,6 +97,8 @@ def pasos(llm):
              gestos=True, salida=["frontend/ml/mlp_gestos.json"]),
         Paso("arboles", "Árbol, bosque y boosting de gestos", ["ml/arboles/entrenar_arboles.py"], 5, None,
              gestos=True, salida=["frontend/ml/arbol_gestos.json"]),
+        Paso("piezas", "Reconocimiento de piezas de motores (PointNet con motores generados)",
+             ["ml/piezas/entrenar_piezas.py"], 20, 1, rapido=True, salida=["frontend/ml/piezas_motor.json"]),
         Paso("neuroevolucion", "Algoritmo genético para la red de gestos", ["ml/evolucion/neuroevolucion.py"],
              150, 5, rapido=True, gestos=True, por_defecto=False, salida=["frontend/ml/mlp_gestos.json (si gana)"]),
     ]

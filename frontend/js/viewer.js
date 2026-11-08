@@ -6,10 +6,12 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { crearHistorial } from './historial.js';
+import { reconocer } from './reconocer_piezas.js';
 import { areaSuperficie, colorPieza, crearAzar, puntosEnSuperficie } from './holograma.js';
 import {
   MAXIMO_PIEZAS, MINIMO_PIEZAS, SECCIONES, agruparPorCercania, centroTriangulos, componentesConexas, desplazamiento,
-  encuadreAislada, hayQueSeccionar, nivelDePiezas, nombreMaterial, nombresPorPosicion, prepararPiezas, seccionar,
+  encuadreAislada, hayQueSeccionar, nivelDePiezas, nombreGenerico, nombreMaterial, nombresPorPosicion, prepararPiezas,
+  seccionar,
   siguienteParaDesmontar, textoMedidas, ultimaDesmontada,
 } from './piezas.js';
 
@@ -99,6 +101,10 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = 
 
   // Estado objetivo: los gestos lo modifican y el pivote lo sigue con suavizado.
   const objetivo = { pos: new THREE.Vector3(), rotX: 0, rotY: 0, escala: 1 };
+  // Inercia del giro (rad/s): al soltar las dos palmas girando rápido, el objeto sigue y frena de a poco
+  const giro = { x: 0, y: 0 };
+  const FRENADO_GIRO_S = 0.9;    // constante de tiempo del frenado
+  const detenerGiro = () => { giro.x = 0; giro.y = 0; };
 
   // Piezas del modelo actual: { id, nombre, descripcion, fija, dir, dist, obj, base, actual, libre, ... }
   let piezas = [];
@@ -187,6 +193,14 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = 
 
   renderer.setAnimationLoop(() => {
     const dt = reloj.getDelta();
+    if (giro.x || giro.y) {
+      objetivo.rotY += giro.x * dt;
+      objetivo.rotX = THREE.MathUtils.clamp(objetivo.rotX - giro.y * dt, -Math.PI / 2, Math.PI / 2);
+      const frenado = Math.exp(-dt / FRENADO_GIRO_S);
+      giro.x *= frenado;
+      giro.y *= frenado;
+      if (Math.hypot(giro.x, giro.y) < 0.05) detenerGiro();
+    }
     const a = 1 - Math.exp(-dt * RAPIDEZ_SUAVIZADO);
     vistaActual.centro.lerp(vistaObjetivo.centro, a);
     for (const k of ['distancia', 'azimut', 'elevacion']) vistaActual[k] += (vistaObjetivo[k] - vistaActual[k]) * a;
@@ -590,6 +604,7 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = 
     deshacer() {
       const anterior = historial.deshacer(estadoActual());
       if (!anterior) return false;
+      detenerGiro();
       objetivo.pos.fromArray(anterior.pos);
       ({ rotX: objetivo.rotX, rotY: objetivo.rotY, escala: objetivo.escala } = anterior);
       if (anterior.piezas?.length === objetivosPiezas.length) objetivosPiezas = [...anterior.piezas];
@@ -658,6 +673,7 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = 
 
     // dx, dy en radianes (positivo = el frente del objeto va a la derecha / arriba)
     rotar(dx, dy) {
+      detenerGiro();
       objetivo.rotY += dx;
       objetivo.rotX = THREE.MathUtils.clamp(objetivo.rotX - dy, -Math.PI / 2, Math.PI / 2);
     },
@@ -671,8 +687,17 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = 
         superior: [Math.PI / 2, 0],
       };
       if (!VISTAS[nombre]) return;
+      detenerGiro();
       [objetivo.rotX, objetivo.rotY] = VISTAS[nombre];
     },
+
+    /** Deja el objeto girando a vx, vy rad/s (mismos signos que rotar), frenando solo. */
+    impulsar(vx, vy) {
+      giro.x = vx;
+      giro.y = vy;
+    },
+    detenerGiro,
+    girando: () => Boolean(giro.x || giro.y),
 
     escala: () => objetivo.escala,
 
@@ -682,6 +707,7 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = 
 
     // Vuelve a la vista inicial con el objeto armado
     reiniciar() {
+      detenerGiro();
       Object.assign(vistaObjetivo, copiarVista(vistaInicial));
       objetivo.pos.set(0, 0, 0);
       objetivo.rotX = 0;
@@ -821,7 +847,53 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = 
         id: p.id, nombre: p.nombre, descripcion: p.descripcion, fija: p.fija,
         materiales: p.materiales, medidas: textoMedidas(p.tamano, unidad),
         orden: p.fija ? null : p.orden,
+        reconocida: p.reconocida ?? null,
       };
+    },
+
+    /**
+     * Pone nombre a las piezas de un motor que no lo traen ("Sección superior", "Object_12"), según su forma
+     * (reconocer_piezas.js). red: la de cargarRed(). familia: 'combustion', 'electrico' o 'motor'.
+     * Las piezas con un nombre puesto por el autor del modelo, o de las que la red no está segura, quedan como
+     * están. Devuelve { nombradas, total }, o null si mientras tanto se cargó otro modelo.
+     */
+    async reconocerPiezas(red, familia = 'motor') {
+      const actual = modelo;
+      if (!actual || piezas.length < 2) return { nombradas: 0, total: piezas.length };
+      const renombrables = piezas.map((p) => nombreGenerico(p.nombre));
+      if (!renombrables.some(Boolean)) return { nombradas: 0, total: piezas.length };
+      // Cada malla en coordenadas del modelo, con las piezas armadas (aunque ya se haya empezado a desarmar)
+      const corridas = piezas.map((p) => p.obj.position.clone());
+      piezas.forEach((p) => p.obj.position.copy(p.base));
+      actual.updateMatrixWorld(true);
+      const inversa = actual.matrixWorld.clone().invert();
+      const relativa = new THREE.Matrix4();
+      const fuentes = piezas.map((p) => {
+        const lista = [];
+        p.obj.traverse((m) => {
+          if (!m.isMesh) return;
+          relativa.multiplyMatrices(inversa, m.matrixWorld);
+          lista.push({ xyz: posicionesDe(m.geometry), indices: m.geometry.index?.array ?? null, matriz: relativa.toArray() });
+        });
+        return lista;
+      });
+      piezas.forEach((p, i) => p.obj.position.copy(corridas[i]));
+      actual.updateMatrixWorld(true);
+
+      const nombres = await reconocer(red, fuentes, piezas.map((p) => p.centro),
+        { familia, azar: crearAzar(1), renombrables });
+      if (modelo !== actual) return null;
+      let nombradas = 0;
+      piezas.forEach((p, i) => {
+        const n = nombres[i];
+        if (!n) return;
+        p.reconocida = { clase: n.clase, confianza: n.confianza, nombreOriginal: p.nombre };
+        p.nombre = n.nombre;
+        p.descripcion = n.descripcion;
+        nombradas++;
+      });
+      avisarPiezas();
+      return { nombradas, total: piezas.length };
     },
 
     /** 'solido' (materiales del modelo) o 'holograma' (piezas de colores con aristas y puntos). */

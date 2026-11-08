@@ -15,8 +15,19 @@ const NOMBRES_GESTO = {
   ninguno: '—',
 };
 
-export function mostrarGesto(gesto, confianza, umbral) {
-  $('gesto').textContent = NOMBRES_GESTO[gesto] ?? gesto;
+// Lo que está haciendo el gesto que se aplica (modo: el gesto que los controles aplicaron de verdad)
+const ACCION_MODO = {
+  palma_abierta: 'Palma · desplazar',
+  dos_palmas: 'Dos palmas · rotar',
+  pellizco: 'Pellizco · mover',
+  escala_dos_manos: 'Dos manos · escalar',
+  'señalar': 'Señalar · elegir',
+};
+
+export function mostrarGesto(gesto, confianza, umbral, modo = null) {
+  const accion = ACCION_MODO[modo];
+  $('gesto').textContent = accion ?? NOMBRES_GESTO[gesto] ?? gesto;
+  $('gesto').classList.toggle('con-accion', Boolean(accion));
   $('confianza').textContent = confianza ? `${Math.round(confianza * 100)} %` : '—';
   const barra = $('barra-confianza');
   barra.style.width = `${Math.round(confianza * 100)}%`;
@@ -52,8 +63,8 @@ export function mostrarFps(fps, msProcesamiento) {
   $('camara-fps').textContent = `${fps.toFixed(0)} fps${ms}`;
 }
 
-export function alternarTamanoCamara() {
-  const grande = $('camara').classList.toggle('grande');
+export function alternarTamanoCamara(grande = !$('camara').classList.contains('grande')) {
+  $('camara').classList.toggle('grande', grande);
   $('camara-tamano').setAttribute('aria-label', grande ? 'Achicar el recuadro' : 'Agrandar el recuadro');
   $('camara-tamano').title = grande ? 'Achicar' : 'Agrandar';
 }
@@ -204,6 +215,13 @@ export function mostrarAnalisis(info) {
   $('analisis-descripcion').textContent = info.descripcion || 'Sin descripción.';
   $('analisis-material').textContent = info.materiales?.length ? info.materiales.join(', ') : 'No informado';
   $('analisis-medidas').textContent = info.medidas;
+  // Nombre puesto por la red de reconocimiento de piezas: se aclara que es una estimación
+  const reconocida = $('analisis-reconocida');
+  reconocida.hidden = !info.reconocida;
+  if (info.reconocida) {
+    reconocida.textContent = `Reconocida por su forma (${Math.round(info.reconocida.confianza * 100)} % de confianza). `
+      + `En el modelo se llama «${info.reconocida.nombreOriginal}».`;
+  }
   $('analisis-orden').textContent = info.fija
     ? 'Pieza fija: las demás se desmontan a su alrededor'
     : `Sale en el paso ${info.orden} del desmontaje`;

@@ -43,6 +43,13 @@ def rasgos(piezas, rng, n=PUNTOS):
     """piezas: lista de (posiciones, triángulos) en coordenadas del modelo. Devuelve (puntos [P, n, 3], contexto
     [P, CONTEXTO]) en float32."""
     muestras, areas = zip(*(muestrear(p, t, n, rng) for p, t in piezas))
+    return rasgos_de_muestras(muestras, areas)
+
+
+def rasgos_de_muestras(muestras, areas):
+    """Lo mismo que rasgos(), a partir de los puntos ya muestreados de cada pieza y su área. Separado del muestreo
+    para comparar cuenta por cuenta con la versión del navegador (frontend/js/reconocer_piezas.js)."""
+    muestras = [np.asarray(m, np.float64) for m in muestras]
     todos = np.concatenate(muestras)
     centro, valores, ejes = _ejes(todos)
     escala = float(np.sqrt(valores[0])) * 2 or 1.0
@@ -69,5 +76,5 @@ def rasgos(piezas, rng, n=PUNTOS):
     for i, f in enumerate(firmas):   # piezas "gemelas": misma forma y tamaño (pistones, bielas, bujías…)
         parecidas = np.sum(np.max(np.abs(firmas - f) / (np.abs(f) + 0.05), axis=1) < 0.15) - 1
         contexto[i][-2] = np.log1p(parecidas)
-        contexto[i][-1] = np.log1p(len(piezas))
+        contexto[i][-1] = np.log1p(len(muestras))
     return np.asarray(puntos, np.float32), np.asarray(contexto, np.float32)

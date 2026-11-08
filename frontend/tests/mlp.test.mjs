@@ -2,7 +2,7 @@
 // Los casos los genera el script de entrenamiento con filas de PRUEBA y las probabilidades de Python.
 // Uso (desde la raíz):  node frontend/tests/mlp.test.mjs
 import { readFileSync } from 'node:fs';
-import { crearClasificadorMlp, crearPredictor } from '../js/mlp.js';
+import { crearClasificadorMlp, crearPredictor, crearPropagacion, importanciaPuntos } from '../js/mlp.js';
 import { crearClasificador } from '../js/gestures.js';
 
 let fallas = 0;
@@ -54,6 +54,34 @@ const clasificar = crearClasificador({ mlp: fijo });
 let r;
 for (let i = 0; i < 6; i++) r = clasificar([mano], 1);
 ok(r.gesto === 'victoria' && r.confianza === 1, 'con el MLP, la ventana temporal funciona igual');
+
+// Qué puntos pesan en la decisión (red.html): con manos reales de HaGRID que la red no vio. En un pellizco tiene
+// que pesar el pulgar o el índice; en todas, la muñeca vale 0 (es el origen) y el máximo es 1.
+{
+  const propagar = crearPropagacion(modelo);
+  const { manos } = JSON.parse(readFileSync(new URL('../ml/manos_demo.json', import.meta.url), 'utf8'));
+  const DEDOS_PELLIZCO = new Set([2, 3, 4, 6, 7, 8]);   // pulgar e índice (sin los nudillos de la palma)
+  let pellizcosBien = 0;
+  let pellizcos = 0;
+  for (const { clase, puntos } of manos) {
+    const k = modelo.clases.indexOf(clase);
+    if (k < 0) continue;
+    const imp = importanciaPuntos(propagar, puntos, k);
+    ok(imp.length === 21 && imp[0] === 0 && Math.max(...imp) === 1 && imp.every((v) => v >= 0 && v <= 1),
+      `importancia de 21 puntos entre 0 y 1 (${clase})`);
+    if (clase === 'pellizco') {
+      pellizcos++;
+      const masPesado = imp.indexOf(1);
+      if (DEDOS_PELLIZCO.has(masPesado)) pellizcosBien++;
+    }
+  }
+  ok(pellizcos > 0 && pellizcosBien >= Math.ceil(pellizcos / 2),
+    `en ${pellizcosBien} de ${pellizcos} pellizcos lo que más pesa es el pulgar o el índice`);
+  // No modifica el vector de entrada
+  const v = manos[0].puntos.slice();
+  importanciaPuntos(propagar, v, 0);
+  ok(v.every((x, i) => x === manos[0].puntos[i]), 'calcular la importancia no cambia los puntos de la mano');
+}
 
 console.log(fallas ? `\n${fallas} falla(s)` : '\nTodo OK');
 process.exit(fallas ? 1 : 0);

@@ -5,7 +5,8 @@
 // reglas, y se dibuja todo: la mano como entrada, cada capa con sus activaciones, las conexiones que más aportan
 // (activación × |peso|), la salida softmax y el umbral. Así se ve funcionar aunque el visor use otro clasificador.
 import { escucharDesdeVentana } from './actividad.js';
-import { capasLineales, crearClasificadorMlp, URL_MODELO } from './mlp.js';
+import { capasLineales, crearClasificadorMlp, crearPropagacion, importanciaPuntos, URL_MODELO } from './mlp.js';
+import { aVector, normalizar } from './normalize.js';
 import { NOMBRES as NOMBRES_RASGOS, URL_ARBOL, crearClasificadorArbol } from './arbol.js';
 import { clasificarFotograma } from './gestures.js';
 
@@ -28,6 +29,8 @@ const ARISTAS_POR_CAPA = 34;   // conexiones dibujadas entre dos capas: las que 
 const LARGO_HISTORIA = 240;
 
 const $ = (id) => document.getElementById(id);
+// ?embebido: dentro del recuadro "Red y LLM" del visor, sin la cabecera de navegación
+if (new URLSearchParams(location.search).has('embebido')) document.body.classList.add('embebida');
 const escapar = (t) => String(t).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const pct = (v) => `${Math.round((v ?? 0) * 100)} %`;
 const fmt = (v) => (Math.abs(v) >= 10 ? v.toFixed(0) : v.toFixed(2)).replace('.', ',');
@@ -37,9 +40,28 @@ let red = null;
 let estructura = null;
 let arbol = null;
 let ultimo = null;          // último cuadro del visor
-let salida = null;          // { red, arbol, reglas } calculados para ese cuadro
+let salidas = [];           // una por mano (hasta dos): { puntos, lado, red, arbol, reglas } calculados para ese cuadro
+let salida = null;          // la de la primera mano (la que usan las tarjetas de una sola mano)
+// Colores de cada mano en el diagrama: la primera en cian → verde, la segunda en violeta → rosa
+const PALETAS = [
+  { a: [43, 212, 255], b: [61, 255, 176] },
+  { a: [167, 123, 255], b: [255, 79, 216] },
+];
+const rgba = ([r, g, b], a) => `rgba(${r},${g},${b},${a})`;
+const LADOS = { derecha: 'Mano derecha', izquierda: 'Mano izquierda' };
+const nombreMano = (s, i) => LADOS[s?.lado] ?? `Mano ${i + 1}`;
 let ultimoMensaje = 0;
-const historia = [];
+const historias = [[], []];    // probabilidades de los últimos cuadros, por mano
+let manoDetalle = 0;            // la mano que muestran el árbol y el gráfico en el tiempo (con dos a la vista)
+let propagar = null;            // la red sin el umbral: para calcular qué puntos pesan en la decisión
+// Qué puntos de la mano pesan más: 126 pasadas por la red por mano, así que se recalcula cada 100 ms
+const MS_IMPORTANCIA = 100;
+const importancias = [null, null];
+const ultimaImportancia = [-Infinity, -Infinity];
+const DEDOS = ['pulgar', 'índice', 'medio', 'anular', 'meñique'];
+const NOMBRES_PUNTOS = ['muñeca', ...DEDOS.flatMap((d, i) => (i === 0
+  ? ['base del pulgar', 'nudillo del pulgar', 'articulación del pulgar', 'punta del pulgar']
+  : [`nudillo del ${d}`, `articulación media del ${d}`, `última articulación del ${d}`, `punta del ${d}`]))];
 
 // ---------------------------------------------------------------- lienzo nítido
 
@@ -79,8 +101,9 @@ const mediaAbs = (v, [a, b]) => { let s = 0; for (let i = a; i < b; i++) s += Ma
 
 // ---------------------------------------------------------------- dibujo de la red
 
-function dibujarRed(t) {
-  const lienzo = $('lienzo-red');
+// Dibuja la red aplicada a una mano: sus puntos como entrada, las activaciones de cada capa y la salida
+// importancia: cuánto pesa cada punto de la mano en la decisión (0 a 1): esos puntos se dibujan en ámbar y más grandes
+function dibujarRed(lienzo, puntos, r, t, paleta = PALETAS[0], importancia = null) {
   const W = 1000;
   const H = 512;
   const ctx = nitido(lienzo, W, H);
@@ -92,7 +115,6 @@ function dibujarRed(t) {
     return;
   }
   const { tamanos, grupos: gr, pesos } = estructura;
-  const r = salida?.red;
   const act = r?.activaciones;
   const nCapas = tamanos.length;
   // Posiciones: la mano a la izquierda (entrada), las ocultas en el medio, la salida a la derecha
@@ -102,7 +124,6 @@ function dibujarRed(t) {
   xs[nCapas - 1] = 820;
 
   // Mano: los 21 puntos normalizados (origen en la muñeca, unidad = muñeca → nudillo medio)
-  const puntos = ultimo?.puntos;
   const posMano = [];
   let cx = 0;
   let cy = 0;
@@ -118,7 +139,7 @@ function dibujarRed(t) {
   ctx.fillStyle = 'rgba(143,179,196,0.9)';
   ctx.font = '600 12px system-ui';
   ctx.fillText('ENTRADA · 21 puntos × (x, y, z)', 20, 26);
-  ctx.strokeStyle = 'rgba(43,212,255,0.12)';
+  ctx.strokeStyle = rgba(paleta.a, 0.12);
   ctx.strokeRect(14, 40, 210, 440);
 
   // Posición vertical de cada neurona dibujada
@@ -133,6 +154,7 @@ function dibujarRed(t) {
   // Activación de cada neurona dibujada, normalizada por capa (0 a 1)
   const brillo = gr.map((g, k) => {
     if (!act) return g.map(() => 0);
+    if (k === 0 && importancia) return importancia;   // la entrada: las conexiones salen de los puntos que pesan
     const v = k === nCapas - 1 ? r.probabilidades : g.map((rango) => mediaAbs(act[k], rango));
     if (k === nCapas - 1) return v;
     const max = Math.max(1e-6, ...v);
@@ -152,8 +174,8 @@ function dibujarRed(t) {
     for (const [s, i, j] of top) {
       const a = act ? s / max : 0.08;
       const grad = ctx.createLinearGradient(xDe(k, i), ys[k][i], xDe(k + 1, j), ys[k + 1][j]);
-      grad.addColorStop(0, `rgba(43,212,255,${0.05 + 0.55 * a})`);
-      grad.addColorStop(1, `rgba(61,255,176,${0.05 + 0.55 * a})`);
+      grad.addColorStop(0, rgba(paleta.a, 0.05 + 0.55 * a));
+      grad.addColorStop(1, rgba(paleta.b, 0.05 + 0.55 * a));
       ctx.strokeStyle = grad;
       ctx.lineWidth = 0.6 + 2.2 * a;
       ctx.setLineDash(act && a > 0.35 ? [5, 9] : []);
@@ -183,11 +205,12 @@ function dibujarRed(t) {
       const b = brillo[k][i];
       const x = xDe(k, i);
       const y = ys[k][i];
-      const radio = k === 0 ? 4.5 : salidaFinal ? 9 : 7;
-      const color = salidaFinal ? COLORES[modelo.clases[i]] ?? '#2bd4ff' : '#2bd4ff';
+      const ambar = k === 0 && importancia && act;
+      const radio = k === 0 ? (ambar ? 3 + 8 * b : 4.5) : salidaFinal ? 9 : 7;
+      const color = salidaFinal ? COLORES[modelo.clases[i]] ?? rgba(paleta.a, 1) : ambar ? '#ffb84d' : rgba(paleta.a, 1);
       ctx.shadowColor = color;
       ctx.shadowBlur = act ? 16 * b : 0;
-      ctx.fillStyle = salidaFinal ? color : `rgba(43,212,255,${0.12 + 0.88 * b})`;
+      ctx.fillStyle = salidaFinal ? color : ambar ? `rgba(255,184,77,${0.2 + 0.8 * b})` : rgba(paleta.a, 0.12 + 0.88 * b);
       ctx.globalAlpha = salidaFinal ? 0.25 + 0.75 * b : 1;
       ctx.beginPath();
       ctx.arc(x, y, radio, 0, 2 * Math.PI);
@@ -195,7 +218,7 @@ function dibujarRed(t) {
       ctx.globalAlpha = 1;
       ctx.shadowBlur = 0;
       if (!salidaFinal && k > 0) {
-        ctx.strokeStyle = 'rgba(43,212,255,0.35)';
+        ctx.strokeStyle = rgba(paleta.a, 0.35);
         ctx.lineWidth = 1;
         ctx.stroke();
       }
@@ -223,7 +246,7 @@ function dibujarRed(t) {
     if (!ultima && act) {
       const activas = act[k].filter((v) => v > 1e-6).length / act[k].length;
       ctx.font = '11.5px system-ui';
-      ctx.fillStyle = 'rgba(43,212,255,0.85)';
+      ctx.fillStyle = rgba(paleta.a, 0.85);
       ctx.fillText(`${Math.round(activas * 100)} % activas`, xs[k], 42);
       ctx.font = '600 12px system-ui';
     }
@@ -244,8 +267,8 @@ function dibujarRed(t) {
 
 // ---------------------------------------------------------------- tarjetas
 
-function dibujarAnillo(p, color) {
-  const ctx = nitido($('anillo'), 92, 92);
+function dibujarAnillo(p, color, id = 'anillo') {
+  const ctx = nitido($(id), 92, 92);
   ctx.clearRect(0, 0, 92, 92);
   ctx.lineWidth = 9;
   ctx.strokeStyle = 'rgba(255,255,255,0.08)';
@@ -285,7 +308,7 @@ function actualizarTarjetas() {
   if (r) {
     $('gesto').textContent = NOMBRES[r.gesto] ?? r.gesto;
     $('gesto').style.color = COLORES[r.gesto] ?? 'var(--texto)';
-    $('gesto-detalle').textContent = `la red le da ${pct(r.probabilidad)}`
+    $('gesto-detalle').textContent = `${salidas.length >= 2 ? `${nombreMano(salida, 0).toLowerCase()} · ` : ''}la red le da ${pct(r.probabilidad)}`
       + (ultimo?.demostracion ? ` · mano real de HaGRID etiquetada «${NOMBRES[ultimo.aplicado]}»`
         : `${ultimo?.simulacion ? ' · simulación' : ''} · el visor aplica: ${NOMBRES[ultimo?.aplicado] ?? '—'}`);
     dibujarAnillo(r.probabilidad, COLORES[r.gesto] ?? '#2bd4ff');
@@ -296,18 +319,26 @@ function actualizarTarjetas() {
     dibujarAnillo(0, '#2bd4ff');
   }
   if (modelo) barras($('probabilidades'), modelo.clases, r?.probabilidades, red.umbral, r?.gesto);
+  actualizarSegundaMano();
 
-  // Comparación de los tres clasificadores
-  const filas = [
-    ['mlp', 'Red neuronal', r ? `${NOMBRES[r.gesto] ?? r.gesto} · ${pct(r.probabilidad)}` : '—'],
-    ['arbol', 'Árbol de decisión', salida?.arbol ? `${NOMBRES[salida.arbol.gesto] ?? salida.arbol.gesto} · ${pct(salida.arbol.probabilidad)}` : (arbol ? '—' : 'sin entrenar')],
-    ['reglas', 'Reglas a mano', salida?.reglas ? NOMBRES[salida.reglas] ?? salida.reglas : '—'],
-  ];
-  $('comparacion').innerHTML = filas.map(([m, nombre, valor]) => `<div class="${m === metodo ? 'activo' : ''}">`
-    + `<span>${nombre}${m === metodo ? ' <span class="chip">en uso</span>' : ''}</span><b>${escapar(valor)}</b></div>`).join('');
+  // Comparación de los tres clasificadores: una columna por mano
+  const dos = salidas.length >= 2;
+  const valores = (s) => ({
+    mlp: s?.red ? `${NOMBRES[s.red.gesto] ?? s.red.gesto} · ${pct(s.red.probabilidad)}` : '—',
+    arbol: s?.arbol ? `${NOMBRES[s.arbol.gesto] ?? s.arbol.gesto} · ${pct(s.arbol.probabilidad)}` : (arbol ? '—' : 'sin entrenar'),
+    reglas: s?.reglas ? NOMBRES[s.reglas] ?? s.reglas : '—',
+  });
+  const columnas = (dos ? salidas.slice(0, 2) : [salida]).map(valores);
+  const filas = [['mlp', 'Red neuronal'], ['arbol', 'Árbol de decisión'], ['reglas', 'Reglas a mano']];
+  $('comparacion').classList.toggle('dos', dos);
+  $('comparacion').innerHTML = (dos ? `<div class="encabezado"><span></span>${salidas.slice(0, 2)
+    .map((s, i) => `<b>${escapar(nombreMano(s, i))}</b>`).join('')}</div>` : '')
+    + filas.map(([m, nombre]) => `<div class="${m === metodo ? 'activo' : ''}">`
+      + `<span>${nombre}${m === metodo ? ' <span class="chip">en uso</span>' : ''}</span>`
+      + `${columnas.map((c) => `<b>${escapar(c[m])}</b>`).join('')}</div>`).join('');
 
-  // Camino del árbol
-  const a = salida?.arbol;
+  // Camino del árbol (de la mano elegida, con dos a la vista)
+  const a = (salidas[manoDetalle] ?? salida)?.arbol;
   if (a) {
     $('camino').innerHTML = a.camino.map((c) => `<li><span>${escapar(NOMBRES_RASGOS[c.rasgo] ?? c.rasgo)}</span>`
       + `<span class="mono tenue">${fmt(c.valor)} ${c.menor ? '≤' : '>'} ${fmt(c.umbral)}</span><span></span></li>`).join('')
@@ -317,12 +348,79 @@ function actualizarTarjetas() {
   actualizarPasos();
 }
 
+// Con dos manos: la segunda en "Lo que ve la red" y en las probabilidades, el gesto de cada una arriba de su
+// diagrama y qué hace el visor con las dos juntas
+function actualizarSegundaMano() {
+  const dos = salidas.length >= 2;
+  const s2 = salidas[1];
+  $('redes').classList.toggle('dos', dos);
+  $('leyenda-mano-2').hidden = !dos;
+  $('gesto-grande-2').hidden = !dos;
+  $('probabilidades-titulo').hidden = !dos;
+  $('probabilidades-titulo-2').hidden = !dos;
+  $('probabilidades-2').hidden = !dos;
+  $('red-mano-0').hidden = !salidas[0]?.red;
+  salidas.forEach((s, i) => {
+    if (!s.red) return;
+    const fijacion = textoFijacion(s.importancia);
+    $(`red-mano-${i}`).innerHTML = `${escapar(nombreMano(s, i))} · <b>${escapar(NOMBRES[s.red.gesto] ?? s.red.gesto)}</b> ${pct(s.red.probabilidad)}`
+      + (fijacion ? ` <span class="tenue">· se fija en ${escapar(fijacion)}</span>` : '');
+  });
+  // Árbol y gráfico en el tiempo: con dos manos se elige cuál ver
+  if (!dos) manoDetalle = 0;
+  document.querySelectorAll('.selector-mano').forEach((sel) => {
+    sel.hidden = !dos;
+    sel.querySelectorAll('button').forEach((b) => {
+      const i = Number(b.dataset.mano);
+      b.textContent = nombreMano(salidas[i], i);
+      b.setAttribute('aria-pressed', String(i === manoDetalle));
+    });
+  });
+  if (dos) {
+    $('probabilidades-titulo').textContent = nombreMano(salidas[0], 0);
+    $('probabilidades-titulo-2').textContent = nombreMano(s2, 1);
+    if (s2.red) {
+      $('gesto-2').textContent = NOMBRES[s2.red.gesto] ?? s2.red.gesto;
+      $('gesto-2').style.color = COLORES[s2.red.gesto] ?? 'var(--texto)';
+      $('gesto-detalle-2').textContent = `${nombreMano(s2, 1).toLowerCase()} · la red le da ${pct(s2.red.probabilidad)}`;
+      dibujarAnillo(s2.red.probabilidad, COLORES[s2.red.gesto] ?? '#a77bff', 'anillo-2');
+      if (modelo) barras($('probabilidades-2'), modelo.clases, s2.red.probabilidades, red.umbral, s2.red.gesto);
+    }
+  }
+  const combinada = $('red-combinada');
+  combinada.hidden = !dos;
+  if (dos) combinada.textContent = textoDosManos();
+}
+
+// "la punta del pulgar y la punta del índice": los dos puntos que más pesan en la decisión de la red
+function textoFijacion(importancia) {
+  if (!importancia) return '';
+  const orden = importancia.map((v, j) => [v, j]).filter(([, j]) => j > 0).sort((a, b) => b[0] - a[0]);
+  const [primero, segundo] = orden;
+  // El segundo solo si pesa al menos la mitad que el primero
+  return segundo && segundo[0] >= 0.5 * primero[0]
+    ? `la ${NOMBRES_PUNTOS[primero[1]]} y la ${NOMBRES_PUNTOS[segundo[1]]}`.replace(/la nudillo/g, 'el nudillo')
+    : `la ${NOMBRES_PUNTOS[primero[1]]}`.replace(/la nudillo/g, 'el nudillo');
+}
+
+// Qué hace el visor con las dos manos: según el gesto de cada una con el clasificador que está usando
+function textoDosManos() {
+  const porMano = ultimo?.porMano?.length >= 2 ? ultimo.porMano : salidas.map((s) => s.red?.gesto);
+  const [g1, g2] = porMano;
+  const nombres = salidas.map((s, i) => nombreMano(s, i).toLowerCase());
+  if (g1 === 'pellizco' && g2 === 'pellizco') return 'Las dos manos pellizcan: el visor escala el objeto (separarlas agranda, juntarlas achica).';
+  if (g1 === 'palma_abierta' && g2 === 'palma_abierta') return 'Las dos palmas abiertas: el visor rota el objeto siguiendo el punto medio entre las manos.';
+  return `Cada mano pasa por la misma red. El visor sigue el gesto de la ${nombres[0]} (${NOMBRES[g1] ?? g1 ?? '—'}); `
+    + `la ${nombres[1]} (${NOMBRES[g2] ?? g2 ?? '—'}) cuenta solo con dos pellizcos (escalar) o dos palmas (rotar).`;
+}
+
 function dibujarHistoria() {
   const ctx = nitido($('historia'), 800, 250);
   ctx.clearRect(0, 0, 800, 250);
   ctx.strokeStyle = 'rgba(255,255,255,0.06)';
   ctx.lineWidth = 1;
   for (const y of [0.25, 0.5, 0.75]) { ctx.beginPath(); ctx.moveTo(0, 240 - y * 230); ctx.lineTo(800, 240 - y * 230); ctx.stroke(); }
+  const historia = historias[manoDetalle];
   if (!modelo || !historia.length) return;
   const paso = 800 / LARGO_HISTORIA;
   modelo.clases.forEach((clase, k) => {
@@ -424,17 +522,34 @@ async function mostrarEvolucion() {
 function procesar(m) {
   if (m.tipo !== 'cuadro') return;
   ultimo = m;
-  salida = null;
-  if (m.puntos && red) {
-    const puntos = Array.from({ length: 21 }, (_, j) => ({ x: m.puntos[3 * j], y: m.puntos[3 * j + 1], z: m.puntos[3 * j + 2] }));
-    salida = {
-      red: red(puntos, 1),
+  // El visor manda hasta dos manos (puntosManos); uno anterior o la demostración, solo "puntos"
+  const vectores = m.puntosManos?.length ? m.puntosManos : m.puntos ? [m.puntos] : [];
+  const ahora = performance.now();
+  salidas = red ? vectores.slice(0, 2).map((v, i) => {
+    const puntos = Array.from({ length: 21 }, (_, j) => ({ x: v[3 * j], y: v[3 * j + 1], z: v[3 * j + 2] }));
+    const salidaRed = red(puntos, 1);
+    if (propagar && ahora - ultimaImportancia[i] > MS_IMPORTANCIA) {
+      // Respecto de la clase más probable (aunque no llegue al umbral)
+      const p = salidaRed.probabilidades;
+      const clase = p.indexOf(Math.max(...p));
+      importancias[i] = importanciaPuntos(propagar, aVector(normalizar(puntos, 1)), clase);
+      ultimaImportancia[i] = ahora;
+    }
+    return {
+      puntos: v,
+      lado: m.lados?.[i] ?? null,
+      red: salidaRed,
       arbol: arbol ? arbol(puntos, 1) : null,
       reglas: clasificarFotograma(puntos, 1),
+      importancia: importancias[i],
     };
-  }
-  historia.push(salida?.red?.probabilidades ?? null);
-  if (historia.length > LARGO_HISTORIA) historia.shift();
+  }) : [];
+  for (let i = salidas.length; i < 2; i++) { importancias[i] = null; ultimaImportancia[i] = -Infinity; }
+  salida = salidas[0] ?? null;
+  historias.forEach((h, i) => {
+    h.push(salidas[i]?.red?.probabilidades ?? null);
+    if (h.length > LARGO_HISTORIA) h.shift();
+  });
 }
 
 // Demostración: sin un visor abierto, la vista recorre manos REALES de HaGRID (frontend/ml/manos_demo.json:
@@ -453,6 +568,14 @@ function cuadroDemo(t) {
     aplicado: manosDemo[k].clase, puntos: a.map((v, e) => v * (1 - mezcla) + b[e] * mezcla) };
 }
 
+// Una red por mano: la segunda solo se muestra (y se dibuja) con dos manos a la vista
+function dibujarRedes(t) {
+  dibujarRed($('lienzo-red'), salidas[0]?.puntos ?? null, salidas[0]?.red ?? null, t, PALETAS[0], salidas[0]?.importancia);
+  const segunda = $('lienzo-red-2').closest('figure');
+  segunda.hidden = salidas.length < 2;
+  if (salidas.length >= 2) dibujarRed($('lienzo-red-2'), salidas[1].puntos, salidas[1].red, t, PALETAS[1], salidas[1].importancia);
+}
+
 let tarjetasPendientes = false;
 let ultimaDemo = 0;
 function bucle(t) {
@@ -465,7 +588,7 @@ function bucle(t) {
   $('conexion').classList.toggle('conectada', conectado);
   $('conexion').querySelector('span').textContent = conectado ? 'Conectado al visor'
     : 'Demostración con manos reales de HaGRID · abrí el visor en otra pestaña para ver la tuya';
-  dibujarRed(t);
+  dibujarRedes(t);
   if (tarjetasPendientes) {
     tarjetasPendientes = false;
     actualizarTarjetas();
@@ -479,6 +602,7 @@ async function iniciar() {
   try {
     modelo = await (await fetch(URL_MODELO)).json();
     red = crearClasificadorMlp(modelo);
+    propagar = crearPropagacion(modelo);
     estructura = prepararEstructura(modelo);
   } catch (err) {
     console.error(err);
@@ -499,5 +623,13 @@ async function iniciar() {
   });
   requestAnimationFrame(bucle);
 }
+
+// Elegir qué mano muestran el árbol y el gráfico en el tiempo
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('.selector-mano button[data-mano]');
+  if (!b) return;
+  manoDetalle = Number(b.dataset.mano);
+  tarjetasPendientes = true;
+});
 
 iniciar();

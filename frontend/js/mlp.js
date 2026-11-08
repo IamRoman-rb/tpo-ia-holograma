@@ -148,3 +148,39 @@ export function capasLineales(modelo) {
   if (modelo.version === 3) return [modelo.entrada_capa, ...modelo.bloques, modelo.salida].map(leerLineal);
   return leerCapas(modelo);
 }
+
+/**
+ * Cuánto pesa cada uno de los 21 puntos de la mano en la decisión de la red por la clase `clase` (para dibujarlo
+ * en red.html). Es la sensibilidad del margen de esa clase (su logit menos el logsumexp de las demás: no se satura
+ * cuando la probabilidad ya es casi 100 %) al mover el punto, con diferencias finitas centradas en x, y, z.
+ * La muñeca queda en 0: es el origen de la normalización y en el entrenamiento siempre vale (0, 0, 0).
+ * Devuelve 21 valores entre 0 y 1 (1 = el punto que más pesa).
+ */
+export function importanciaPuntos(propagar, vector, clase, eps = 0.05) {
+  const v = Array.from(vector);
+  const margen = () => {
+    const z = propagar(v).activaciones.at(-1);
+    let maximo = -Infinity;
+    for (let i = 0; i < z.length; i++) if (i !== clase && z[i] > maximo) maximo = z[i];
+    let suma = 0;
+    for (let i = 0; i < z.length; i++) if (i !== clase) suma += Math.exp(z[i] - maximo);
+    return z[clase] - (maximo + Math.log(suma));
+  };
+  const importancia = [0];
+  for (let j = 1; j < 21; j++) {
+    let s = 0;
+    for (let e = 0; e < 3; e++) {
+      const k = 3 * j + e;
+      const original = v[k];
+      v[k] = original + eps;
+      const mas = margen();
+      v[k] = original - eps;
+      const menos = margen();
+      v[k] = original;
+      s += ((mas - menos) / (2 * eps)) ** 2;
+    }
+    importancia.push(Math.sqrt(s));
+  }
+  const maximo = Math.max(1e-9, ...importancia);
+  return importancia.map((x) => x / maximo);
+}

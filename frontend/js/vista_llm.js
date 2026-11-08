@@ -11,6 +11,8 @@ import { interpretarPedido, salud } from './api.js';
 import { nombreAccion, nombreMotor } from './motores.js';
 
 const $ = (id) => document.getElementById(id);
+// ?embebido: dentro del recuadro "Red y LLM" del visor, sin la cabecera de navegación
+if (new URLSearchParams(location.search).has('embebido')) document.body.classList.add('embebida');
 const escapar = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const pct = (v) => `${Math.round((v ?? 0) * 100)} %`;
 const ms = (v) => (v == null ? '—' : v >= 1000 ? `${(v / 1000).toFixed(1).replace('.', ',')} s` : `${Math.round(v)} ms`);

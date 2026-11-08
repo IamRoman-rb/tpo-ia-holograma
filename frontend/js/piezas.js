@@ -473,3 +473,24 @@ export function crearSeleccionPorPermanencia(ms = 800) {
     return { progreso, elegida: null };
   };
 }
+
+// ---------------------------------------------------------------- nombres que no dicen qué es la pieza
+
+// Palabras de los nombres que ponen los programas de 3D (o el visor) y no dicen qué es la pieza
+const GENERICAS = new Set(['pieza', 'seccion', 'grupo', 'partes', 'parte', 'part', 'object', 'obj', 'objeto', 'mesh',
+  'malla', 'node', 'nodo', 'group', 'cube', 'cylinder', 'sphere', 'plane', 'torus', 'cone', 'circle', 'polysurface',
+  'pcube', 'pcylinder', 'psphere', 'geometry', 'geom', 'default', 'body', 'solid', 'component', 'untitled', 'model',
+  'root', 'scene', 'material', 'mat', 'shape', 'instance', 'primitive', 'box', 'superior', 'inferior', 'delantera',
+  'trasera', 'derecha', 'izquierda', 'central', 'sketchfab', 'gltf', 'defaultmaterial', 'lambert', 'blinn', 'phong',
+  'cuerpo', 'body', 'brep', 'face', 'surface', 'nurbs', 'curve', 'merged', 'combined', 'join', 'joined']);
+
+/**
+ * true si el nombre de una pieza no dice qué es: los que pone el visor ("Sección superior izquierda 2",
+ * "Grupo 3 (12 partes)") o los programas de 3D ("Object_12", "Cylinder.004", "polySurface37"). Esas son las que
+ * puede nombrar el reconocimiento de piezas; un nombre puesto por el autor ("Piston", "Carburetor") se respeta.
+ */
+export function nombreGenerico(nombre = '') {
+  const palabras = nombre.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+    .replace(/([a-z])(\d)/g, '$1 $2').split(/[^a-z]+/).filter(Boolean);
+  return palabras.every((p) => GENERICAS.has(p) || p.length <= 1);
+}
