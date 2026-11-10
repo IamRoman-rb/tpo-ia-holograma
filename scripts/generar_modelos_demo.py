@@ -143,10 +143,11 @@ def main():
                        "url": f"models/{id_}.glb", "origen": "catalogo"})
         print(f"{ruta.name:28s} {ruta.stat().st_size / 1024:7.1f} KB · {len(modelo.piezas)} piezas")
     indice += motores_del_catalogo()
-    # Conservar los modelos generados por IA que ya estaban en el catálogo
+    # Conservar las autopartes (scripts/generar_autopartes.py) y los modelos generados por IA que ya estaban
     ruta_indice = SALIDA / "catalogo.json"
     if ruta_indice.exists():
         anteriores = json.loads(ruta_indice.read_text(encoding="utf-8"))
+        indice += [it for it in anteriores if it.get("categoria") == "autoparte"]
         indice += [it for it in anteriores if it.get("origen") == "generado"]
     with open(ruta_indice, "w", encoding="utf-8") as f:
         json.dump(indice, f, ensure_ascii=False, indent=2)

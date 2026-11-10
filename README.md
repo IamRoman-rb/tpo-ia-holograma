@@ -258,6 +258,7 @@ Para usar Colab, se corre `backend/generador_colab/servidor_generacion.ipynb` en
 
 ```bash
 python scripts/generar_modelos_demo.py   # regenera frontend/models/*.glb y catalogo.json
+python scripts/generar_autopartes.py     # 14 autopartes mecánicas desarmables en frontend/models/autopartes/
 node frontend/tests/gestos.test.mjs      # pruebas de normalización, gestos y búsqueda local
 node frontend/tests/piezas.test.mjs      # orden y recorrido del desarmado, análisis de una pieza
 node frontend/tests/mlp.test.mjs         # el MLP en JavaScript da lo mismo que en Python
