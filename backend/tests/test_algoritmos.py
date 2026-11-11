@@ -148,3 +148,17 @@ def test_consenso_decide_si_preguntar(monkeypatch):
         assert (r["confianza"] < r["umbral_confirmacion"]) == pregunta
         assert traza["decision"].startswith("preguntar" if pregunta else "ejecutar")
         assert len(traza["votos"]) == 2
+
+
+def test_consenso_sin_los_motores_fuertes_deja_seguir_la_cadena(monkeypatch):
+    # Con los pesos ajustados, si solo responden Naive Bayes y las reglas, el consenso no decide
+    monkeypatch.setattr(consenso, "pesos_guardados",
+                        lambda: {"pesos": {"transformer": 0.47, "llm_propio": 0.31, "bayes": 0.19, "reglas": 0.0}})
+    monkeypatch.setattr(consenso, "correr_motores",
+                        lambda f, m=None: {"bayes": _salida("explotar", 0.4), "reglas": _salida("mostrar", 0.7)})
+    with pytest.raises(RuntimeError, match="faltan los motores"):
+        consenso.interpretar_consenso("mostrame un freno a disco")
+    # Con el transformer presente ya cubre lo suficiente
+    monkeypatch.setattr(consenso, "correr_motores",
+                        lambda f, m=None: {"transformer": _salida("mostrar", 0.95), "bayes": _salida("explotar", 0.4)})
+    assert consenso.interpretar_consenso("mostrame un freno a disco")["accion"] == "mostrar"

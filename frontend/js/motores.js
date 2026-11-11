@@ -11,6 +11,7 @@ export const MOTORES_PEDIDOS = {
   modelo: { corto: 'modelo propio', largo: 'el intérprete con embeddings' },
   bayes: { corto: 'Naive Bayes', largo: 'el modelo estadístico Naive Bayes' },
   reglas: { corto: 'reglas', largo: 'las reglas' },
+  catalogo: { corto: 'nombre del catálogo', largo: 'el atajo por nombre: la frase es justo un objeto del catálogo' },
   automatico: { corto: 'automático', largo: 'la cadena automática (Claude, si hay, y si no el consenso)' },
 };
 

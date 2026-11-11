@@ -15,6 +15,7 @@ from pathlib import Path
 
 import anthropic
 
+import atajo_catalogo
 import intent_modelo
 from schemas import ESQUEMA_INTENCION
 from texto import normalizar
@@ -82,6 +83,10 @@ def interpretar(frase: str, motor: str | None = None) -> dict:
     En "traza" queda lo que pasó (modelo, tokens, tiempo o el error): lo muestra el panel de actividad."""
     global _claude_pausado_hasta
     traza = {"modelo": MODELO}
+    # Solo el nombre de algo del catálogo ("Freno a disco"): se muestra sin consultar a ningún motor
+    if motor in (None, "automatico") and (atajo := atajo_catalogo.interpretar_atajo(frase)):
+        return {**atajo, "motor": "catalogo",
+                "traza": {"atajo": f"la frase es el nombre de «{atajo['objeto']}» en el catálogo"}}
     if motor in (None, "automatico", "claude"):
         if time.monotonic() < _claude_pausado_hasta:
             traza["error"] = "Claude en pausa por un error anterior (sin crédito o sin clave)"
