@@ -35,8 +35,12 @@ export function buscarLocal(frase, items) {
     for (const variante of [item.nombre, ...item.sinonimos]) {
       const p = palabras(variante);
       if (p.length === 0) continue;
-      const sim = p.filter((w) => pedido.has(w)).length / p.length;
-      if (!mejor || sim > mejor.similitud) mejor = { item, similitud: sim };
+      const enComun = p.filter((w) => pedido.has(w)).length;
+      const sim = enComun / p.length;
+      // A igual proporción gana el que cubre más palabras del pedido: "motor de arranque" le gana a "motor"
+      if (!mejor || sim > mejor.similitud || (sim === mejor.similitud && enComun > mejor.enComun)) {
+        mejor = { item, similitud: sim, enComun };
+      }
     }
   }
   return mejor && mejor.similitud >= UMBRAL_LOCAL ? mejor : null;

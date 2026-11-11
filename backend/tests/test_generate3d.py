@@ -89,10 +89,11 @@ def test_api_genera_y_despues_lo_encuentra_en_el_catalogo(entorno, monkeypatch, 
     main.limite_generacion._pedidos.clear()
     cliente = TestClient(main.app)
 
-    r = cliente.post("/object", json={"frase": "bomba de agua"}).json()
-    assert r["origen"] == "generado" and r["id"] == "gen_bomba_de_agua"
+    # un objeto que no está en el catálogo propio (la bomba de agua ya es una autoparte del catálogo)
+    r = cliente.post("/object", json={"frase": "silla de oficina"}).json()
+    assert r["origen"] == "generado" and r["id"] == "gen_silla_de_oficina"
 
-    r = cliente.post("/object", json={"frase": "bomba de agua"}).json()
+    r = cliente.post("/object", json={"frase": "silla de oficina"}).json()
     assert r["origen"] == "generado" and r["metodo"] == "palabras"   # reutilizado desde el catálogo
     assert entorno["servidor"]["llamadas"] == 1
 

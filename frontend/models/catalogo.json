@@ -240,5 +240,216 @@
     "descripcion": "Motor sin escobillas de rotor exterior, como el de los drones.",
     "url": "models/motores/electrico_brushless_0p3_patas.glb",
     "origen": "catalogo"
+  },
+  {
+    "id": "freno_disco",
+    "nombre": "Freno a disco",
+    "sinonimos": [
+      "freno de disco",
+      "disco de freno",
+      "pinza de freno",
+      "caliper",
+      "frenos del auto",
+      "freno delantero"
+    ],
+    "descripcion": "Freno a disco con pinza, pastillas, soporte, disco ventilado y maza.",
+    "url": "models/autopartes/freno_disco.glb",
+    "origen": "catalogo",
+    "categoria": "autoparte"
+  },
+  {
+    "id": "amortiguador_mcpherson",
+    "nombre": "Amortiguador McPherson",
+    "sinonimos": [
+      "amortiguador",
+      "suspensión",
+      "suspension mcpherson",
+      "espiral",
+      "resorte de suspensión",
+      "columna mcpherson"
+    ],
+    "descripcion": "Columna de suspensión McPherson: amortiguador, espiral, copela, tope y fuelle.",
+    "url": "models/autopartes/amortiguador_mcpherson.glb",
+    "origen": "catalogo",
+    "categoria": "autoparte"
+  },
+  {
+    "id": "embrague",
+    "nombre": "Kit de embrague",
+    "sinonimos": [
+      "embrague",
+      "clutch",
+      "disco de embrague",
+      "plato de embrague",
+      "volante motor",
+      "crapodina"
+    ],
+    "descripcion": "Embrague con volante motor, disco, plato de presión, diafragma y rulemán de empuje.",
+    "url": "models/autopartes/embrague.glb",
+    "origen": "catalogo",
+    "categoria": "autoparte"
+  },
+  {
+    "id": "turbocompresor",
+    "nombre": "Turbocompresor",
+    "sinonimos": [
+      "turbo",
+      "turbocompresor",
+      "turbina de auto",
+      "turbo del motor",
+      "sobrealimentador"
+    ],
+    "descripcion": "Turbo con carcasas de turbina y compresor, sus ruedas, eje, cuerpo central y wastegate.",
+    "url": "models/autopartes/turbocompresor.glb",
+    "origen": "catalogo",
+    "categoria": "autoparte"
+  },
+  {
+    "id": "alternador",
+    "nombre": "Alternador",
+    "sinonimos": [
+      "alternador",
+      "generador del auto",
+      "dinamo",
+      "cargador de batería del auto"
+    ],
+    "descripcion": "Alternador con polea, ventilador, rotor de garras, estator, regulador y tapas.",
+    "url": "models/autopartes/alternador.glb",
+    "origen": "catalogo",
+    "categoria": "autoparte"
+  },
+  {
+    "id": "motor_arranque",
+    "nombre": "Motor de arranque",
+    "sinonimos": [
+      "motor de arranque",
+      "burro de arranque",
+      "arranque",
+      "burro",
+      "starter"
+    ],
+    "descripcion": "Motor de arranque con automático, inducido, escobillas, piñón bendix y carcasa.",
+    "url": "models/autopartes/motor_arranque.glb",
+    "origen": "catalogo",
+    "categoria": "autoparte"
+  },
+  {
+    "id": "bomba_agua",
+    "nombre": "Bomba de agua",
+    "sinonimos": [
+      "bomba de agua",
+      "bomba de refrigerante",
+      "bomba del radiador",
+      "water pump"
+    ],
+    "descripcion": "Bomba de agua con polea, eje y rodamiento, impulsor, junta y cuerpo.",
+    "url": "models/autopartes/bomba_agua.glb",
+    "origen": "catalogo",
+    "categoria": "autoparte"
+  },
+  {
+    "id": "piston_biela",
+    "nombre": "Pistón y biela",
+    "sinonimos": [
+      "pistón",
+      "biela",
+      "pistón con biela",
+      "conjunto pistón biela",
+      "aros de pistón"
+    ],
+    "descripcion": "Pistón con aros, perno y seguros, biela, tapa, bulones y cojinetes.",
+    "url": "models/autopartes/piston_biela.glb",
+    "origen": "catalogo",
+    "categoria": "autoparte"
+  },
+  {
+    "id": "bujia",
+    "nombre": "Bujía",
+    "sinonimos": [
+      "bujía",
+      "bujia de encendido",
+      "chispa",
+      "spark plug"
+    ],
+    "descripcion": "Bujía de encendido: terminal, aislador cerámico, cuerpo roscado, electrodos y arandela.",
+    "url": "models/autopartes/bujia.glb",
+    "origen": "catalogo",
+    "categoria": "autoparte"
+  },
+  {
+    "id": "rueda",
+    "nombre": "Rueda",
+    "sinonimos": [
+      "rueda",
+      "neumático",
+      "goma del auto",
+      "cubierta",
+      "llanta",
+      "rueda de auto"
+    ],
+    "descripcion": "Rueda con neumático, llanta de aleación, tuercas, válvula y maza.",
+    "url": "models/autopartes/rueda.glb",
+    "origen": "catalogo",
+    "categoria": "autoparte"
+  },
+  {
+    "id": "diferencial",
+    "nombre": "Diferencial",
+    "sinonimos": [
+      "diferencial",
+      "puente trasero",
+      "corona y piñón",
+      "palier trasero",
+      "satélites"
+    ],
+    "descripcion": "Diferencial con piñón de ataque, corona, satélites, planetarios, semiejes y carcasa.",
+    "url": "models/autopartes/diferencial.glb",
+    "origen": "catalogo",
+    "categoria": "autoparte"
+  },
+  {
+    "id": "junta_homocinetica",
+    "nombre": "Junta homocinética",
+    "sinonimos": [
+      "junta homocinética",
+      "homocinética",
+      "punta de eje",
+      "palier",
+      "semieje delantero",
+      "junta cv"
+    ],
+    "descripcion": "Junta homocinética de bolas con campana, jaula, nuez, bolas, fuelle y semieje.",
+    "url": "models/autopartes/junta_homocinetica.glb",
+    "origen": "catalogo",
+    "categoria": "autoparte"
+  },
+  {
+    "id": "arbol_levas",
+    "nombre": "Árbol de levas y válvulas",
+    "sinonimos": [
+      "árbol de levas",
+      "levas",
+      "distribución",
+      "válvulas del motor",
+      "tren de válvulas",
+      "botadores"
+    ],
+    "descripcion": "Árbol de levas de 4 cilindros con polea, botadores, resortes y 8 válvulas.",
+    "url": "models/autopartes/arbol_levas.glb",
+    "origen": "catalogo",
+    "categoria": "autoparte"
+  },
+  {
+    "id": "filtro_aceite",
+    "nombre": "Filtro de aceite",
+    "sinonimos": [
+      "filtro de aceite",
+      "filtro del motor",
+      "oil filter"
+    ],
+    "descripcion": "Filtro de aceite con carcasa, elemento de papel, válvula antidrenaje, junta y base.",
+    "url": "models/autopartes/filtro_aceite.glb",
+    "origen": "catalogo",
+    "categoria": "autoparte"
   }
 ]

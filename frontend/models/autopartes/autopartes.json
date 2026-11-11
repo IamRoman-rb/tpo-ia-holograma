@@ -1,0 +1,1126 @@
+[
+  {
+    "id": "freno_disco",
+    "nombre": "Freno a disco",
+    "sistema": "frenos",
+    "url": "models/autopartes/freno_disco.glb",
+    "piezas": [
+      {
+        "pieza": "pinza",
+        "nombre": "Pinza de freno (caliper)",
+        "clase": "pinza",
+        "descripcion": "Abraza el disco; su pistón hidráulico empuja las pastillas cuando se pisa el freno.",
+        "orden": 1,
+        "direccion": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "pastilla_exterior",
+        "nombre": "Pastilla exterior",
+        "clase": "pastilla",
+        "descripcion": "Material de fricción que roza la cara de afuera del disco.",
+        "orden": 2,
+        "direccion": [
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "pieza": "pastilla_interior",
+        "nombre": "Pastilla interior",
+        "clase": "pastilla",
+        "descripcion": "Material de fricción que roza la cara de adentro del disco.",
+        "orden": 3,
+        "direccion": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "pieza": "soporte_pinza",
+        "nombre": "Soporte de la pinza",
+        "clase": "soporte_pinza",
+        "descripcion": "Puente atornillado a la mangueta que guía la pinza.",
+        "orden": 4,
+        "direccion": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "disco",
+        "nombre": "Disco de freno ventilado",
+        "clase": "disco",
+        "descripcion": "Gira con la rueda; las aletas internas lo ventilan para que no se recaliente.",
+        "orden": 5,
+        "direccion": [
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "pieza": "maza",
+        "nombre": "Maza de rueda con espárragos",
+        "clase": "maza",
+        "descripcion": "Gira sobre su rodamiento y lleva los cinco espárragos donde se ajusta la rueda.",
+        "orden": null,
+        "direccion": null
+      }
+    ]
+  },
+  {
+    "id": "amortiguador_mcpherson",
+    "nombre": "Amortiguador McPherson",
+    "sistema": "suspension",
+    "url": "models/autopartes/amortiguador_mcpherson.glb",
+    "piezas": [
+      {
+        "pieza": "tuerca_superior",
+        "nombre": "Tuerca del vástago",
+        "clase": "tuerca",
+        "descripcion": "Fija el vástago del amortiguador a la copela.",
+        "orden": 1,
+        "direccion": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "copela",
+        "nombre": "Copela (soporte superior)",
+        "clase": "copela",
+        "descripcion": "Fija el conjunto a la carrocería; tiene un rodamiento para que la rueda pueda girar al doblar.",
+        "orden": 2,
+        "direccion": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "plato_superior",
+        "nombre": "Plato superior del resorte",
+        "clase": "plato_resorte",
+        "descripcion": "Asiento de arriba del espiral.",
+        "orden": 3,
+        "direccion": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "resorte",
+        "nombre": "Resorte helicoidal (espiral)",
+        "clase": "resorte",
+        "descripcion": "Sostiene el peso del auto; el amortiguador frena sus rebotes.",
+        "orden": 4,
+        "direccion": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "guardapolvo",
+        "nombre": "Fuelle guardapolvo",
+        "clase": "guardapolvo",
+        "descripcion": "Protege el vástago del barro y la tierra.",
+        "orden": 5,
+        "direccion": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "tope",
+        "nombre": "Tope de rebote",
+        "clase": "tope",
+        "descripcion": "Taco de goma que evita el golpe a fondo de la suspensión.",
+        "orden": 6,
+        "direccion": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "amortiguador",
+        "nombre": "Amortiguador con base",
+        "clase": "amortiguador",
+        "descripcion": "Cilindro con aceite que frena el movimiento del resorte. Abajo se abulona a la mangueta.",
+        "orden": null,
+        "direccion": null
+      }
+    ]
+  },
+  {
+    "id": "embrague",
+    "nombre": "Kit de embrague",
+    "sistema": "transmision",
+    "url": "models/autopartes/embrague.glb",
+    "piezas": [
+      {
+        "pieza": "ruleman_empuje",
+        "nombre": "Rulemán de empuje (crapodina)",
+        "clase": "ruleman_empuje",
+        "descripcion": "Lo mueve el pedal de embrague y aprieta los dedos del diafragma.",
+        "orden": 1,
+        "direccion": [
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "pieza": "bulones_tapa",
+        "nombre": "Bulones de la tapa",
+        "clase": "bulones",
+        "descripcion": "Seis bulones que fijan el plato de presión al volante.",
+        "orden": 2,
+        "direccion": [
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "pieza": "diafragma",
+        "nombre": "Tapa y resorte de diafragma",
+        "clase": "diafragma",
+        "descripcion": "La tapa sujeta el resorte de diafragma: sus dedos hacen de palanca para aflojar el plato.",
+        "orden": 3,
+        "direccion": [
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "pieza": "plato_presion",
+        "nombre": "Plato de presión",
+        "clase": "plato_presion",
+        "descripcion": "Aprieta el disco contra el volante: así el motor queda conectado con la caja de cambios.",
+        "orden": 4,
+        "direccion": [
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "pieza": "disco_embrague",
+        "nombre": "Disco de embrague",
+        "clase": "disco_embrague",
+        "descripcion": "Disco con forro de fricción y resortes amortiguadores; su centro estriado mueve la caja de cambios.",
+        "orden": 5,
+        "direccion": [
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "pieza": "volante",
+        "nombre": "Volante motor",
+        "clase": "volante",
+        "descripcion": "Disco pesado atornillado al cigüeñal; su corona dentada la usa el motor de arranque.",
+        "orden": null,
+        "direccion": null
+      }
+    ]
+  },
+  {
+    "id": "turbocompresor",
+    "nombre": "Turbocompresor",
+    "sistema": "motor",
+    "url": "models/autopartes/turbocompresor.glb",
+    "piezas": [
+      {
+        "pieza": "actuador_wastegate",
+        "nombre": "Actuador de la wastegate",
+        "clase": "actuador_wastegate",
+        "descripcion": "Cápsula que abre la válvula de descarga cuando la presión de soplado llega al límite.",
+        "orden": 1,
+        "direccion": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "pieza": "carcasa_compresor",
+        "nombre": "Carcasa del compresor (caracol frío)",
+        "clase": "carcasa_compresor",
+        "descripcion": "Junta el aire comprimido por la rueda y lo manda al motor.",
+        "orden": 2,
+        "direccion": [
+          1.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "rueda_compresor",
+        "nombre": "Rueda del compresor",
+        "clase": "rueda_compresor",
+        "descripcion": "Aspira aire fresco y lo comprime; gira a más de 100.000 rpm.",
+        "orden": 3,
+        "direccion": [
+          1.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "carcasa_turbina",
+        "nombre": "Carcasa de la turbina (caracol caliente)",
+        "clase": "carcasa_turbina",
+        "descripcion": "Recibe los gases de escape y los hace girar contra la rueda de la turbina.",
+        "orden": 4,
+        "direccion": [
+          -1.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "rueda_turbina",
+        "nombre": "Rueda de la turbina con eje",
+        "clase": "rueda_turbina",
+        "descripcion": "La mueven los gases de escape; el eje la une a la rueda del compresor.",
+        "orden": 5,
+        "direccion": [
+          -1.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "cuerpo_central",
+        "nombre": "Cuerpo central (CHRA)",
+        "clase": "cuerpo_central",
+        "descripcion": "Aloja los cojinetes del eje; lo lubrica y enfría el aceite del motor.",
+        "orden": null,
+        "direccion": null
+      }
+    ]
+  },
+  {
+    "id": "alternador",
+    "nombre": "Alternador",
+    "sistema": "electrico",
+    "url": "models/autopartes/alternador.glb",
+    "piezas": [
+      {
+        "pieza": "tuerca_polea",
+        "nombre": "Tuerca de la polea",
+        "clase": "tuerca",
+        "descripcion": "Fija la polea al eje del rotor.",
+        "orden": 1,
+        "direccion": [
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "pieza": "polea",
+        "nombre": "Polea poli-V",
+        "clase": "polea",
+        "descripcion": "La mueve la correa del motor.",
+        "orden": 2,
+        "direccion": [
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "pieza": "ventilador",
+        "nombre": "Ventilador",
+        "clase": "ventilador",
+        "descripcion": "Refrigera el alternador aspirando aire a través de las tapas.",
+        "orden": 3,
+        "direccion": [
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "pieza": "regulador",
+        "nombre": "Regulador y rectificador",
+        "clase": "regulador",
+        "descripcion": "Convierte la corriente alterna en continua y mantiene la tensión en unos 14 V.",
+        "orden": 4,
+        "direccion": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "pieza": "tapa_trasera",
+        "nombre": "Tapa trasera",
+        "clase": "tapa",
+        "descripcion": "Carcasa de aluminio con el rodamiento trasero.",
+        "orden": 5,
+        "direccion": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "pieza": "estator",
+        "nombre": "Estator",
+        "clase": "estator",
+        "descripcion": "Núcleo de chapas con los bobinados de cobre donde se genera la corriente.",
+        "orden": 6,
+        "direccion": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "pieza": "rotor",
+        "nombre": "Rotor de garras con eje",
+        "clase": "rotor",
+        "descripcion": "Electroimán que gira dentro del estator: sus garras alternan polos norte y sur.",
+        "orden": 7,
+        "direccion": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "pieza": "tapa_delantera",
+        "nombre": "Tapa delantera",
+        "clase": "tapa_delantera",
+        "descripcion": "Carcasa con la oreja de montaje y el rodamiento delantero; se abulona al motor.",
+        "orden": null,
+        "direccion": null
+      }
+    ]
+  },
+  {
+    "id": "motor_arranque",
+    "nombre": "Motor de arranque",
+    "sistema": "electrico",
+    "url": "models/autopartes/motor_arranque.glb",
+    "piezas": [
+      {
+        "pieza": "solenoide",
+        "nombre": "Automático (solenoide)",
+        "clase": "solenoide",
+        "descripcion": "Electroimán que empuja el piñón contra la corona y cierra el paso de corriente al motor.",
+        "orden": 1,
+        "direccion": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "tapa_trasera",
+        "nombre": "Tapa trasera",
+        "clase": "tapa",
+        "descripcion": "Cierra el motor y sostiene el porta-escobillas.",
+        "orden": 2,
+        "direccion": [
+          -1.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "escobillas",
+        "nombre": "Escobillas",
+        "clase": "escobillas",
+        "descripcion": "Carbones que llevan la corriente al colector del inducido.",
+        "orden": 3,
+        "direccion": [
+          -1.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "inducido",
+        "nombre": "Inducido",
+        "clase": "inducido",
+        "descripcion": "Rotor bobinado que gira al recibir corriente; el colector de cobre reparte la corriente.",
+        "orden": 4,
+        "direccion": [
+          -1.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "pinon_bendix",
+        "nombre": "Piñón (bendix)",
+        "clase": "pinon_bendix",
+        "descripcion": "Engrana con la corona del volante para hacer girar el motor y se desacopla cuando arranca.",
+        "orden": 5,
+        "direccion": [
+          1.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "carcasa",
+        "nombre": "Carcasa y nariz",
+        "clase": "carcasa",
+        "descripcion": "Yugo con los imanes y nariz con la brida que se abulona a la caja.",
+        "orden": null,
+        "direccion": null
+      }
+    ]
+  },
+  {
+    "id": "bomba_agua",
+    "nombre": "Bomba de agua",
+    "sistema": "refrigeracion",
+    "url": "models/autopartes/bomba_agua.glb",
+    "piezas": [
+      {
+        "pieza": "polea",
+        "nombre": "Polea",
+        "clase": "polea",
+        "descripcion": "La mueve la correa de distribución o la de accesorios.",
+        "orden": 1,
+        "direccion": [
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "pieza": "impulsor",
+        "nombre": "Impulsor (turbina)",
+        "clase": "impulsor",
+        "descripcion": "Sus paletas empujan el líquido refrigerante por el motor.",
+        "orden": 2,
+        "direccion": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "pieza": "junta",
+        "nombre": "Junta",
+        "clase": "junta",
+        "descripcion": "Sella la bomba contra el block para que no pierda agua.",
+        "orden": 3,
+        "direccion": [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      },
+      {
+        "pieza": "eje_rodamiento",
+        "nombre": "Eje con rodamiento y retén",
+        "clase": "eje_rodamiento",
+        "descripcion": "Eje que une polea e impulsor; el retén evita que el agua llegue al rodamiento.",
+        "orden": 4,
+        "direccion": [
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "pieza": "cuerpo",
+        "nombre": "Cuerpo de la bomba",
+        "clase": "cuerpo",
+        "descripcion": "Carcasa de aluminio con la brida de montaje y la salida de agua.",
+        "orden": null,
+        "direccion": null
+      }
+    ]
+  },
+  {
+    "id": "piston_biela",
+    "nombre": "Pistón y biela",
+    "sistema": "motor",
+    "url": "models/autopartes/piston_biela.glb",
+    "piezas": [
+      {
+        "pieza": "aros",
+        "nombre": "Aros del pistón",
+        "clase": "aros",
+        "descripcion": "Dos aros de compresión y uno de aceite: sellan la cámara y limpian el aceite del cilindro.",
+        "orden": 1,
+        "direccion": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "seguros",
+        "nombre": "Seguros del perno",
+        "clase": "seguros",
+        "descripcion": "Clips que traban el perno dentro del pistón.",
+        "orden": 2,
+        "direccion": [
+          1.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "perno",
+        "nombre": "Perno de pistón",
+        "clase": "perno",
+        "descripcion": "Une el pistón con el pie de la biela y le permite oscilar.",
+        "orden": 3,
+        "direccion": [
+          1.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "piston",
+        "nombre": "Pistón",
+        "clase": "piston",
+        "descripcion": "Recibe la fuerza de la combustión y la transmite a la biela.",
+        "orden": 4,
+        "direccion": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "bulones_tapa",
+        "nombre": "Bulones de la tapa de biela",
+        "clase": "bulones",
+        "descripcion": "Ajustan la tapa contra la biela.",
+        "orden": 5,
+        "direccion": [
+          0.0,
+          -1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "tapa_biela",
+        "nombre": "Tapa de biela",
+        "clase": "tapa_biela",
+        "descripcion": "Mitad inferior de la cabeza de biela: abraza el muñón del cigüeñal.",
+        "orden": 6,
+        "direccion": [
+          0.0,
+          -1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "cojinetes",
+        "nombre": "Cojinetes de biela (metales)",
+        "clase": "cojinetes",
+        "descripcion": "Casquillos antifricción entre la biela y el cigüeñal, lubricados a presión.",
+        "orden": 7,
+        "direccion": [
+          0.0,
+          -1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "biela",
+        "nombre": "Biela",
+        "clase": "biela",
+        "descripcion": "Convierte el movimiento de sube y baja del pistón en giro del cigüeñal.",
+        "orden": null,
+        "direccion": null
+      }
+    ]
+  },
+  {
+    "id": "bujia",
+    "nombre": "Bujía",
+    "sistema": "motor",
+    "url": "models/autopartes/bujia.glb",
+    "piezas": [
+      {
+        "pieza": "terminal",
+        "nombre": "Terminal",
+        "clase": "terminal",
+        "descripcion": "Donde se conecta el cable o la bobina.",
+        "orden": 1,
+        "direccion": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "junta",
+        "nombre": "Arandela de sellado",
+        "clase": "junta",
+        "descripcion": "Sella la bujía contra la tapa de cilindros.",
+        "orden": 2,
+        "direccion": [
+          0.0,
+          -1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "aislador",
+        "nombre": "Aislador cerámico con electrodo central",
+        "clase": "aislador",
+        "descripcion": "Cerámica que aísla la alta tensión; adentro corre el electrodo central (corte didáctico).",
+        "orden": 3,
+        "direccion": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "cuerpo",
+        "nombre": "Cuerpo roscado con electrodo de masa",
+        "clase": "cuerpo",
+        "descripcion": "Hexágono para la llave, rosca y electrodo de masa: la chispa salta entre los dos electrodos.",
+        "orden": null,
+        "direccion": null
+      }
+    ]
+  },
+  {
+    "id": "rueda",
+    "nombre": "Rueda",
+    "sistema": "suspension",
+    "url": "models/autopartes/rueda.glb",
+    "piezas": [
+      {
+        "pieza": "tapa_central",
+        "nombre": "Tapa central",
+        "clase": "tapa_central",
+        "descripcion": "Tapa decorativa que cubre la maza.",
+        "orden": 1,
+        "direccion": [
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "pieza": "tuercas",
+        "nombre": "Tuercas de rueda",
+        "clase": "tuercas",
+        "descripcion": "Cinco tuercas que aprietan la llanta contra la maza.",
+        "orden": 2,
+        "direccion": [
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "pieza": "valvula",
+        "nombre": "Válvula de inflado",
+        "clase": "valvula",
+        "descripcion": "Por donde se infla el neumático.",
+        "orden": 3,
+        "direccion": [
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "pieza": "neumatico",
+        "nombre": "Neumático",
+        "clase": "neumatico",
+        "descripcion": "Cubierta de goma: da el agarre y absorbe las irregularidades del camino.",
+        "orden": 4,
+        "direccion": [
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "pieza": "llanta",
+        "nombre": "Llanta",
+        "clase": "llanta",
+        "descripcion": "Rueda de aluminio sobre la que se monta el neumático.",
+        "orden": 5,
+        "direccion": [
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "pieza": "maza",
+        "nombre": "Maza con espárragos",
+        "clase": "maza",
+        "descripcion": "Gira sobre el rodamiento de rueda; la llanta se ajusta acá.",
+        "orden": null,
+        "direccion": null
+      }
+    ]
+  },
+  {
+    "id": "diferencial",
+    "nombre": "Diferencial",
+    "sistema": "transmision",
+    "url": "models/autopartes/diferencial.glb",
+    "piezas": [
+      {
+        "pieza": "tapa",
+        "nombre": "Tapa del diferencial",
+        "clase": "tapa",
+        "descripcion": "Cierra la carcasa y contiene el aceite.",
+        "orden": 1,
+        "direccion": [
+          1.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "semieje_derecho",
+        "nombre": "Semieje derecho",
+        "clase": "semieje",
+        "descripcion": "Lleva el giro a la rueda derecha.",
+        "orden": 2,
+        "direccion": [
+          1.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "semieje_izquierdo",
+        "nombre": "Semieje izquierdo",
+        "clase": "semieje",
+        "descripcion": "Lleva el giro a la rueda izquierda.",
+        "orden": 3,
+        "direccion": [
+          -1.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "corona",
+        "nombre": "Corona",
+        "clase": "corona",
+        "descripcion": "Engranaje grande que recibe el giro del piñón y reduce la velocidad.",
+        "orden": 4,
+        "direccion": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "satelites",
+        "nombre": "Satélites y planetarios",
+        "clase": "satelites",
+        "descripcion": "Engranajes que reparten el giro entre las dos ruedas y dejan que giren distinto en las curvas.",
+        "orden": 5,
+        "direccion": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "caja_satelites",
+        "nombre": "Caja de satélites",
+        "clase": "caja_satelites",
+        "descripcion": "Carcasa que gira con la corona y lleva los satélites.",
+        "orden": 6,
+        "direccion": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "pinon_ataque",
+        "nombre": "Piñón de ataque",
+        "clase": "pinon_ataque",
+        "descripcion": "Recibe el giro del cardán y lo transmite a la corona en ángulo recto.",
+        "orden": 7,
+        "direccion": [
+          0.0,
+          0.0,
+          1.0
+        ]
+      },
+      {
+        "pieza": "carcasa",
+        "nombre": "Carcasa (puente)",
+        "clase": "carcasa",
+        "descripcion": "Caja de fundición con las trompetas por donde salen los semiejes.",
+        "orden": null,
+        "direccion": null
+      }
+    ]
+  },
+  {
+    "id": "junta_homocinetica",
+    "nombre": "Junta homocinética",
+    "sistema": "transmision",
+    "url": "models/autopartes/junta_homocinetica.glb",
+    "piezas": [
+      {
+        "pieza": "abrazaderas",
+        "nombre": "Abrazaderas del fuelle",
+        "clase": "abrazaderas",
+        "descripcion": "Ajustan el fuelle a la campana y al semieje.",
+        "orden": 1,
+        "direccion": [
+          1.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "fuelle",
+        "nombre": "Fuelle (guardapolvo)",
+        "clase": "fuelle",
+        "descripcion": "Mantiene la grasa adentro y la tierra afuera de la junta.",
+        "orden": 2,
+        "direccion": [
+          1.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "semieje",
+        "nombre": "Semieje (palier)",
+        "clase": "semieje",
+        "descripcion": "Barra que lleva el giro de la caja a la rueda.",
+        "orden": 3,
+        "direccion": [
+          1.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "nuez",
+        "nombre": "Nuez (maza interna)",
+        "clase": "nuez",
+        "descripcion": "Estriada al semieje: sus pistas guían las bolas.",
+        "orden": 4,
+        "direccion": [
+          1.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "jaula",
+        "nombre": "Jaula",
+        "clase": "jaula",
+        "descripcion": "Mantiene las seis bolas en el mismo plano mientras la junta se dobla.",
+        "orden": 5,
+        "direccion": [
+          1.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "bolas",
+        "nombre": "Bolas",
+        "clase": "bolas",
+        "descripcion": "Seis bolas que transmiten el giro aunque el semieje esté inclinado.",
+        "orden": 6,
+        "direccion": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "campana",
+        "nombre": "Campana con punta de eje",
+        "clase": "campana",
+        "descripcion": "Pista exterior de la junta; la punta estriada entra en la maza de la rueda.",
+        "orden": null,
+        "direccion": null
+      }
+    ]
+  },
+  {
+    "id": "arbol_levas",
+    "nombre": "Árbol de levas y válvulas",
+    "sistema": "motor",
+    "url": "models/autopartes/arbol_levas.glb",
+    "piezas": [
+      {
+        "pieza": "polea",
+        "nombre": "Polea dentada de distribución",
+        "clase": "polea",
+        "descripcion": "La mueve la correa (o cadena) del cigüeñal: el árbol gira a la mitad de vueltas que el motor.",
+        "orden": 1,
+        "direccion": [
+          1.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "arbol",
+        "nombre": "Árbol de levas",
+        "clase": "arbol",
+        "descripcion": "Eje con levas que abren cada válvula en el momento justo.",
+        "orden": 2,
+        "direccion": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "botadores",
+        "nombre": "Botadores (taqués)",
+        "clase": "botadores",
+        "descripcion": "Copas que reciben el empuje de la leva y lo pasan a la válvula.",
+        "orden": 3,
+        "direccion": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "platillos",
+        "nombre": "Platillos y chavetas",
+        "clase": "platillos",
+        "descripcion": "Retienen el resorte en la punta de cada válvula.",
+        "orden": 4,
+        "direccion": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "resortes",
+        "nombre": "Resortes de válvula",
+        "clase": "resortes",
+        "descripcion": "Cierran la válvula cuando la leva deja de empujar.",
+        "orden": 5,
+        "direccion": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "valvulas",
+        "nombre": "Válvulas (admisión y escape)",
+        "clase": "valvulas",
+        "descripcion": "Abren y cierran el paso de mezcla y de gases de escape en cada cilindro.",
+        "orden": 6,
+        "direccion": [
+          0.0,
+          -1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "caballetes",
+        "nombre": "Caballetes del árbol",
+        "clase": "caballetes",
+        "descripcion": "Soportes de la tapa de cilindros donde apoya y gira el árbol de levas.",
+        "orden": null,
+        "direccion": null
+      }
+    ]
+  },
+  {
+    "id": "filtro_aceite",
+    "nombre": "Filtro de aceite",
+    "sistema": "motor",
+    "url": "models/autopartes/filtro_aceite.glb",
+    "piezas": [
+      {
+        "pieza": "carcasa",
+        "nombre": "Carcasa (vaso)",
+        "clase": "carcasa",
+        "descripcion": "Lata de acero que contiene el elemento filtrante.",
+        "orden": 1,
+        "direccion": [
+          0.0,
+          -1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "elemento",
+        "nombre": "Elemento filtrante",
+        "clase": "elemento",
+        "descripcion": "Papel plegado que retiene las partículas del aceite.",
+        "orden": 2,
+        "direccion": [
+          0.0,
+          -1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "valvula_antidrenaje",
+        "nombre": "Válvula antidrenaje",
+        "clase": "valvula_antidrenaje",
+        "descripcion": "Membrana de goma que evita que el aceite vuelva al cárter con el motor apagado.",
+        "orden": 3,
+        "direccion": [
+          0.0,
+          -1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "junta",
+        "nombre": "Junta tórica",
+        "clase": "junta",
+        "descripcion": "Sella el filtro contra el block.",
+        "orden": 4,
+        "direccion": [
+          0.0,
+          1.0,
+          0.0
+        ]
+      },
+      {
+        "pieza": "base",
+        "nombre": "Base roscada",
+        "clase": "base",
+        "descripcion": "Placa con la rosca central y los orificios de entrada del aceite.",
+        "orden": null,
+        "direccion": null
+      }
+    ]
+  }
+]
