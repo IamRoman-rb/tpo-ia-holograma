@@ -13,7 +13,7 @@ import { hacerArrastrable } from './arrastrable.js';
 import { AJUSTES_POR_DEFECTO, crearPanelAjustes } from './ajustes.js';
 import { cargarCatalogo, buscarLocal } from './catalogo.js';
 import { interpretarPedido, pedirObjeto, salud, transcribir } from './api.js';
-import { CLASIFICADOR_DE_MOTOR, nombreMotor, respuestaComando } from './motores.js';
+import { CLASIFICADOR_DE_MOTOR, fraseAsistente, nombreMotor, respuestaComando } from './motores.js';
 import * as ui from './ui.js';
 import * as metricas from './metricas.js';
 import { cargarMlp } from './mlp.js';
@@ -351,10 +351,10 @@ async function atenderPedido(frase, { porVoz = false } = {}) {
   // Con Whisper, la respuesta también se escucha (sin el porcentaje ni el motor). Con la escucha continua del
   // navegador, un pedido que sale bien solo se muestra: así vuelve a escuchar enseguida.
   if (porVoz && vozLocal && respuestasHabladas && intencion.accion !== 'desconocido') {
-    respuestaHablada = decir(document.getElementById('interpretacion').textContent.split(' — ')[0]);
+    respuestaHablada = decir(fraseAsistente(intencion));
   }
   if (intencion.accion === 'desconocido') {
-    if (porVoz && respuestasHabladas) respuestaHablada = decir('No entendí el pedido.');
+    if (porVoz && respuestasHabladas) respuestaHablada = decir('Disculpe, no entendí el pedido.');
     const motivo = intencion.motivo ? ` (${intencion.motivo})` : '';
     ui.mostrarEstado(`No entendí el pedido${motivo}. Probá con "mostrame un engranaje".`, 'error');
     return publicarFin(id);
@@ -364,7 +364,7 @@ async function atenderPedido(frase, { porVoz = false } = {}) {
     ui.mostrarEstado('esperando confirmación');
     if (!(await ui.pedirConfirmacion())) {
       ui.mostrarEstado('pedido cancelado');
-      if (porVoz && respuestasHabladas) respuestaHablada = decir('Pedido cancelado.');
+      if (porVoz && respuestasHabladas) respuestaHablada = decir('Entendido. Cancelo el pedido.');
       return publicarPedido(id, 'error', { mensaje: 'cancelado por el usuario' });
     }
     if (id !== pedidoActual) return;
@@ -580,7 +580,7 @@ async function alternarManosLibres() {
         if (r.activado && r.texto) return pedirPorVoz(r.texto);
         if (r.activado) {
           esperandoOrden = performance.now() + 6000;
-          if (respuestasHabladas) decir('¿Sí?');
+          if (respuestasHabladas) decir('¿Sí? Lo escucho.');
           return ui.mostrarEstado('¿sí? te escucho');
         }
         ui.mostrarEstado(`escuché «${r.texto}», pero no empezó con "holograma"`);
@@ -588,7 +588,7 @@ async function alternarManosLibres() {
     });
     botonManosLibres.classList.add('escuchando');
     botonManosLibres.setAttribute('aria-pressed', 'true');
-    if (respuestasHabladas) decir('Manos libres activado. Decí holograma y tu pedido.');
+    if (respuestasHabladas) decir('Modo manos libres activado. Diga holograma y su pedido.');
   } catch (err) {
     manosLibres = null;
     sinMicrofono(err);
@@ -600,7 +600,7 @@ function alternarRespuestasHabladas() {
   respuestasHabladas = !respuestasHabladas;
   try { localStorage.setItem('respuestas-habladas', respuestasHabladas ? 'si' : 'no'); } catch { /* sin almacenamiento */ }
   ui.mostrarEstado(respuestasHabladas ? 'respuestas habladas encendidas' : 'respuestas habladas apagadas');
-  if (respuestasHabladas) decir('Respuestas habladas encendidas.');
+  if (respuestasHabladas) decir('Respuestas habladas activadas. A su disposición.');
 }
 
 botonMicrofono.addEventListener('click', alternarVoz);

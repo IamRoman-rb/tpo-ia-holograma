@@ -8,6 +8,8 @@ anthropic
 # voz local (Whisper); PyAV 16+ ya no acepta una opción que usa faster-whisper 1.2
 faster-whisper
 av<16
+# respuestas habladas locales (Piper, voz neuronal en ONNX)
+piper-tts
 # búsqueda difusa (frecuencias del español) y optimización del consenso
 wordfreq
 scipy

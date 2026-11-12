@@ -1,6 +1,6 @@
 // Pedidos por voz (frontend/js/voz.js) con un reconocimiento de voz falso: no necesita micrófono.
 // Uso (desde la raíz):  node frontend/tests/voz.test.mjs
-import { DETECTOR, crearDetectorVoz, crearVoz, puedeReconocerLocal, reconocimientoDisponible } from '../js/voz.js';
+import { DETECTOR, crearDetectorVoz, crearVoz, decir, puedeReconocerLocal, reconocimientoDisponible } from '../js/voz.js';
 
 let fallas = 0;
 const ok = (cond, msg) => { console.log(`${cond ? 'OK   ' : 'FALLA'} ${msg}`); if (!cond) fallas++; };
@@ -112,6 +112,44 @@ const golpe = simular(0.003, 0.1, 1500, 1560);
 ok(!golpe.eventos.some(([e]) => e === 'inicio'), 'un golpe corto no cuenta como una frase');
 const larga = simular(0.003, 0.08, 500, 20000, 20000);
 ok(larga.eventos.some(([e, t]) => e === 'fin' && t <= 500 + DETECTOR.maximoMs + 100), 'una frase interminable se corta sola');
+
+// ---- respuestas habladas: la voz del asistente (Piper en el backend) y, si falla, la del navegador
+const nodo = (extra = {}) => ({ connect: (n) => n, ...extra });
+const reproducidos = [];
+class ContextoFalso {
+  constructor() { this.state = 'running'; this.destination = nodo(); }
+  async decodeAudioData(wav) { return { wav }; }
+  createBufferSource() {
+    return nodo({ playbackRate: {}, start() { reproducidos.push(this); setTimeout(() => this.onended(), 5); }, stop() {} });
+  }
+  createBiquadFilter() { return nodo({ frequency: {}, gain: {}, Q: {} }); }
+  createDynamicsCompressor() { return nodo(); }
+  createDelay() { return nodo({ delayTime: {} }); }
+  createGain() { return nodo({ gain: {} }); }
+}
+const leidosNavegador = [];
+const navegadorFalso = (conAudio) => ({
+  ...(conAudio ? { AudioContext: ContextoFalso } : {}),
+  SpeechSynthesisUtterance: class { constructor(t) { this.text = t; } },
+  speechSynthesis: {
+    cancel() {},
+    getVoices: () => [{ lang: 'en-US', name: 'inglés' }, { lang: 'es-MX', name: 'español' }],
+    speak(u) { leidosNavegador.push(u); setTimeout(() => u.onend(), 5); },
+  },
+});
+const pedidos = [];
+await decir('Enseguida.', navegadorFalso(true), { sintetizar: async (t) => { pedidos.push(t); return new ArrayBuffer(8); } });
+ok(pedidos[0] === 'Enseguida.' && reproducidos.length === 1 && leidosNavegador.length === 0,
+  'con el backend, la respuesta la dice la voz del asistente');
+ok(reproducidos[0].playbackRate.value < 1, 'la voz del asistente suena apenas más grave');
+await decir('Hola.', navegadorFalso(true), { sintetizar: async () => { throw new Error('503'); } });
+ok(leidosNavegador.length === 1 && leidosNavegador[0].voice?.name === 'español',
+  'si el backend no tiene la voz, lee el navegador con una voz en español');
+let llamado = false;
+await decir('Otra.', navegadorFalso(true), { sintetizar: async () => { llamado = true; return new ArrayBuffer(8); } });
+ok(!llamado && leidosNavegador.length === 2, 'después de una falla no se vuelve a esperar al backend por un rato');
+await decir('Sin Web Audio.', navegadorFalso(false), { sintetizar: async () => new ArrayBuffer(8) });
+ok(leidosNavegador.length === 3, 'sin Web Audio lee el navegador');
 
 console.log(fallas ? `\n${fallas} falla(s)` : '\nTodo OK');
 process.exit(fallas ? 1 : 0);

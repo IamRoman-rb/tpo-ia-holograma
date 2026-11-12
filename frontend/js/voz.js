@@ -294,16 +294,105 @@ export async function escucharMicrofono({ continuo = false, alFrase, alEstado = 
   return { detener };
 }
 
-/** Lee en voz alta una respuesta corta (solo si el pedido vino por voz). */
-export function decir(texto, global = globalThis) {
+// ---------------------------------------------------------------- respuestas habladas
+//
+// La voz es la del asistente: Piper en el backend (backend/voz_respuesta.py), en el equipo y sin internet. Acá se le
+// da el timbre con Web Audio: un tono apenas más grave, sin retumbe de graves, más presencia en la zona de la voz
+// (~2,8 kHz) y un eco muy corto y suave que la hace sonar "electrónica" sin que se pierda claridad. Si el backend no
+// tiene la voz, lee el navegador (sus voces dependen del sistema: en un Windows sin voces en español, acento inglés).
+
+export const EFECTO_ASISTENTE = {
+  tono: 0.97,                          // velocidad de reproducción: <1 más grave (y apenas más lento)
+  corteGraves: 110,                    // Hz: pasa-altos que limpia el retumbe
+  presencia: { hz: 2800, db: 3 },      // realce de la zona que da claridad a la voz
+  eco: { ms: 24, retorno: 0.2, mezcla: 0.14 },
+};
+
+let contextoHabla = null;
+let fuenteHabla = null;
+let turnoHabla = 0;
+let sinVozLocalHasta = 0;              // si el backend no tiene la voz, un rato se usa directo la del navegador
+
+function callar(global) {
+  try { fuenteHabla?.stop(); } catch { /* ya había terminado */ }
+  fuenteHabla = null;
+  global.speechSynthesis?.cancel();
+}
+
+async function reproducirAsistente(wav, global, efecto) {
+  const Contexto = global.AudioContext ?? global.webkitAudioContext;
+  contextoHabla ??= new Contexto();
+  if (contextoHabla.state === 'suspended') await contextoHabla.resume();
+  const ctx = contextoHabla;
+  const fuente = ctx.createBufferSource();
+  fuente.buffer = await ctx.decodeAudioData(wav);
+  fuente.playbackRate.value = efecto.tono;
+
+  const graves = ctx.createBiquadFilter();
+  graves.type = 'highpass';
+  graves.frequency.value = efecto.corteGraves;
+  const presencia = ctx.createBiquadFilter();
+  presencia.type = 'peaking';
+  presencia.frequency.value = efecto.presencia.hz;
+  presencia.gain.value = efecto.presencia.db;
+  presencia.Q.value = 0.9;
+  const salida = ctx.createDynamicsCompressor();   // empareja el volumen y evita que el eco sature
+  fuente.connect(graves).connect(presencia).connect(salida);
+
+  const eco = ctx.createDelay(0.2);
+  eco.delayTime.value = efecto.eco.ms / 1000;
+  const retorno = ctx.createGain();
+  retorno.gain.value = efecto.eco.retorno;
+  const mezcla = ctx.createGain();
+  mezcla.gain.value = efecto.eco.mezcla;
+  presencia.connect(eco);
+  eco.connect(retorno).connect(eco);
+  eco.connect(mezcla).connect(salida);
+  salida.connect(ctx.destination);
+
+  fuenteHabla = fuente;
+  return new Promise((resolver) => {
+    fuente.onended = () => {
+      if (fuenteHabla === fuente) fuenteHabla = null;
+      resolver();
+    };
+    fuente.start();
+  });
+}
+
+function decirNavegador(texto, global) {
   const sintesis = global.speechSynthesis;
   if (!sintesis || !global.SpeechSynthesisUtterance) return Promise.resolve();
-  sintesis.cancel();
   const u = new global.SpeechSynthesisUtterance(texto);
   u.lang = IDIOMA;
+  const enEspanol = sintesis.getVoices?.().find((v) => v.lang?.toLowerCase().startsWith('es'));
+  if (enEspanol) u.voice = enEspanol;
   return new Promise((resolver) => {
     u.onend = resolver;
     u.onerror = resolver;
     sintesis.speak(u);
   });
+}
+
+/**
+ * Lee en voz alta una respuesta corta. Termina (la promesa se cumple) cuando se dejó de hablar: así el micrófono no
+ * se escucha a sí mismo. Una respuesta nueva corta la anterior.
+ *   sintetizar(texto) -> ArrayBuffer WAV: la voz del backend (se puede reemplazar en las pruebas)
+ */
+export async function decir(texto, global = globalThis, { sintetizar, efecto = EFECTO_ASISTENTE } = {}) {
+  callar(global);
+  const turno = ++turnoHabla;
+  const hayWebAudio = Boolean(global.AudioContext ?? global.webkitAudioContext);
+  if (hayWebAudio && Date.now() >= sinVozLocalHasta) {
+    try {
+      const wav = await (sintetizar ?? (await import('./api.js')).sintetizarVoz)(texto);
+      if (turno !== turnoHabla) return undefined;   // otra respuesta la reemplazó mientras se sintetizaba
+      return await reproducirAsistente(wav, global, efecto);
+    } catch (err) {
+      if (turno !== turnoHabla) return undefined;
+      sinVozLocalHasta = Date.now() + 60000;
+      console.info('Voz del asistente no disponible, lee el navegador:', err.message);
+    }
+  }
+  return decirNavegador(texto, global);
 }

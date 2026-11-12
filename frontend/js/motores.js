@@ -29,6 +29,24 @@ const NOMBRES_ACCION = {
 };
 export const nombreAccion = (a) => NOMBRES_ACCION[a] ?? a;
 
+/** Lo que dice en voz alta el asistente al atender un pedido: corto, formal, sin porcentajes ni motores. */
+export function fraseAsistente(i) {
+  const p = i.parametros ?? {};
+  switch (i.accion) {
+    case 'mostrar': return i.objeto ? `Enseguida. Le muestro: ${i.objeto}.` : 'Enseguida.';
+    case 'rotar': return 'Entendido. Girando.';
+    case 'escalar': return p.factor_escala && p.factor_escala < 1 ? 'Entendido. Achicando.' : 'Entendido. Agrandando.';
+    case 'vista': return p.vista ? `Vista ${p.vista}.` : 'Cambio la vista.';
+    case 'reiniciar': return 'Vista reiniciada.';
+    case 'desmontar': return 'Desmonto la pieza.';
+    case 'explotar': return 'Enseguida. Le muestro el despiece.';
+    case 'armar': return 'Vuelvo a armarlo.';
+    case 'aislar': return i.objeto ? `Analizo la pieza: ${i.objeto}.` : 'Analizo la pieza.';
+    case 'conjunto': return 'Vuelvo al conjunto.';
+    default: return `Entendido: ${nombreAccion(i.accion)}.`;
+  }
+}
+
 const porcentaje = (v) => `${Math.round((v ?? 0) * 100)} %`;
 
 /** Explicación de un pedido a partir de su traza (lo que el backend contó de cómo decidió). */

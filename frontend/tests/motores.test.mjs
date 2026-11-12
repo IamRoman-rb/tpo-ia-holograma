@@ -1,6 +1,6 @@
 // Respuestas a los comandos de los modelos (frontend/js/motores.js): "usá el árbol para los gestos",
 // "¿qué modelo respondió?", "¿qué tan seguro estás?", "¿por qué?". Uso:  node frontend/tests/motores.test.mjs
-import { CLASIFICADOR_DE_MOTOR, explicarPedido, nombreMotor, respuestaComando } from '../js/motores.js';
+import { CLASIFICADOR_DE_MOTOR, explicarPedido, fraseAsistente, nombreMotor, respuestaComando } from '../js/motores.js';
 
 let fallas = 0;
 const ok = (cond, msg) => { console.log(`${cond ? 'OK   ' : 'FALLA'} ${msg}`); if (!cond) fallas++; };
@@ -33,6 +33,13 @@ ok(respuestaComando(consultar('explicar', 'por qué ese gesto'), { ultimo, gesto
 ok(explicarPedido({ motor: 'bayes', traza: { probabilidades: { rotar: 0.9, vista: 0.05 }, rasgos_decisivos: ['giralo', '<i>_giralo'] } })
   .includes('le dio 90 % a rotar'), 'Naive Bayes explica con sus probabilidades y las palabras que más pesaron');
 ok(nombreMotor('llm') === 'Claude' && nombreMotor(undefined) === 'reglas', 'nombres cortos de los motores');
+
+// Lo que dice el asistente al atender un pedido: corto y sin porcentajes
+ok(fraseAsistente({ accion: 'mostrar', objeto: 'engranaje recto' }) === 'Enseguida. Le muestro: engranaje recto.',
+  'mostrar: dice qué objeto muestra');
+ok(fraseAsistente({ accion: 'escalar', parametros: { factor_escala: 0.5 } }).includes('Achicando')
+  && fraseAsistente({ accion: 'escalar', parametros: { factor_escala: 2 } }).includes('Agrandando'), 'escalar: agranda o achica');
+ok(!/%|\d/.test(fraseAsistente({ accion: 'rotar', confianza: 0.93, motor: 'consenso' })), 'sin porcentajes ni motores');
 
 console.log(fallas ? `\n${fallas} falla(s)` : '\nTodo OK');
 process.exit(fallas ? 1 : 0);

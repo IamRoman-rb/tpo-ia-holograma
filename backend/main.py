@@ -9,9 +9,10 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
-from fastapi import FastAPI, HTTPException, Request  # noqa: E402
+from fastapi import FastAPI, HTTPException, Request, Response  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
+from pydantic import BaseModel, Field  # noqa: E402
 
 import generate3d  # noqa: E402
 from generate3d import GeneracionFallida, GeneracionNoDisponible, generar  # noqa: E402
@@ -22,6 +23,7 @@ from retrieval import CARPETA_GLBS, URL_GLBS, buscar_similar, catalogo, listar_c
 from safety import LimiteFrecuencia, fuera_de_dominio, validar_intencion  # noqa: E402
 from schemas import Pedido  # noqa: E402
 import voz  # noqa: E402
+import voz_respuesta  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 
@@ -39,6 +41,8 @@ async def lifespan(app):
     threading.Thread(target=_precargar_motores, daemon=True).start()
     if voz.disponible():
         threading.Thread(target=_precargar_voz, daemon=True).start()
+    if voz_respuesta.disponible():
+        threading.Thread(target=_precargar_voz_respuesta, daemon=True).start()
     yield
 
 
@@ -60,6 +64,13 @@ def _precargar_voz():
         voz.cargar()
     except voz.VozNoDisponible as e:
         logging.getLogger(__name__).warning("Voz local no disponible: %s", e)
+
+
+def _precargar_voz_respuesta():
+    try:
+        voz_respuesta.sintetizar("Listo.")   # carga la voz y deja una frase en la memoria
+    except Exception as e:   # sin la voz, el navegador lee con las suyas
+        logging.getLogger(__name__).warning("Voz de respuesta no disponible: %s", e)
 
 
 app = FastAPI(title="TPO Holograma IA", lifespan=lifespan)
@@ -94,6 +105,7 @@ def health():
     return {"estado": "ok", "busqueda": catalogo().metodo, "piezas": len(catalogo().items),
             "modelos3d": len(catalogo().objaverse or ()), "motores_listos": MOTORES["listos"],
             "generacion": generate3d.modo(), "voz": f"whisper {voz.MODELO}" if voz.disponible() else None,
+            "voz_respuesta": f"piper {voz_respuesta.VOZ}" if voz_respuesta.disponible() else None,
             "motores": motores_instalados()}
 
 
@@ -150,6 +162,30 @@ async def reconocer_voz(request: Request, activacion: bool = False):
     if activacion:
         r["activado"], r["texto"] = voz.quitar_activacion(r["texto"])
     return r
+
+
+class TextoHablado(BaseModel):
+    texto: str = Field(min_length=1, max_length=voz_respuesta.MAXIMO_CARACTERES)
+
+
+# Las respuestas habladas van aparte del límite de pedidos: cada pedido por voz ya usa /voz, /intent y /object
+limite_habla = LimiteFrecuencia(maximo=60, ventana_s=60)
+
+
+@app.post("/decir")
+def decir(p: TextoHablado, request: Request):
+    """Texto de una respuesta -> audio WAV con Piper, en el equipo (voz_respuesta.py)."""
+    if not limite_habla.permitir(_cliente(request)):
+        raise HTTPException(429, "Demasiadas respuestas habladas seguidas.")
+    if not voz_respuesta.disponible():
+        raise HTTPException(503, "La voz de respuesta local no está instalada (piper-tts).")
+    try:
+        audio = voz_respuesta.sintetizar(p.texto)
+    except voz_respuesta.VozRespuestaNoDisponible as e:
+        raise HTTPException(503, f"Voz de respuesta no disponible: {e}")
+    except ValueError as e:
+        raise HTTPException(422, str(e))
+    return Response(audio, media_type="audio/wav")
 
 
 @app.post("/object")

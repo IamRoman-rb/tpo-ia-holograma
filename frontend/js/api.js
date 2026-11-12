@@ -52,5 +52,19 @@ export async function transcribir(audio, { activacion = false } = {}) {
   if (!r.ok) throw new ErrorBackend(datos.detail ?? `/voz respondió ${r.status}`, r.status);
   return datos;
 }
+/** Texto de una respuesta → audio WAV (ArrayBuffer) con Piper en el backend (backend/voz_respuesta.py). */
+export async function sintetizarVoz(texto) {
+  let r;
+  try {
+    r = await fetch(`${API}/decir`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ texto }),
+      signal: AbortSignal.timeout(8000),   // Piper tarda décimas de segundo; más que esto, mejor la voz del navegador
+    });
+  } catch (err) {
+    throw new ErrorBackend(`backend no disponible (${err.name})`);
+  }
+  if (!r.ok) throw new ErrorBackend(`/decir respondió ${r.status}`, r.status);
+  return r.arrayBuffer();
+}
 export const pedirObjeto = (objeto) => post('/object', { frase: objeto }, ESPERA_GENERACION_MS);
 export const salud = () => fetch(`${API}/health`, { signal: AbortSignal.timeout(3000) }).then((r) => r.json());
