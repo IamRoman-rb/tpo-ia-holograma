@@ -36,8 +36,19 @@ def nombre(e: Electrico) -> str:
     return base + (" con brida" if e.tipo == "induccion" and e.montaje == "brida" else "")
 
 
+# Lo que gira con el eje cuando el motor está en marcha (todo sobre el eje X, centrado en el origen)
+GIRATORIAS = ("eje", "rotor", "ventilador", "chaveta", "inducido", "colector", "campana", "imanes", "clip")
+VELOCIDAD = 3 * math.pi    # rad/s en la animación: vuelta y media por segundo
+
+
 def generar(e: Electrico) -> Modelo:
-    return {"induccion": _induccion, "continua": _continua, "brushless": _brushless}[e.tipo](e)
+    m = {"induccion": _induccion, "continua": _continua, "brushless": _brushless}[e.tipo](e)
+    m.velocidad = VELOCIDAD
+    for id_ in GIRATORIAS:
+        if id_ in m.piezas:
+            m.piezas[id_]["meta"]["movimiento"] = {"tipo": "giro", "eje": [1.0, 0.0, 0.0], "centro": [0.0, 0.0, 0.0],
+                                                    "relacion": 1.0}
+    return m
 
 
 def _rodamiento(a, x, r_int, r_ext, ancho):

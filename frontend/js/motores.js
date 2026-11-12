@@ -30,6 +30,22 @@ const NOMBRES_ACCION = {
 };
 export const nombreAccion = (a) => NOMBRES_ACCION[a] ?? a;
 
+// Encender o apagar el movimiento (motores que giran, exoesqueleto que camina). Se resuelve en el navegador, sin pasar
+// por los motores de intención: es un comando del visor, como "deshacer".
+// Ojo con las palabras que también son sustantivos o preposiciones: "motor de arranque", "llave para tubos".
+const RE_APAGAR = /\b(apag\w*|para(lo|la)|parar|deten\w*|frena(lo|la)?|frenar|quieto|stop)\b|^para\b/;
+const RE_ENCENDER = /\b(encend\w*|encende\w*|prend\w*|arranca(lo|la)?|arrancar|en marcha|a (andar|funcionar|caminar|girar)|(hace|haz|ponga)(lo|la)? (andar|funcionar|girar|caminar|mover)|anima(lo|la|r)?|move(lo|la)|que (camine|gire|ande|funcione)|ponete a caminar)\b/;
+
+/** 'encender', 'apagar' o null. */
+export function comandoMarcha(frase = '') {
+  const t = frase.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[¿?¡!.,;:]/g, ' ')
+    .replace(/^\s*holo\s*grama\b/, '').trim();
+  if (t.split(/\s+/).filter(Boolean).length > 8) return null;   // una frase larga es un pedido, no un comando
+  if (RE_APAGAR.test(t)) return 'apagar';
+  if (RE_ENCENDER.test(t)) return 'encender';
+  return null;
+}
+
 /** Lo que dice en voz alta el asistente al atender un pedido: corto, formal, sin porcentajes ni motores. */
 export function fraseAsistente(i) {
   const p = i.parametros ?? {};

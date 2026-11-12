@@ -20,6 +20,9 @@ from geometria import (Modelo, caja, cilindro, cono, mover, perfil_engranaje, pr
 EJE_X = rot_z(math.pi / 2)    # lleva un cilindro del eje Y al eje X (el del cigüeñal)
 EJE_Z = rot_x(math.pi / 2)    # del eje Y al eje Z
 
+# Velocidad del cigüeñal en la animación (rad/s): una vuelta por segundo se sigue bien con la vista
+VELOCIDAD = 2 * math.pi
+
 MATERIALES = {
     "aluminio": ((0.72, 0.74, 0.77), 0.9, 0.35), "hierro": ((0.30, 0.31, 0.33), 0.7, 0.5),
     "acero": ((0.80, 0.80, 0.82), 1.0, 0.25), "cromo": ((0.93, 0.93, 0.95), 1.0, 0.08),
@@ -73,6 +76,9 @@ class _Armado:
             self.orden += 1
             self.m.pieza(id_, nombre_, descripcion, self.orden, direccion, clase=clase)
 
+    def mover(self, **movimiento):
+        self.m.mover_con(**movimiento)
+
     def agregar(self, material, parte, R=None):
         self.m.agregar(material, mover(parte, R=R) if R is not None else parte)
 
@@ -81,6 +87,7 @@ def generar(c: Combustion) -> Modelo:
     if c.disposicion == "radial":
         return _radial(c)
     m = Modelo(MATERIALES)
+    m.velocidad = VELOCIDAD
     a = _Armado(m)
     D, r = c.diametro, c.carrera / 2
     L = 1.75 * c.carrera                       # largo de la biela
@@ -220,6 +227,7 @@ def generar(c: Combustion) -> Modelo:
         a.agregar("acero", mover(prisma_anular(perfil, 0.1 * D, 0.3 * D), (x_dist, *p), EJE_X))
     a.pieza("polea_ciguenal", "Polea del cigüeñal", "Mueve con una correa el alternador y la bomba de agua.",
             "polea_ciguenal", (1, 0, 0))
+    a.mover(tipo="giro", eje=(1, 0, 0), centro=(0, 0, 0), relacion=1)
     a.agregar("hierro", mover(cilindro(0.72 * D, 0.28 * D, 36), (largo / 2 + 0.55 * D, 0, 0), EJE_X))
     a.agregar("goma", mover(toroide(0.72 * D, 0.05 * D, 36, 8), (largo / 2 + 0.55 * D, 0, 0), EJE_X))
 
@@ -229,6 +237,8 @@ def generar(c: Combustion) -> Modelo:
         a.pieza(f"arbol_levas_{i}", f"Árbol de levas{tipo}{lado(b)}",
                 "Eje con levas que empujan las válvulas para abrirlas, sincronizado con el cigüeñal.",
                 "arbol_de_levas", u)
+        a.mover(tipo="giro", eje=(1, 0, 0), relacion=0.5,   # media vuelta por cada vuelta del cigüeñal
+                centro=np.array([desfase[b], tope_culata + 0.12 * D, z], np.float32) @ R.T)
         a.agregar("acero", mover(cilindro(0.07 * D, largo, 16), (desfase[b], tope_culata + 0.12 * D, z), EJE_X), R)
         for k, x in enumerate(xs):
             for dx in ((0.0,) if c.valvulas == 2 else (-0.2 * D, 0.2 * D)):
@@ -278,12 +288,14 @@ def generar(c: Combustion) -> Modelo:
             xb = x + desfase[b]
             a.pieza(f"piston_{n}", f"Pistón {n}", "Sube y baja dentro del cilindro; recibe la fuerza de la combustión.",
                     "piston", u)
+            a.mover(tipo="piston", u=u, r=r, L=L, fase=giro[k], s0=perno, x=xb)
             a.agregar("aluminio", mover(cilindro(0.48 * D, 0.62 * D, 32), (xb, perno + 0.15 * D, 0)), R)
             for dy in (0.32, 0.4):
                 a.agregar("hierro", mover(toroide(0.48 * D, 0.018 * D, 32, 6), (xb, perno + dy * D, 0)), R)
             a.agregar("acero", mover(cilindro(0.1 * D, 0.75 * D, 14), (xb, perno, 0), EJE_X), R)
             a.pieza(f"biela_{n}", f"Biela {n}", "Une el pistón con el cigüeñal y convierte la subida y bajada en giro.",
                     "biela", tuple(u))
+            a.mover(tipo="biela", u=u, r=r, L=L, fase=giro[k], s0=perno, x=xb)
             # en el sistema del banco: del muñón (a_lo_largo, de_costado) al perno (perno, 0)
             dy, dz = perno - a_lo_largo, -de_costado
             largo_biela = math.hypot(dy, dz)
@@ -296,12 +308,14 @@ def generar(c: Combustion) -> Modelo:
     a.pieza("volante_inercia", "Volante de inercia",
             "Disco pesado que suaviza el giro; su corona dentada engrana con el motor de arranque.",
             "volante_de_inercia", (-1, 0, 0))
+    a.mover(tipo="giro", eje=(1, 0, 0), centro=(0, 0, 0), relacion=1)
     x_volante = -largo / 2 - 0.35 * D
     a.agregar("hierro", mover(cilindro(1.5 * D, 0.22 * D, 48), (x_volante, 0, 0), EJE_X))
     a.agregar("acero", mover(prisma_anular(perfil_engranaje(72, 1.5 * D, 1.6 * D), 1.45 * D, 0.18 * D),
                              (x_volante, 0, 0), EJE_X))
     a.pieza("ciguenal", "Cigüeñal", "Eje que gira con el empuje de las bielas: de él sale la fuerza del motor.",
             "ciguenal", (0, -1, 0))
+    a.mover(tipo="giro", eje=(1, 0, 0), centro=(0, 0, 0), relacion=1)
     a.agregar("acero", mover(cilindro(0.26 * D, largo + 0.5 * D, 28), (0, 0, 0), EJE_X))
     ancho_munon = 0.3 * D if len(bancos) == 1 else 0.62 * D
     for k, x in enumerate(xs):
@@ -330,6 +344,7 @@ def generar(c: Combustion) -> Modelo:
 def _radial(c: Combustion) -> Modelo:
     """Motor radial de aviación: una estrella de cilindros alrededor del cigüeñal, con la hélice adelante."""
     m = Modelo(MATERIALES)
+    m.velocidad = VELOCIDAD
     a = _Armado(m)
     D, r = c.diametro, c.carrera / 2
     L = 1.9 * c.carrera
@@ -338,6 +353,7 @@ def _radial(c: Combustion) -> Modelo:
     angulos = [2 * math.pi * k / c.cilindros for k in range(c.cilindros)]
 
     a.pieza("helice", "Hélice", "Convierte el giro del motor en empuje.", "helice", (1, 0, 0))
+    a.mover(tipo="giro", eje=(1, 0, 0), centro=(0, 0, 0), relacion=0.5)   # la caja de reducción la hace ir más lenta
     x_helice = 1.9 * D
     a.agregar("hierro", mover(cono(0.45 * D, 0.05 * D, 0.9 * D, 24), (x_helice + 0.45 * D, 0, 0), rot_z(-math.pi / 2)))
     for ang in (0, math.pi):
@@ -376,17 +392,22 @@ def _radial(c: Combustion) -> Modelo:
         R, u = _hacia(ang), _dir(ang)
         perno = r + L
         a.pieza(f"piston_{k + 1}", f"Pistón {k + 1}", "Sube y baja dentro del cilindro.", "piston", u)
+        # el muñón único apunta arriba con el cigüeñal en 0; cada cilindro lo ve girado su propio ángulo
+        a.mover(tipo="piston", u=u, r=r, L=L, fase=0.0, s0=perno, x=0.0)
         a.agregar("aluminio", mover(cilindro(0.48 * D, 0.62 * D, 28), (0, perno + 0.15 * D, 0)), R)
         a.agregar("acero", mover(cilindro(0.1 * D, 0.75 * D, 12), (0, perno, 0), EJE_Z), R)
         maestra = k == 0
         a.pieza(f"biela_{k + 1}", "Biela maestra" if maestra else f"Biela articulada {k + 1}",
                 "La biela maestra va al cigüeñal; las articuladas se enganchan a ella." if maestra else
                 "Se engancha a la biela maestra.", "biela", u)
+        # la maestra sigue al muñón; las articuladas, simplificado, acompañan a su pistón
+        a.mover(tipo="biela" if maestra else "piston", u=u, r=r, L=L, fase=0.0, s0=perno, x=0.0)
         desde = r if maestra else r + 0.45 * D
         a.agregar("acero", mover(caja(0.11 * D, perno - desde, 0.16 * D), (0, (perno + desde) / 2, 0)), R)
         if maestra:   # el anillo de la biela maestra abraza el muñón del cigüeñal
             a.agregar("acero", mover(toroide(0.55 * D, 0.1 * D, 36, 8), (0, r, 0), EJE_X))
     a.pieza("ciguenal", "Cigüeñal", "De un solo codo: todas las bielas empujan el mismo muñón.", "ciguenal", (1, 0, 0))
+    a.mover(tipo="giro", eje=(1, 0, 0), centro=(0, 0, 0), relacion=1)
     a.agregar("acero", mover(cilindro(0.3 * D, 3.0 * D, 24), (0.6 * D, 0, 0), EJE_X))
     a.agregar("acero", mover(cilindro(0.22 * D, 0.5 * D, 20), (0, r, 0), EJE_X))
     a.agregar("hierro", mover(caja(0.14 * D, r + 0.6 * D, 1.0 * D), (0.32 * D, 0.2 * r, 0)))

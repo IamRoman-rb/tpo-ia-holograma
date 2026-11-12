@@ -13,7 +13,7 @@ import { hacerArrastrable } from './arrastrable.js';
 import { AJUSTES_POR_DEFECTO, crearPanelAjustes } from './ajustes.js';
 import { cargarCatalogo, buscarLocal } from './catalogo.js';
 import { interpretarPedido, pedirObjeto, salud, transcribir } from './api.js';
-import { CLASIFICADOR_DE_MOTOR, fraseAsistente, nombreMotor, respuestaComando } from './motores.js';
+import { CLASIFICADOR_DE_MOTOR, comandoMarcha, fraseAsistente, nombreMotor, respuestaComando } from './motores.js';
 import * as ui from './ui.js';
 import * as metricas from './metricas.js';
 import { cargarMlp } from './mlp.js';
@@ -66,6 +66,21 @@ const visor = crearVisor(document.getElementById('escena'), {
 const actividad = crearActividad();
 const raizActividad = document.getElementById('actividad');
 const botonActividad = document.querySelector('[data-barra="actividad"]');
+const botonMarcha = document.querySelector('[data-barra="marcha"]');
+
+// Marcha: los motores giran (cigüeñal, pistones, bielas, levas) y el exoesqueleto camina (viewer.js + movimiento.js)
+function actualizarBotonMarcha() {
+  botonMarcha.hidden = !visor.tieneMovimiento();
+  botonMarcha.setAttribute('aria-pressed', String(visor.enMarcha()));
+  botonMarcha.textContent = visor.enMarcha() ? 'Apagar' : 'En marcha';
+}
+function alternarMarcha(encender = !visor.enMarcha()) {
+  if (!visor.tieneMovimiento()) return 'Este modelo no tiene piezas que se muevan.';
+  if (encender) visor.encender();
+  else visor.apagar();
+  actualizarBotonMarcha();
+  return encender ? 'Enseguida. En marcha.' : 'Entendido. Detengo el movimiento.';
+}
 function alternarActividad(mostrar = raizActividad.hidden) {
   raizActividad.hidden = !mostrar;
   botonActividad.setAttribute('aria-pressed', String(mostrar));
@@ -136,6 +151,7 @@ let ultimoModelo = { origen: null, t: 0 }; // para medir la latencia del pedido
 async function mostrarModelo(url, nombre, origen, id, atribucion = null, familiaPiezas = null) {
   ui.mostrarEstado('cargando modelo…');
   await visor.cargarModelo(url);
+  actualizarBotonMarcha();
   ultimoModelo = { origen, t: performance.now() };
   ui.mostrarOrigen(nombre, origen, atribucion);
   ui.marcarSeleccionado(id);
@@ -312,6 +328,14 @@ async function atenderComando(intencion, frase, porVoz) {
 }
 
 async function atenderPedido(frase, { porVoz = false } = {}) {
+  // "encendé el motor", "apagalo": comando del visor, no hace falta interpretarlo con los modelos
+  const marcha = visor.tieneMovimiento() && comandoMarcha(frase);
+  if (marcha) {
+    const respuesta = alternarMarcha(marcha === 'encender');
+    ui.mostrarEstado(respuesta);
+    if (porVoz && respuestasHabladas) respuestaHablada = decir(respuesta);
+    return;
+  }
   const id = ++pedidoActual;
   if (porVoz) {
     pedidoDeVozActual = id;
@@ -1011,6 +1035,7 @@ const ACCIONES_BARRA = {
   },
   actividad: () => alternarActividad(),
   ajustes: () => mostrarAjustes(),
+  marcha: () => ui.mostrarEstado(alternarMarcha()),
 };
 document.getElementById('barra').addEventListener('click', (e) => {
   const accion = e.target.closest('button')?.dataset.barra;
@@ -1030,6 +1055,7 @@ addEventListener('keydown', (e) => {
 addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT') return;
   if (e.key === 'k' || e.key === 'K') ACCIONES_BARRA.ajustes();
+  if ((e.key === 'e' || e.key === 'E') && visor.tieneMovimiento()) ACCIONES_BARRA.marcha();
   if (e.key === 'h' || e.key === 'H') ACCIONES_BARRA.holograma();
   if (e.key === 'c' || e.key === 'C') ACCIONES_BARRA.catalogo();
   if (e.key === 'n' || e.key === 'N') ACCIONES_BARRA.ia();

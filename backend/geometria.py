@@ -234,6 +234,7 @@ class Modelo:
         self.materiales = materiales          # nombre -> (rgb, metálico, rugosidad)
         self.piezas = {}                      # id -> {"meta": {...}, "partes": {material: [partes]}}
         self._actual = None
+        self.velocidad = None                 # rad/s del ciclo de movimiento (cigüeñal, paso…); None = sin movimiento
 
     def pieza(self, id_, nombre, descripcion="", orden=None, direccion=None, clase=None):
         """Empieza una pieza nueva: lo que se agregue después pertenece a ella.
@@ -244,6 +245,20 @@ class Modelo:
             "partes": defaultdict(list),
         }
         self._actual = id_
+        return self
+
+    def mover_con(self, **movimiento):
+        """Cómo se mueve la pieza actual cuando el objeto está en marcha (lo calcula frontend/js/movimiento.js):
+          tipo="giro":    gira relacion·θ alrededor del eje que pasa por centro (cigüeñal, levas, rotor)
+          tipo="piston":  se desliza por su cilindro según la biela y la manivela (u, r, L, fase, s0, x)
+          tipo="biela":   sigue al muñón abajo y al pistón arriba (mismos datos que el pistón)
+          tipo="oscilar": gira base + amplitud·sin(θ + fase) alrededor del eje (articulaciones); con padre, además
+                          acompaña el movimiento de esa pieza (el antebrazo sigue al brazo)."""
+        def limpio(v):
+            if isinstance(v, (list, tuple, np.ndarray)):
+                return [round(float(x), 5) for x in v]
+            return round(float(v), 5) if isinstance(v, (float, np.floating, int)) and not isinstance(v, bool) else v
+        self.piezas[self._actual]["meta"]["movimiento"] = {k: limpio(v) for k, v in movimiento.items()}
         return self
 
     def agregar(self, material, parte):
@@ -319,9 +334,11 @@ def a_glb(modelo, nombre, unidad=None) -> bytes:
         extras = {k: v for k, v in pieza["meta"].items() if v not in (None, "")}
         nodos.append({"name": id_, "mesh": len(mallas) - 1, "extras": extras})
 
+    extras_escena = {k: v for k, v in (("unidad", unidad), ("velocidad", modelo.velocidad)) if v}
     gltf = {
         "asset": {"version": "2.0", "generator": "tpo-holograma/backend/geometria.py"},
-        "scene": 0, "scenes": [{"name": nombre, "nodes": list(range(len(nodos))), **({"extras": {"unidad": unidad}} if unidad else {})}],
+        "scene": 0, "scenes": [{"name": nombre, "nodes": list(range(len(nodos))),
+                                **({"extras": extras_escena} if extras_escena else {})}],
         "nodes": nodos, "meshes": mallas, "materials": materiales, "accessors": accesores,
         "bufferViews": vistas, "buffers": [{"byteLength": len(binario)}],
     }

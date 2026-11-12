@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { crearHistorial } from './historial.js';
+import { crearMarcha, movimientos } from './movimiento.js';
 import { reconocer } from './reconocer_piezas.js';
 import { areaSuperficie, colorPieza, crearAzar, puntosEnSuperficie } from './holograma.js';
 import {
@@ -114,6 +115,8 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = 
   let apuntada = null;           // pieza bajo el cursor de la mano
   let aislada = null;            // pieza que se está analizando sola
   let unidad = null;             // unidad del modelo, si el .glb la declara (los generados: cm)
+  // En marcha (movimiento.js): solo los modelos que declaran cómo se mueve cada pieza (motores, exoesqueleto)
+  let marcha = null;
   // Encuadre: al desarmar, el modelo se achica para que todas las piezas sigan a la vista
   let modelo = null;
   let contenedorModelo = null;
@@ -211,11 +214,18 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = 
     pivote.scale.setScalar(pivote.scale.x + (objetivo.escala - pivote.scale.x) * a);
 
     const ap = 1 - Math.exp(-dt * RAPIDEZ_PIEZAS);
+    // Con movimiento, cada pieza suma el suyo (giro, pistón, biela…) al desarme: se sigue moviendo afuera
+    const movs = marcha ? movimientos(piezas, marcha.avanzar(dt), marcha.intensidad) : null;
     for (const p of piezas) {
       const i = piezas.indexOf(p);
       p.actual += (objetivosPiezas[i] - p.actual) * ap;
       p.libreActual.lerp(p.libre, a);
       p.obj.position.copy(p.base).add(new THREE.Vector3(...desplazamiento(p, p.actual))).add(p.libreActual);
+      const mov = movs?.get(p.id);
+      if (mov) {
+        p.obj.position.add(new THREE.Vector3(...mov.t));
+        p.obj.quaternion.fromArray(mov.q);
+      }
       const opacidad = aislada && p.id !== aislada ? OPACIDAD_ATENUADA : 1;
       p.opacidad += (opacidad - p.opacidad) * ap;
       aplicarOpacidad(p);
@@ -508,6 +518,7 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = 
         descripcion: obj.userData.descripcion ?? '',
         orden: obj.userData.orden,
         direccion: obj.userData.direccion,
+        movimiento: obj.userData.movimiento,
         centro: cajaPieza.getCenter(new THREE.Vector3()).toArray(),
         tamano: t.toArray(),
         materiales: [...materiales],
@@ -562,6 +573,18 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = 
   }
 
   return {
+    // Marcha: los motores giran y el exoesqueleto camina. Al apagar, termina el ciclo y queda como estaba
+    tieneMovimiento: () => Boolean(marcha),
+    enMarcha: () => Boolean(marcha?.encendida),
+    encender() {
+      marcha?.encender();
+      return Boolean(marcha);
+    },
+    apagar() {
+      marcha?.apagar();
+      return Boolean(marcha);
+    },
+
     async cargarModelo(url) {
       const gltf = await loader.loadAsync(url);
       modelo = gltf.scene;
@@ -572,6 +595,8 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = 
       separacion = null;
       piezas = leerPiezas(modelo, caja, gltf.parser.associations);
       objetivosPiezas = piezas.map(() => 0);
+      const velocidad = gltf.scene.userData.velocidad;
+      marcha = velocidad && piezas.some((p) => p.movimiento) ? crearMarcha(velocidad) : null;
       // Estilo holograma: un color por pieza (o uno solo si el modelo no está armado por piezas)
       let areaModelo = 0;
       modelo.traverse((m) => {
@@ -864,7 +889,8 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = 
       if (!renombrables.some(Boolean)) return { nombradas: 0, total: piezas.length };
       // Cada malla en coordenadas del modelo, con las piezas armadas (aunque ya se haya empezado a desarmar)
       const corridas = piezas.map((p) => p.obj.position.clone());
-      piezas.forEach((p) => p.obj.position.copy(p.base));
+      const giros = piezas.map((p) => p.obj.quaternion.clone());
+      piezas.forEach((p) => { p.obj.position.copy(p.base); p.obj.quaternion.identity(); });
       actual.updateMatrixWorld(true);
       const inversa = actual.matrixWorld.clone().invert();
       const relativa = new THREE.Matrix4();
@@ -877,7 +903,7 @@ export function crearVisor(contenedor, { alCambiarPiezas = () => {}, alCuadro = 
         });
         return lista;
       });
-      piezas.forEach((p, i) => p.obj.position.copy(corridas[i]));
+      piezas.forEach((p, i) => { p.obj.position.copy(corridas[i]); p.obj.quaternion.copy(giros[i]); });
       actual.updateMatrixWorld(true);
 
       const nombres = await reconocer(red, fuentes, piezas.map((p) => p.centro),
