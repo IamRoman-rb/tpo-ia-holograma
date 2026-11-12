@@ -39,7 +39,9 @@ def test_solo_cuentan_los_bajados(objaverse, catalogo):
 @pytest.mark.parametrize("consulta, esperado", [
     ("guitarra", "gui"),
     ("una mesa", "mesa"),
-    ("motor de auto", "v8"),          # nombra más que el "motor" del catálogo propio, y tiene más piezas que v8b
+    # El motor de 4 cilindros propio tiene el sinónimo "motor de auto": nombra lo mismo que Objaverse y va primero
+    # (antes ganaba Objaverse porque el empate de palabras se resolvía por el "motor" eléctrico)
+    ("motor de auto", "combustion_4_linea_90p0_8p6_8p6_dohc_4_no_correa_nafta"),
     ("motor", "motor_electrico"),     # a igual coincidencia, el catálogo propio va primero
     ("rulemán", "rodamiento_bolas"),
 ])

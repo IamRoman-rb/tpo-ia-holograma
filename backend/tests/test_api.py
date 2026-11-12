@@ -42,8 +42,11 @@ def test_frase_demasiado_larga(cliente):
 
 
 def test_catalogo(cliente):
-    # los 5 modelos propios y las variedades de motores (backend/motores/)
+    # los 5 modelos propios, las variedades de motores (backend/motores/) y las autopartes (scripts/generar_autopartes.py)
+    import json
     import motores
+    from retrieval import RAIZ
+    autopartes = json.loads((RAIZ / "frontend" / "models" / "autopartes" / "autopartes.json").read_text(encoding="utf-8"))
     catalogo = cliente.get("/catalog").json()
-    assert len(catalogo) == 5 + len(motores.CATALOGO)
-    assert {"valvula_compuerta", "motor_electrico"} <= {it["id"] for it in catalogo}
+    assert len(catalogo) == 5 + len(motores.CATALOGO) + len(autopartes)
+    assert {"valvula_compuerta", "motor_electrico", "freno_disco", "turbocompresor"} <= {it["id"] for it in catalogo}

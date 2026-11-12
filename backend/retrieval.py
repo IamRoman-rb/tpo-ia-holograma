@@ -224,13 +224,16 @@ class Catalogo:
         consulta = set(_palabras(texto))
         puntajes = []
         for it in self.items:
-            mejor = 0.0
+            mejor = (0.0, 0)
             for variante in _variantes(it)[:-1]:  # la descripción es larga: diluiría el puntaje
                 ps = _palabras(variante)
                 if ps:
-                    mejor = max(mejor, sum(p in consulta for p in ps) / len(ps))
+                    en_comun = sum(p in consulta for p in ps)
+                    mejor = max(mejor, (en_comun / len(ps), en_comun))
             puntajes.append((it, mejor))
-        return sorted(puntajes, key=lambda x: x[1], reverse=True)
+        # A igual proporción gana el nombre que cubre más palabras del pedido: "motor de arranque" le gana a "motor"
+        puntajes.sort(key=lambda x: x[1], reverse=True)
+        return [(it, proporcion) for it, (proporcion, _) in puntajes]
 
     def ranking_embeddings(self, texto):
         q = self.modelo.encode(self.prefijo_consulta + texto, normalize_embeddings=True)

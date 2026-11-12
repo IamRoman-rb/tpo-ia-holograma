@@ -222,6 +222,11 @@ Todas las técnicas, con sus resultados: [docs/tecnicas_ia.md](docs/tecnicas_ia.
 
 Los pedidos escritos o por voz los interpreta el LLM (Claude). Sin Claude, los interpreta el **consenso de los motores propios** (`backend/consenso.py`): el transformer BETO ajustado, el LLM propio (Qwen ajustado), el intérprete con embeddings, Naive Bayes y las reglas votan, y la mejor respuesta sale de una combinación con pesos ajustados por máxima verosimilitud. El consenso acierta 305 de 309 frases en los siete sets de evaluación (97 % en la prueba, 98 % con objetos que nunca vio), pero tarda unos 5 s por pedido en el procesador. El motor solo más rápido y casi tan preciso es el transformer (300 de 309, 33 ms): se elige diciendo «usá el transformer». Uno de esos motores es un **modelo propio entrenado** que corre en el equipo (`backend/intent_modelo.py`): reconoce la acción con embeddings de la frase y un clasificador entrenado con 18.800 frases rioplatenses, y un etiquetador entrenado encuentra el objeto, de cualquier tipo, con lo que lo describe ("una silla de oficina con ruedas", "el cráneo de un tigre"). Aprendió con casi 10 mil nombres de objetos de WordNet en español. Con 45 pedidos de objetos que nunca vio acierta 91 %, contra 60 % de las reglas que usaba antes ([docs/metricas.md](docs/metricas.md#intérprete-de-pedidos-entrenado-respaldo-del-llm)). Si tampoco está ese modelo, quedan las reglas. El visor y el panel de actividad muestran qué motor respondió.
 
+Dos casos se resuelven antes o en lugar del consenso (`backend/atajo_catalogo.py`, `backend/consenso.py`):
+
+- **Solo el nombre de un objeto del catálogo** ("Freno a disco", "el turbo", "Motor V8"): se muestra directamente, sin consultar a ningún motor (aparece como «nombre del catálogo»). Sin verbo, Naive Bayes decide por las palabras del objeto, y como en las frases de entrenamiento las piezas mecánicas aparecen sobre todo en pedidos de despiece, proponía el despiece.
+- **Faltan los motores entrenados** (una compu donde no se corrió `scripts/entrenar.py`): si los motores que responden no suman el 40 % del peso ajustado del consenso, el consenso no decide y siguen el intérprete entrenado y las reglas. Antes decidía solo Naive Bayes, con un peso pensado para votar junto a los otros, y se equivocaba aun con frases como "mostrame un freno a disco".
+
 ### Pedidos y comandos por voz
 
 Con el backend levantado, la voz la reconoce **Whisper large-v3 en este equipo** (`backend/voz.py`): el audio no sale de la computadora.
@@ -258,6 +263,7 @@ Para usar Colab, se corre `backend/generador_colab/servidor_generacion.ipynb` en
 
 ```bash
 python scripts/generar_modelos_demo.py   # regenera frontend/models/*.glb y catalogo.json
+python scripts/generar_autopartes.py     # 14 autopartes mecánicas desarmables en frontend/models/autopartes/
 node frontend/tests/gestos.test.mjs      # pruebas de normalización, gestos y búsqueda local
 node frontend/tests/piezas.test.mjs      # orden y recorrido del desarmado, análisis de una pieza
 node frontend/tests/mlp.test.mjs         # el MLP en JavaScript da lo mismo que en Python

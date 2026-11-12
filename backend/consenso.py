@@ -32,6 +32,10 @@ RUTA_PESOS = Path(__file__).parent / "modelos" / "consenso.json"
 COSTO_PREGUNTA = 0.2      # costo de pedir confirmación, relativo a equivocarse (= 1)
 PISO = 1e-4               # probabilidad mínima de una acción (un motor nunca veta del todo)
 CONFIANZA_REGLAS = 0.7
+# Los pesos se ajustaron con los cinco motores. Si los que respondieron no llegan a esta parte del peso total
+# (en una máquina sin el transformer ni el LLM propio entrenados queda solo Naive Bayes, con 0,19 de 0,97), la
+# combinación no es la que se ajustó: decide un motor débil aplanado por su peso. Mejor que siga la cadena.
+PESO_MINIMO = 0.4
 
 
 def acciones():
@@ -130,6 +134,15 @@ def combinar(salidas, pesos=None, lista=None):
     return p / p.sum()
 
 
+def peso_cubierto(salidas, pesos=None):
+    """Qué parte del peso ajustado tienen los motores que respondieron (1 si no hay pesos ajustados)."""
+    w = (pesos or pesos_guardados() or {}).get("pesos", {})
+    total = sum(w.values())
+    if not total:
+        return 1.0
+    return sum(w.get(n, 0.0) for n in salidas) / total
+
+
 def _similares(a, b):
     """Dos objetos dicen lo mismo si comparten casi todas las palabras (Jaccard >= 0,6)."""
     pa, pb = set(normalizar(a).split()) - {"el", "la", "los", "las", "un", "una"}, \
@@ -168,6 +181,10 @@ def interpretar_consenso(frase, traza=None, motores=None):
     salidas = correr_motores(frase, motores)
     if not salidas:
         raise RuntimeError("ningún motor respondió")
+    cubierto = peso_cubierto(salidas)
+    if cubierto < PESO_MINIMO:
+        raise RuntimeError(f"faltan los motores con más peso: respondieron {sorted(salidas)}, "
+                           f"{cubierto:.0%} del peso ajustado")
     p = combinar(salidas, lista=lista)
     k = int(np.argmax(p))
     accion, confianza = lista[k], float(p[k])
