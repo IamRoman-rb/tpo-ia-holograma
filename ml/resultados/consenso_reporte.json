@@ -1,5 +1,5 @@
 {
-  "fecha": "2026-10-29",
+  "fecha": "2026-11-11",
   "frases_validacion": 138,
   "motores": [
     "llm_propio",
@@ -20,30 +20,30 @@
     },
     {
       "metodo": "solo transformer",
-      "exactitud": 0.9855,
+      "exactitud": 0.9928,
       "ic95": [
-        0.9638,
+        0.9783,
         1.0
       ],
-      "ece": 0.0095
+      "ece": 0.0059
     },
     {
       "metodo": "solo modelo",
-      "exactitud": 0.942,
+      "exactitud": 0.9493,
       "ic95": [
-        0.8986,
+        0.913,
         0.9783
       ],
-      "ece": 0.0404
+      "ece": 0.0339
     },
     {
       "metodo": "solo bayes",
-      "exactitud": 0.8913,
+      "exactitud": 0.8986,
       "ic95": [
-        0.8333,
-        0.935
+        0.8406,
+        0.942
       ],
-      "ece": 0.0467
+      "ece": 0.0263
     },
     {
       "metodo": "solo reglas",
@@ -64,21 +64,21 @@
     },
     {
       "metodo": "promedio de probabilidades",
-      "exactitud": 0.9783,
+      "exactitud": 0.9928,
       "ic95": [
-        0.9493,
+        0.9783,
         1.0
       ],
-      "ece": 0.162
+      "ece": 0.1763
     },
     {
       "metodo": "log-lineal, L-BFGS (validación cruzada)",
-      "exactitud": 0.9855,
+      "exactitud": 0.9928,
       "ic95": [
-        0.9638,
+        0.9783,
         1.0
       ],
-      "ece": 0.0084
+      "ece": 0.0067
     },
     {
       "metodo": "log-lineal, algoritmo genético (validación cruzada)",
@@ -87,37 +87,37 @@
         0.9638,
         1.0
       ],
-      "ece": 0.0046
+      "ece": 0.007
     }
   ],
   "pesos_lbfgs": {
-    "llm_propio": 0.3067,
-    "transformer": 0.473,
-    "modelo": 0.0,
-    "bayes": 0.1905,
+    "llm_propio": 0.1882,
+    "transformer": 0.5185,
+    "modelo": 0.047,
+    "bayes": 0.1956,
     "reglas": 0.0
   },
   "sesgos_lbfgs": {
-    "mostrar": -0.2165,
-    "rotar": -0.011,
-    "escalar": 0.0274,
-    "vista": -0.0223,
-    "reiniciar": -0.0157,
-    "desmontar": 0.0196,
-    "explotar": -0.0448,
-    "armar": -0.0104,
-    "aislar": -0.0231,
+    "mostrar": -0.2378,
+    "rotar": -0.0108,
+    "escalar": 0.0404,
+    "vista": -0.0222,
+    "reiniciar": -0.0125,
+    "desmontar": 0.0868,
+    "explotar": -0.1309,
+    "armar": -0.0152,
+    "aislar": -0.021,
     "conjunto": -0.0183,
-    "usar_motor": 0.0567,
-    "consultar": 0.0436,
-    "desconocido": 0.2147
+    "usar_motor": 0.0229,
+    "consultar": 0.004,
+    "desconocido": 0.3147
   },
   "pesos_genetico": {
-    "llm_propio": 0.2783,
-    "transformer": 0.4999,
-    "modelo": 0.0,
-    "bayes": 0.1832,
-    "reglas": 0.0
+    "llm_propio": 0.1637,
+    "transformer": 0.5362,
+    "modelo": 0.0431,
+    "bayes": 0.1929,
+    "reglas": 0.0258
   },
-  "ms_por_frase": 5146
+  "ms_por_frase": 8363
 }

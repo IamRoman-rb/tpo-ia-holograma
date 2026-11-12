@@ -1,28 +1,28 @@
-Árbol de profundidad 4 entrenado con HaGRID (F1 macro en prueba 0.729).
+Árbol de profundidad 4 entrenado con HaGRID (F1 macro en prueba 0.728).
 
 |--- indice <= 1.19
 |   |--- anular <= 1.21
-|   |   |--- pulgarVertical <= -0.30
-|   |   |   |--- pulgarMedio <= 0.87
+|   |   |--- pulgarVertical <= -0.27
+|   |   |   |--- pulgarMedio <= 0.86
 |   |   |   |   |--- class: puño
-|   |   |   |--- pulgarMedio >  0.87
+|   |   |   |--- pulgarMedio >  0.86
 |   |   |   |   |--- class: pulgar_arriba
-|   |   |--- pulgarVertical >  -0.30
-|   |   |   |--- pulgarMedio <= 0.62
+|   |   |--- pulgarVertical >  -0.27
+|   |   |   |--- pulgarMedio <= 0.60
 |   |   |   |   |--- class: ninguno
-|   |   |   |--- pulgarMedio >  0.62
+|   |   |   |--- pulgarMedio >  0.60
 |   |   |   |   |--- class: pulgar_abajo
 |   |--- anular >  1.21
-|   |   |--- pulgarIndice <= 0.94
+|   |   |--- pulgarIndice <= 0.81
 |   |   |   |--- separacionV <= 0.41
 |   |   |   |   |--- class: pellizco
 |   |   |   |--- separacionV >  0.41
 |   |   |   |   |--- class: pellizco
-|   |   |--- pulgarIndice >  0.94
-|   |   |   |--- pulgarAfuera <= 0.84
+|   |   |--- pulgarIndice >  0.81
+|   |   |   |--- pulgarVertical <= -0.61
 |   |   |   |   |--- class: pulgar_arriba
-|   |   |   |--- pulgarAfuera >  0.84
-|   |   |   |   |--- class: pulgar_arriba
+|   |   |   |--- pulgarVertical >  -0.61
+|   |   |   |   |--- class: pulgar_abajo
 |--- indice >  1.19
 |   |--- medio <= 0.99
 |   |   |--- menique <= 0.86
@@ -31,18 +31,18 @@
 |   |   |   |--- pulgarAfuera >  0.64
 |   |   |   |   |--- class: ninguno
 |   |   |--- menique >  0.86
-|   |   |   |--- menique <= 1.22
+|   |   |   |--- menique <= 1.23
 |   |   |   |   |--- class: ninguno
-|   |   |   |--- menique >  1.22
+|   |   |   |--- menique >  1.23
 |   |   |   |   |--- class: ninguno
 |   |--- medio >  0.99
-|   |   |--- curvaMenique <= 18.94
-|   |   |   |--- indiceVertical <= -0.67
+|   |   |--- curvaMenique <= 19.89
+|   |   |   |--- indiceVertical <= -0.68
 |   |   |   |   |--- class: palma_abierta
-|   |   |   |--- indiceVertical >  -0.67
+|   |   |   |--- indiceVertical >  -0.68
 |   |   |   |   |--- class: ninguno
-|   |   |--- curvaMenique >  18.94
-|   |   |   |--- separacionV <= 0.39
+|   |   |--- curvaMenique >  19.89
+|   |   |   |--- separacionV <= 0.38
 |   |   |   |   |--- class: ninguno
-|   |   |   |--- separacionV >  0.39
+|   |   |   |--- separacionV >  0.38
 |   |   |   |   |--- class: victoria

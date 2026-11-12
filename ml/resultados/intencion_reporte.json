@@ -1,5 +1,5 @@
 {
-  "fecha": "2026-11-02",
+  "fecha": "2026-11-11",
   "frases": {
     "entrenamiento": 109524,
     "validacion_accion": 138,
@@ -14,7 +14,7 @@
       "exactitud_validacion": 0.9348,
       "f1_validacion": 0.9611,
       "exactitud_prueba": 0.8421,
-      "segundos": 15.0
+      "segundos": 19.2
     },
     {
       "embeddings": "paraphrase-multilingual-MiniLM-L12-v2",
@@ -22,7 +22,7 @@
       "exactitud_validacion": 0.942,
       "f1_validacion": 0.9496,
       "exactitud_prueba": 0.8684,
-      "segundos": 13.9
+      "segundos": 11.6
     },
     {
       "embeddings": "paraphrase-multilingual-MiniLM-L12-v2",
@@ -30,7 +30,7 @@
       "exactitud_validacion": 0.9493,
       "f1_validacion": 0.9575,
       "exactitud_prueba": 0.8421,
-      "segundos": 46.7
+      "segundos": 50.7
     },
     {
       "embeddings": "paraphrase-multilingual-MiniLM-L12-v2",
@@ -38,7 +38,7 @@
       "exactitud_validacion": 0.9493,
       "f1_validacion": 0.9542,
       "exactitud_prueba": 0.8421,
-      "segundos": 96.3
+      "segundos": 101.1
     },
     {
       "embeddings": "intfloat/multilingual-e5-small",
@@ -46,7 +46,7 @@
       "exactitud_validacion": 0.9493,
       "f1_validacion": 0.9601,
       "exactitud_prueba": 0.8421,
-      "segundos": 9.2
+      "segundos": 10.2
     },
     {
       "embeddings": "intfloat/multilingual-e5-small",
@@ -54,7 +54,7 @@
       "exactitud_validacion": 0.9493,
       "f1_validacion": 0.9535,
       "exactitud_prueba": 0.8421,
-      "segundos": 12.4
+      "segundos": 11.7
     },
     {
       "embeddings": "intfloat/multilingual-e5-small",
@@ -62,7 +62,7 @@
       "exactitud_validacion": 0.9275,
       "f1_validacion": 0.9308,
       "exactitud_prueba": 0.8684,
-      "segundos": 46.1
+      "segundos": 47.0
     },
     {
       "embeddings": "intfloat/multilingual-e5-small",
@@ -70,7 +70,7 @@
       "exactitud_validacion": 0.9493,
       "f1_validacion": 0.9511,
       "exactitud_prueba": 0.8947,
-      "segundos": 137.1
+      "segundos": 145.4
     }
   ],
   "comparacion_objeto": [
@@ -78,43 +78,43 @@
       "etiquetador": "rasgos",
       "objeto_exacto_generadas": 0.9943,
       "objeto_exacto_a_mano": 0.9636,
-      "segundos": 15.9
+      "segundos": 15.8
     },
     {
       "etiquetador": "contexto_logistica",
       "objeto_exacto_generadas": 0.8657,
       "objeto_exacto_a_mano": 0.8909,
-      "segundos": 26.3
+      "segundos": 25.5
     },
     {
       "etiquetador": "combinado_logistica",
       "objeto_exacto_generadas": 0.9857,
       "objeto_exacto_a_mano": 0.9818,
-      "segundos": 42.3
+      "segundos": 41.3
     },
     {
       "etiquetador": "contexto_mlp_256",
       "objeto_exacto_generadas": 0.9857,
       "objeto_exacto_a_mano": 0.9818,
-      "segundos": 434.3
+      "segundos": 394.4
     },
     {
       "etiquetador": "combinado_mlp_256",
       "objeto_exacto_generadas": 0.9921,
       "objeto_exacto_a_mano": 0.9818,
-      "segundos": 450.3
+      "segundos": 410.2
     },
     {
       "etiquetador": "contexto_mlp_512",
       "objeto_exacto_generadas": 0.9871,
       "objeto_exacto_a_mano": 0.9818,
-      "segundos": 712.0
+      "segundos": 695.2
     },
     {
       "etiquetador": "combinado_mlp_512",
       "objeto_exacto_generadas": 0.9936,
       "objeto_exacto_a_mano": 0.9818,
-      "segundos": 727.9
+      "segundos": 711.0
     }
   ],
   "elegido": {

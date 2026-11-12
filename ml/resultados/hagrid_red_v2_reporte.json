@@ -1,5 +1,5 @@
 {
-  "fecha": "2026-10-29",
+  "fecha": "2026-11-11",
   "dataset": "HaGRID (ml\\data\\hagrid), CC BY-SA 4.0",
   "filas": {
     "entrenamiento": 391215,
@@ -21,7 +21,7 @@
       "parametros": 16968,
       "f1_validacion": 0.9619,
       "epocas": 36,
-      "segundos": 148
+      "segundos": 85
     },
     {
       "ocultas": [
@@ -32,7 +32,7 @@
       "parametros": 50312,
       "f1_validacion": 0.9607,
       "epocas": 14,
-      "segundos": 65
+      "segundos": 54
     },
     {
       "ocultas": [
@@ -43,7 +43,7 @@
       "parametros": 166152,
       "f1_validacion": 0.9595,
       "epocas": 14,
-      "segundos": 122
+      "segundos": 101
     },
     {
       "ocultas": [
@@ -55,7 +55,7 @@
       "parametros": 198024,
       "f1_validacion": 0.9601,
       "epocas": 14,
-      "segundos": 146
+      "segundos": 119
     },
     {
       "ocultas": [
@@ -67,7 +67,7 @@
       "parametros": 723720,
       "f1_validacion": 0.9595,
       "epocas": 13,
-      "segundos": 301
+      "segundos": 243
     }
   ],
   "elegida": {
