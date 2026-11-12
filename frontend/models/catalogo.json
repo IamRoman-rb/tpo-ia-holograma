@@ -451,5 +451,23 @@
     "url": "models/autopartes/filtro_aceite.glb",
     "origen": "catalogo",
     "categoria": "autoparte"
+  },
+  {
+    "id": "exoesqueleto_industrial",
+    "nombre": "Exoesqueleto industrial",
+    "sinonimos": [
+      "exoesqueleto",
+      "exoesqueleto industrial",
+      "traje robótico",
+      "armadura robótica",
+      "armadura mecánica",
+      "traje mecánico",
+      "exoesqueleto de carga",
+      "exosqueleto"
+    ],
+    "descripcion": "Exoesqueleto de trabajo: casco, batería, placa pectoral, hombreras, brazos, antebrazos, guantes, cinturón, muslos, piernas y botas, con actuadores hidráulicos. Camina en el lugar.",
+    "url": "models/exoesqueleto/exoesqueleto_industrial.glb",
+    "origen": "catalogo",
+    "categoria": "exoesqueleto"
   }
 ]
